@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class FuncionarioExecutor {
     private Producao producao; //Atributo código fk da classe Producao

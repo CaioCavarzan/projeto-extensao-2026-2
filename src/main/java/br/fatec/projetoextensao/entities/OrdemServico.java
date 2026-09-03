@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

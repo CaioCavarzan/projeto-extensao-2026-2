@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class Fornecedor extends Pessoa {
     private String cnpj;
