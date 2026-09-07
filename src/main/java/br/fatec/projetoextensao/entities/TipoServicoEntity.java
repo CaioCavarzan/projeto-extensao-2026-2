@@ -8,3 +8,5 @@ public class TipoServicoEntity {
     private String tipo;
 
 }
+
+//a

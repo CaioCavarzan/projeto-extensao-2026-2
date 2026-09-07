@@ -8,3 +8,6 @@ public class StatusCronogramaEntity {
     private String status;
 
 }
+
+
+//a
