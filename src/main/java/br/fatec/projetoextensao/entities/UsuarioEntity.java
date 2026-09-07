@@ -9,3 +9,6 @@ public class UsuarioEntity {
     private String senha;
     private String tipoAcesso;
 }
+
+
+//a

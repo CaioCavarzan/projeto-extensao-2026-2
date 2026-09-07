@@ -10,3 +10,5 @@ public class PessoaJuridicaEntity extends Cliente{
     private int inscricaoEstadual;
 
 }
+
+//a

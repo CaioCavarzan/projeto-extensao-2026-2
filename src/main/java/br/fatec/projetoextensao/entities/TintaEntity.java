@@ -14,3 +14,5 @@ public class TintaEntity {
     private int estoque;
     private float valorUnitario;
 }
+
+//a
