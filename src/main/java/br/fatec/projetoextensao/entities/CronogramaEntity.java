@@ -19,7 +19,7 @@ public class CronogramaEntity{
     private int prioridade;
     private LocalDateTime dataCriacao;
     private LocalDateTime ultimaAlteracao;
-    private Usuario usuarioAlterou; //Atributo codigo fk da classe Usuario
-    private ServicoAplicadoPeca servicoAplicadoPeca;
+    private UsuarioEntity usuarioAlterou; //Atributo codigo fk da classe Usuario
+    private ServicoAplicadoPecaEntity servicoAplicadoPeca;
     private ArrayList<HistoricoStatusCronogramaEntity> historico;
 }

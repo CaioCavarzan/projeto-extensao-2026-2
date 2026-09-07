@@ -9,5 +9,5 @@ public class CidadeEntity{
     @Id
     private String codigo;
     private String nome;
-    private Uf uf; //atributo codigo fk da classe Uf
+    private UfEntity uf; //atributo codigo fk da classe Uf
 }
