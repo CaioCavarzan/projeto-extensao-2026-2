@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class Cliente extends Pessoa {
     private FonteAquisicao fonte; //atributo codigo fk da classe FonteAquisicao
