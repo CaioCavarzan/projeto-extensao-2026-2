@@ -1,18 +1,18 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 import java.time.LocalDateTime;
 
 public class Producao {
     private int codigo;
-    private Cronograma cronograma; //Atributo código fk da classe Cronograma 
-    private ServicoAplicadoPeca servicoAplicadoPeca; //Atributo código fk da classe ServicoAplicadoPeca
+    private Cronograma cronograma; // Atributo código fk da classe Cronograma
+    private ServicoAplicadoPeca servicoAplicadoPeca; // Atributo código fk da classe ServicoAplicadoPeca
     private Usuario usuarioCadastrou;
     private LocalDateTime dataExecucao;
     private int qtdProduzida;
     private int qtdDefeito;
     private String observacao;
 
-    public Producao(){
+    public Producao() {
         codigo = 0;
         cronograma = new Cronograma();
         servicoAplicadoPeca = new ServicoAplicadoPeca();
@@ -22,8 +22,9 @@ public class Producao {
         qtdDefeito = 0;
         observacao = new String();
     }
-    
-    public Producao(int codigo, Cronograma cronograma, ServicoAplicadoPeca servicoAplicadoPeca, Usuario usuarioCadastrou, LocalDateTime dataExecucao, int qtdProduzida, int qtdDefeito, String observacao){
+
+    public Producao(int codigo, Cronograma cronograma, ServicoAplicadoPeca servicoAplicadoPeca,
+            Usuario usuarioCadastrou, LocalDateTime dataExecucao, int qtdProduzida, int qtdDefeito, String observacao) {
         this.codigo = codigo;
         this.cronograma = cronograma;
         this.servicoAplicadoPeca = servicoAplicadoPeca;

@@ -1,12 +1,12 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
-public class PessoaJuridica extends Cliente{
+public class PessoaJuridica extends Cliente {
     private String cnpj;
     private String razaoSocial;
     private String nomeFantasia;
     private int inscricaoEstadual;
 
-    public PessoaJuridica(){
+    public PessoaJuridica() {
         super();
         cnpj = new String();
         razaoSocial = new String();
@@ -14,13 +14,15 @@ public class PessoaJuridica extends Cliente{
         inscricaoEstadual = 0;
     }
 
-    public PessoaJuridica(int codigo, String email, Cep cep, String logradouro, String numeroCasa, String telefone, FonteAquisicao fonte, String observacao, String complemento, int prioridade, String cnpj, String razaoSocial, String nomeFantasia,int inscricaoEstadual ){
+    public PessoaJuridica(int codigo, String email, Cep cep, String logradouro, String numeroCasa, String telefone,
+            FonteAquisicao fonte, String observacao, String complemento, int prioridade, String cnpj,
+            String razaoSocial, String nomeFantasia, int inscricaoEstadual) {
         super(codigo, email, cep, logradouro, numeroCasa, telefone, fonte, observacao, complemento, prioridade);
         this.cnpj = cnpj;
         this.razaoSocial = razaoSocial;
         this.nomeFantasia = nomeFantasia;
         this.inscricaoEstadual = inscricaoEstadual;
-    
+
     }
 
     public String getCnpj() {

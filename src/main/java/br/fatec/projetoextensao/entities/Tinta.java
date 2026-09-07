@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class Tinta {
     private int codigo;

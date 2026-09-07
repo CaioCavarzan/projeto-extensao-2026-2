@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class ServicoAplicadoPeca {
     private TipoServico tipoServico; //Atributo código fk da classe TipoServico

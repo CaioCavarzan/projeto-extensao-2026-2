@@ -1,16 +1,17 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
-public class PessoaFisica extends Cliente{
+public class PessoaFisica extends Cliente {
     private String cpf;
     private String nome;
 
-    public PessoaFisica(){
+    public PessoaFisica() {
         super();
         cpf = new String();
         nome = new String();
     }
 
-    public PessoaFisica(int codigo, String email, Cep cep, String logradouro, String numeroImovel, String telefone, FonteAquisicao fonte, String observacao, String complemento, int prioridade, String cpf, String nome){
+    public PessoaFisica(int codigo, String email, Cep cep, String logradouro, String numeroImovel, String telefone,
+            FonteAquisicao fonte, String observacao, String complemento, int prioridade, String cpf, String nome) {
         super(codigo, email, cep, logradouro, numeroImovel, telefone, fonte, observacao, complemento, prioridade);
         this.cpf = cpf;
         this.nome = nome;

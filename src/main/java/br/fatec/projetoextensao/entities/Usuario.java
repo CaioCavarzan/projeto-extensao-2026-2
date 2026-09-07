@@ -1,4 +1,4 @@
-package entities;
+package br.fatec.projetoextensao.entities;
 
 public class Usuario {
     private Funcionario funcionario; //atributo codigo fk da classe Funcionario; 
