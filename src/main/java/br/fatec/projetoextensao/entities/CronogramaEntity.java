@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "Cronogramas")
+@Table(name = "Cronograma")
 public class CronogramaEntity{
 
     @Id
@@ -20,15 +20,20 @@ public class CronogramaEntity{
     @Column(name = "codigo")
     private int codigo;
 
+    @Column(name = "peca_tipo_servico")
+    private ServicoAplicadoPecaEntity servicoAplicadoPeca;
+
+    @Column(name = "peca_codigo")
+    private PecaEntity peca;
+
     @Column(name = "data_planejada")
     private LocalDate dataPlanejada;
 
     @Column(name = "qtd_planejada")
     private int qtdPlanejada;
 
-    //Não constava na DER
-    //@Column(name = "usuario_codigo")
-    //private UsuarioEntity usuarioCadastrou; //Atributo codigo fk da classe Usuario
+    @Column(name = "usuario_codigo")
+    private UsuarioEntity usuarioCadastrou; //Atributo codigo fk da classe Usuario
     
     @Column(name = "observacao")
     private String observacao;
@@ -45,10 +50,6 @@ public class CronogramaEntity{
     @Column(name = "usuario_alteracao")
     private UsuarioEntity usuarioAlterou; //Atributo codigo fk da classe Usuario
     
-    //Não constava na DER
-    //@Column(name = "servico_aplicado_peca")
-    //private ServicoAplicadoPecaEntity servicoAplicadoPeca;
-
     //Não constava na DER
     //@Column(name = "historico")
     //private ArrayList<HistoricoStatusCronogramaEntity> historico;

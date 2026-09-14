@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "FuncionarioExecutores")
+@Table(name = "Producao_Funcionarios")
 public class FuncionarioExecutorEntity{
 
     @Column(name = "producao_codigo")

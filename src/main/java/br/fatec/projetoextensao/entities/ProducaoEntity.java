@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "Producoes")
+@Table(name = "Producao")
 public class ProducaoEntity{
 
     @Id 
@@ -21,8 +21,11 @@ public class ProducaoEntity{
     @Column(name = "cronograma_codigo")
     private CronogramaEntity cronograma; //Atributo código fk da classe Cronograma 
 
-    @Column(name = "tipo_servico_codigo")
+    @Column(name = "peca_tipo_servico")
     private ServicoAplicadoPecaEntity servicoAplicadoPeca; //Atributo código fk da classe ServicoAplicadoPeca
+
+    @Column(name = "peca_codigo")
+    private PecaEntity peca;    
     
     @Column(name = "usuario_codigo")
     private UsuarioEntity usuarioCadastrou;
