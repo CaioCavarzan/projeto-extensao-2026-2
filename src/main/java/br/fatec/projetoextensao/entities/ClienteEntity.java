@@ -2,6 +2,7 @@ package br.fatec.projetoextensao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "Clientes")
 public class ClienteEntity extends PessoaEntity{
 
+    @Id
     @Column(name = "pessoa_codigo")
     private PessoaEntity pessoa; 
 
