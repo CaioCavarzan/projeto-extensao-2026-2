@@ -3,10 +3,13 @@ package br.fatec.projetoextensao.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Os_Status")
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Table(name = "StatusOs")
 public class StatusOsEntity {
     
     @Column(name = "os_codigo")
@@ -14,8 +17,5 @@ public class StatusOsEntity {
     
     @Column(name = "status_codigo")
     private String status;
-
-    @Column(name = "data_hora")
-    private LocalDateTime dataHora;
 
 }

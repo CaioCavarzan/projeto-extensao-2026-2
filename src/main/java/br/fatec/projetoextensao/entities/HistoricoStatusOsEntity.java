@@ -5,16 +5,20 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Os_Status")
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Table(name = "HistoricosStatusOs")
 public class HistoricoStatusOsEntity{
     
     @Column(name = "os_codigo")
-    private OrdemServicoEntity os; // Atributo codigo fk da classe OrdemServico
+    private OrdemServicoEntity os; 
     
     @Column(name = "status_codigo")
-    private StatusOsEntity status; // Atributo codigo fk da classe StatusOs
+    private StatusOsEntity status; 
     
     @Column(name = "data_hora")
     private LocalDateTime dataHora;

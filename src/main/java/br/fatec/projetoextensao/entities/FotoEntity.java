@@ -6,8 +6,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor 
+@AllArgsConstructor 
 @Table(name = "Fotos")
 public class FotoEntity{
 
@@ -16,8 +20,8 @@ public class FotoEntity{
     @Column(name = "codigo")
     private int codigo;
 
-    @Column(name = "peca_codigo")
-    private PecaEntity peca; //atributo codigo fk da classe Peca;
+    @Column(name = "item_codigo")
+    private ItemEntity item;
 
     @Column(name = "foto")
     private String foto;
