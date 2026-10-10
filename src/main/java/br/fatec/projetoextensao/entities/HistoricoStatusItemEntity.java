@@ -6,13 +6,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
-@AllArgsConstructor 
+@AllArgsConstructor
+@Data
 @Table(name = "HistoricosStatusItens")
-public class HistoricoStatusPecaEntity{
+public class HistoricoStatusItemEntity{
 
     @Column(name = "item_codigo")
     private ItemEntity item;

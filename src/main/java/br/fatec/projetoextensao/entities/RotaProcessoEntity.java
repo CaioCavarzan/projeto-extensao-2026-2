@@ -7,13 +7,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@NoArgsConstructor 
-@AllArgsConstructor 
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Table(name = "RotasProcessos")
-public class RotaProcessoEntity {
+public class RotaProcessoEntity{
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

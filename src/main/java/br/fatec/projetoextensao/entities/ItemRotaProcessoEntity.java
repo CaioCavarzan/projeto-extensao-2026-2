@@ -5,8 +5,14 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Table(name = "ItensRotasProcessos")
 public class ItemRotaProcessoEntity{
 
@@ -18,9 +24,6 @@ public class ItemRotaProcessoEntity{
 
     @Column(name = "ordem")
     private int ordem;
-
-    @Column(name = "status")
-    private String status;
 
     @Column(name = "data_inicio")
     private LocalDateTime dataInicio;

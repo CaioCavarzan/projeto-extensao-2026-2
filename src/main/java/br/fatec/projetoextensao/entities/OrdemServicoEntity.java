@@ -7,11 +7,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@NoArgsConstructor 
-@AllArgsConstructor 
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Table(name = "OrdensDeServico")
 public class OrdemServicoEntity{
 
@@ -32,6 +34,6 @@ public class OrdemServicoEntity{
     private float valorOS;
 
     @Column(name = "prioridade")
-    private String prioridade;
+    private int prioridade;
 
 }

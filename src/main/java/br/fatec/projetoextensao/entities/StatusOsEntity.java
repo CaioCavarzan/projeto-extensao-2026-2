@@ -4,13 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@NoArgsConstructor 
-@AllArgsConstructor 
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Table(name = "StatusOs")
-public class StatusOsEntity {
+public class StatusOsEntity{
     
     @Column(name = "os_codigo")
     private int codigo;

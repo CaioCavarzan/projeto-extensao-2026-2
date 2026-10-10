@@ -4,18 +4,21 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@NoArgsConstructor 
-@AllArgsConstructor 
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Table(name = "Usuarios")
-public class UsuarioEntity {
+public class UsuarioEntity{
     
     @Column(name = "funcionario_codigo")
     private FuncionarioEntity funcionario;
 
-    //colocar aqui atributo de 'is_admin'
+    @Column(name = "is_admin")
+    private boolean isAdmin;
     
     @Column(name = "login")
     private String login;
@@ -23,6 +26,7 @@ public class UsuarioEntity {
     @Column(name = "senha_hash")
     private String senhaHash;
     
-    //colocar aqui atributo de 'ativo'
+    @Column(name = "ativo")
+    private boolean ativo;
 
 }

@@ -2,25 +2,27 @@ package br.fatec.projetoextensao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
-@AllArgsConstructor 
+@AllArgsConstructor
+@Data
+@PrimaryKeyJoinColumn(name = "pessoa_codigo")
 @Table(name = "Fornecedores")
 public class FornecedorEntity extends PessoaEntity{
-    
-    @Column(name = "pessoa_codigo")
-    private PessoaEntity pessoa;
     
     @Column(name = "cnpj")
     private String cnpj;
     
-    @Column(name = "status")
-    private boolean status; //verificar por que no dicionário o formato é 'bit' e não 'boolean'
+    @Column(name = "ativo")
+    private boolean ativo;
 
     @Column(name = "prazo_pagamento")
     private String prazoPagamento; 
+    
    }

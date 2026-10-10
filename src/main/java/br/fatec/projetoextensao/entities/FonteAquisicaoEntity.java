@@ -7,12 +7,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
 @AllArgsConstructor
-@Table(name = "FonteAquisicao")
+@Data
+@Table(name = "FontesAquisicao")
 public class FonteAquisicaoEntity{
 
     @Id
@@ -22,5 +24,5 @@ public class FonteAquisicaoEntity{
 
     @Column(name = "descricao")
     private String descricao;
-    
+       
 }

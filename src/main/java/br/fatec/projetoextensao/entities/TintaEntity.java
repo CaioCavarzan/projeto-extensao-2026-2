@@ -4,22 +4,24 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
-@AllArgsConstructor 
+@AllArgsConstructor
+@Data
 @Table(name = "Tintas")
-public class TintaEntity {
+public class TintaEntity{
     
     @Column(name = "codigo")
     private int codigo;
 
     @Column(name = "fornecedor_codigo")
-    private FornecedorEntity fornecedor;
+    private FornecedorEntity fornecedor; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
 
     @Column(name = "cor_codigo")
-    private String cor;
+    private CorEntity cor; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
     
     @Column(name = "descricao")
     private String descricao;

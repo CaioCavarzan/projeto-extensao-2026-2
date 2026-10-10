@@ -7,11 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
-@AllArgsConstructor 
+@AllArgsConstructor
+@Data
 @Table(name = "Fotos")
 public class FotoEntity{
 
@@ -25,4 +27,5 @@ public class FotoEntity{
 
     @Column(name = "foto")
     private String foto;
+        
 }

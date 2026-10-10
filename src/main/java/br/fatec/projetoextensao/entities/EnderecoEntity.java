@@ -5,17 +5,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor  
+@AllArgsConstructor
+@Data
 @Table(name = "Enderecos")
 public class EnderecoEntity{
 
     @Id
     @Column(name = "codigo")
-    private String codigo;
+    private int codigo;
 
     @Column(name = "uf")
     private String uf;

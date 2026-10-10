@@ -1,8 +1,6 @@
 package br.fatec.projetoextensao.entities;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-//import java.util.ArrayList;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,11 +9,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor 
-@AllArgsConstructor 
+@AllArgsConstructor
+@Data
 @Table(name = "Itens")
 public class ItemEntity{
     
@@ -37,13 +37,13 @@ public class ItemEntity{
     private String descricao;
 
     @Column(name = "qtd_total")
-    private int qtdTotal;
+    private float qtdTotal;
 
     @Column(name = "unidade")
     private String unidade;
 
     @Column(name = "data_entrada")
-    private LocalDate dataEntrada;
+    private LocalDateTime dataEntrada;
 
     @Column(name = "prazo_entrega")
     private String prazoEntrega;
@@ -52,7 +52,7 @@ public class ItemEntity{
     private float valorTotalPeca;
 
     @Column(name = "data_finalizacao")
-    private LocalDate dataFinalizacao;
+    private LocalDateTime dataFinalizacao;
     
     @Column(name = "numero_ose")
     private String numeroOse;
