@@ -1,9 +1,17 @@
 package br.fatec.projetoextensao.entities;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,14 +22,18 @@ import lombok.NoArgsConstructor;
 @Table(name = "Tintas")
 public class TintaEntity{
     
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "codigo")
     private int codigo;
 
-    @Column(name = "fornecedor_codigo")
-    private FornecedorEntity fornecedor; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "fornecedor_codigo")
+    private FornecedorEntity fornecedor; 
 
-    @Column(name = "cor_codigo")
-    private CorEntity cor; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "cor_codigo")
+    private CorEntity cor; 
     
     @Column(name = "descricao")
     private String descricao;
@@ -36,9 +48,9 @@ public class TintaEntity{
     private String referenciaFornecedor;
     
     @Column(name = "estoque_atual")
-    private float estoque;
+    private BigDecimal estoque = BigDecimal.ZERO;
     
     @Column(name = "valor_unit")
-    private float valorUnitario;
+    private BigDecimal valorUnitario;
     
 }

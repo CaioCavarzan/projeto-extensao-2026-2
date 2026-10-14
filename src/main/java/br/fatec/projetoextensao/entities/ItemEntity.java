@@ -1,12 +1,15 @@
 package br.fatec.projetoextensao.entities;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,32 +27,41 @@ public class ItemEntity{
     @Column(name = "codigo")
     private int codigo;
     
-    @Column(name = "os_codigo")
+    @ManyToOne
+    @JoinColumn(name = "os_codigo")
     private OrdemServicoEntity os;
 
-    @Column(name = "tinta_codigo")
+    @ManyToOne
+    @JoinColumn(name = "tinta_codigo")
     private TintaEntity tinta; 
 
-    @Column(name = "cor_codigo")
+    @ManyToOne
+    @JoinColumn(name = "cor_codigo")
     private CorEntity cor;
     
     @Column(name = "descricao")
     private String descricao;
 
     @Column(name = "qtd_total")
-    private float qtdTotal;
+    private BigDecimal qtdTotal;
 
     @Column(name = "unidade")
     private String unidade;
 
     @Column(name = "data_entrada")
     private LocalDateTime dataEntrada;
+    
+    @PrePersist
+    private void preencherDataEntrada(){
+     if (dataEntrada == null) {
+         dataEntrada = LocalDateTime.now();}
+     }
 
     @Column(name = "prazo_entrega")
     private String prazoEntrega;
 
     @Column(name = "valor_total_item")
-    private float valorTotalPeca;
+    private BigDecimal valorTotalPeca;
 
     @Column(name = "data_finalizacao")
     private LocalDateTime dataFinalizacao;
@@ -58,6 +70,6 @@ public class ItemEntity{
     private String numeroOse;
     
     @Column(name = "score_prioridade")
-    private float scorePrioridade;
+    private BigDecimal scorePrioridade;
 
 }

@@ -2,6 +2,10 @@ package br.fatec.projetoextensao.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,13 +16,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Table(name = "CronogramasItens")
-public class CronogramaItem{
+@IdClass(CronogramaItemId.class)
+public class CronogramaItemEntity{
     
-    @Column(name = "cronograma_codigo")
-    private CronogramaEntity cronograma; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
+    @Id
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "cronograma_codigo")
+    private CronogramaEntity cronograma; 
 
-    @Column(name = "item_rota_processo_codigo")
-    private ItemRotaProcessoEntity itemProcesso; //verificar com a tia Lu se é assim que funciona a parte de chave estrangeira
+    @Id
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "item_rota_processo_codigo")
+    private ItemRotaProcessoEntity itemRotaProcesso;
 
     @Column(name = "qtd_planejado")
     private float qtdPlanejado;

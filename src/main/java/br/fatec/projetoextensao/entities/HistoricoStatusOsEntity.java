@@ -4,6 +4,11 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,14 +19,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Table(name = "HistoricosStatusOs")
+@IdClass(HistoricoStatusOsId.class)
 public class HistoricoStatusOsEntity{
     
-    @Column(name = "os_codigo")
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "os_codigo")
     private OrdemServicoEntity os; 
     
-    @Column(name = "status_codigo")
-    private StatusOsEntity status; 
-    
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "status_codigo")
+    private StatusOsEntity status;
+
+    @Id
     @Column(name = "data_hora")
     private LocalDateTime dataHora;
+
+    @PrePersist
+    private void preencherDataHora(){
+    if (dataHora == null) {
+        dataHora = LocalDateTime.now();
+        }
+    }
 }

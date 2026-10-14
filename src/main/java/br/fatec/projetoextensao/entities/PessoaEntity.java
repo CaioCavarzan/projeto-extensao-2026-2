@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,7 +36,8 @@ public class PessoaEntity{
     @Column(name = "telefone")
     private String telefone;
 
-    @Column(name = "endereco_codigo")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "endereco_codigo")
     private EnderecoEntity endereco;
 
 }

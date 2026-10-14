@@ -20,7 +20,7 @@ public class FornecedorEntity extends PessoaEntity{
     private String cnpj;
     
     @Column(name = "ativo")
-    private boolean ativo;
+    private boolean ativo = true;
 
     @Column(name = "prazo_pagamento")
     private String prazoPagamento; 

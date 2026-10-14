@@ -1,6 +1,7 @@
 package br.fatec.projetoextensao.entities;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -24,9 +25,9 @@ public class FuncionarioEntity extends PessoaEntity{
     private String cargo; 
     
     @Column(name = "salario")
-    private float salario;
+    private BigDecimal salario;
 
     @Column(name = "data_admissao")
-    private LocalDateTime dataAdmissao;
+    private LocalDate dataAdmissao;
 
 }
