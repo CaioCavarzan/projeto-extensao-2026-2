@@ -1,6 +1,7 @@
 package br.fatec.projetoextensao.entities;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,8 +39,8 @@ public class HistoricoStatusItemEntity{
 
     @PrePersist
     private void preencherDataHora(){
-    if (dataHora == null) {
-        dataHora = LocalDateTime.now();
+        if (dataHora == null) {
+            dataHora = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         }
     }
 }

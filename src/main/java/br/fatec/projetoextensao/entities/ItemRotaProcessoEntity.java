@@ -26,11 +26,11 @@ public class ItemRotaProcessoEntity{
     @Column(name = "codigo")
     private int codigo;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "rota_processo_codigo")
     private RotaProcessoEntity rotaProcesso;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "item_codigo")
     private ItemEntity item;
 

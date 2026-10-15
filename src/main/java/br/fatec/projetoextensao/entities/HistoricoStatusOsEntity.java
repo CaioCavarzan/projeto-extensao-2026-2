@@ -9,6 +9,7 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import java.time.temporal.ChronoUnit;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -23,12 +24,12 @@ import lombok.NoArgsConstructor;
 public class HistoricoStatusOsEntity{
     
     @Id
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "os_codigo")
     private OrdemServicoEntity os; 
     
     @Id
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "status_codigo")
     private StatusOsEntity status;
 
@@ -38,8 +39,8 @@ public class HistoricoStatusOsEntity{
 
     @PrePersist
     private void preencherDataHora(){
-    if (dataHora == null) {
-        dataHora = LocalDateTime.now();
+        if (dataHora == null) {
+            dataHora = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         }
     }
 }

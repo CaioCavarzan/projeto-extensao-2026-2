@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
+import java.math.BigDecimal;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -30,12 +31,12 @@ public class CronogramaItemEntity{
     private ItemRotaProcessoEntity itemRotaProcesso;
 
     @Column(name = "qtd_planejado")
-    private float qtdPlanejado;
+    private BigDecimal qtdPlanejado;
 
     @Column(name = "posicao")
     private int posicao;
 
     @Column(name = "pontuacao")
-    private float pontuacao;
+    private BigDecimal pontuacao;
 
 }

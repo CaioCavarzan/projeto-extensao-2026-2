@@ -2,6 +2,7 @@ package br.fatec.projetoextensao.entities;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,7 +28,7 @@ public class ItemEntity{
     @Column(name = "codigo")
     private int codigo;
     
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "os_codigo")
     private OrdemServicoEntity os;
 
@@ -58,7 +59,7 @@ public class ItemEntity{
      }
 
     @Column(name = "prazo_entrega")
-    private String prazoEntrega;
+    private LocalDate prazoEntrega;
 
     @Column(name = "valor_total_item")
     private BigDecimal valorTotalPeca;
@@ -66,7 +67,7 @@ public class ItemEntity{
     @Column(name = "data_finalizacao")
     private LocalDateTime dataFinalizacao;
     
-    @Column(name = "numero_ose")
+    @Column(name = "nr_ose")
     private String numeroOse;
     
     @Column(name = "score_prioridade")
