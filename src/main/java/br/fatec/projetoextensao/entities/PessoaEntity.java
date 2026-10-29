@@ -37,4 +37,5 @@ public class PessoaEntity{
     @JoinColumn(name = "endereco_codigo")
     private EnderecoEntity endereco;
 
+
 }
