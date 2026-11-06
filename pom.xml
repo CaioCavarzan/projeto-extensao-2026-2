@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.3</version>
+		<version>3.5.16</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.fatec</groupId>
@@ -16,7 +16,7 @@
 	<description>Projeto de Extensao</description>
 
 	<properties>
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 	</properties>
 
 	<dependencies>
@@ -27,6 +27,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!-- INCLUÍDO (20/10/2026): Spring Security, usado pelas regras de acesso da planilha FENIX_REGRAS_DE_NEGOCIO:
+		     RN-SIS-01 (toda rota exige login, exceto ativação de conta e redefinição de senha), RN-SIS-02 e RN-SIS-03
+		     (perfis ADMIN e OPERADOR, com @PreAuthorize em cada método dos Services), RN-USU-04, RN-USU-07 e RN-USU-08
+		     (login só de usuário ativo, mensagem única de erro, limite de tentativas) e RN-USU-14/17 (senha e resposta
+		     de segurança gravadas em BCrypt). A versão do Spring Security é gerenciada pelo spring-boot-starter-parent. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
 		<dependency>
@@ -49,10 +59,33 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- INCLUÍDO (20/10/2026): só para os testes (scope test, não vai para o WAR).
+		     spring-security-test: @WithMockUser, para testar os Services com o perfil ADMIN ou OPERADOR.
+		     h2: banco em memória criado a partir do script do grupo (src/test/resources/schema-h2.sql), para os testes
+		     das regras rodarem sem o SQL Server ligado (perfil "test", application-test.properties). -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<!-- JDK 25 requires annotation processing to be enabled explicitly. -->
+					<proc>full</proc>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
