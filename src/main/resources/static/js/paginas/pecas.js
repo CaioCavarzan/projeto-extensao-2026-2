@@ -1,6 +1,8 @@
 // Peças (itens das OS) — INCLUÍDO em 21/10/2026, no layout do pecas.tsx do protótipo (cards com foto).
 // Dados: GET /api/itens e GET /api/ordens (cliente e prioridade de cada OS). A primeira foto de cada item é baixada
 // só quando o card aparece na tela, porque a imagem exige login (ver api.urlDaFoto).
+// ALTERADO (18/11/2026) [E3-41]: a lista de OS (ref.ordens) passou a vir de GET /api/ordens/painel (view
+// vw_painel_ordens_servico), com os mesmos campos usados aqui: numero, clienteNome, status e prioridade.
 
 import { get, urlDaFoto } from '../api.js';
 import { dialogoNovoItem, osEncerrada } from '../componentes/os.js';

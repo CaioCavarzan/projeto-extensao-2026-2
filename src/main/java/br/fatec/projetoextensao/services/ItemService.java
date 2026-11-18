@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import br.fatec.projetoextensao.config.ParametrosSistema;
 import br.fatec.projetoextensao.dtos.FotoResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
+import br.fatec.projetoextensao.dtos.ItemAtrasadoResponse;
 import br.fatec.projetoextensao.dtos.ItemAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.ItemRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
@@ -36,6 +37,7 @@ import br.fatec.projetoextensao.repositories.FotoRepository;
 import br.fatec.projetoextensao.repositories.HistoricoStatusItemRepository;
 import br.fatec.projetoextensao.repositories.ItemRepository;
 import br.fatec.projetoextensao.repositories.OrdemServicoRepository;
+import br.fatec.projetoextensao.repositories.RotinasBancoRepository;
 import br.fatec.projetoextensao.security.Perfis;
 import br.fatec.projetoextensao.validacao.Imagens;
 import br.fatec.projetoextensao.validacao.Textos;
@@ -50,6 +52,16 @@ import lombok.RequiredArgsConstructor;
  *
  * score_prioridade (RN-ITE-29) nunca vem do front e fica NULL: a regra com a fórmula do score foi retirada da
  * planilha. Quando a fórmula for definida, o cálculo entra aqui, num método chamado ao incluir e alterar o item.
+ *
+ * ALTERADO (18/11/2026) [E3-08, E3-11, E3-12]: integração com a Etapa 3 do banco.
+ * <ul>
+ *   <li>o valor da OS (RN-ITE-08) é recalculado pelos triggers ao gravar o item ou o status dele; aqui só se relê
+ *       a OS com valorOsService.sincronizar;</li>
+ *   <li>a cor do item é conferida também pelo trigger trg_itens_sincronizar_valor_os (THROW 50110 se a cor da tinta
+ *       for outra). validarCorETinta continua: dá a mensagem certa antes de chegar ao banco;</li>
+ *   <li>listarAtrasados lê a função dbo.fn_itens_atrasados;</li>
+ *   <li>cancelarItensDaOs saiu: quem cancela os itens no cancelamento da OS é a procedure sp_cancelar_ordem_servico.</li>
+ * </ul>
  */
 @Service
 @RequiredArgsConstructor
@@ -67,6 +79,8 @@ public class ItemService {
     private final TintaService tintaService;
     private final ArmazenamentoFotos armazenamentoFotos;
     private final ParametrosSistema parametros;
+    // INCLUÍDO (18/11/2026) [E3-11]: leitura da função dbo.fn_itens_atrasados (listarAtrasados).
+    private final RotinasBancoRepository rotinasBanco;
 
     // ------------------------------------------------------------------ inclusão
 
@@ -82,7 +96,9 @@ public class ItemService {
         garantirOsAberta(os);
         List<String> avisos = new ArrayList<>();
         ItemEntity item = criarItem(os, dto, avisos);
-        valorOsService.recalcular(os); // RN-ITE-08 e RN-OS-14
+        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(os) (soma feita em Java). O INSERT do item já
+        // disparou o trigger trg_itens_sincronizar_valor_os, que gravou o novo valor_os; sincronizar só relê a OS.
+        valorOsService.sincronizar(os); // RN-ITE-08 e RN-OS-14
         return paraResponse(item, avisos);
     }
 
@@ -168,7 +184,9 @@ public class ItemService {
         item.setPrazoEntrega(d.prazoEntrega());
         item.setValorTotalPeca(d.valor());
         itemRepository.save(item);
-        valorOsService.recalcular(item.getOs()); // RN-ITE-08
+        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(item.getOs()). O UPDATE do item (enviado no flush
+        // de sincronizar) dispara trg_itens_sincronizar_valor_os, que recalcula valor_os no banco; o Java só relê.
+        valorOsService.sincronizar(item.getOs()); // RN-ITE-08
         statusService.avaliarProntidao(item);
         return paraResponse(item, avisos);
     }
@@ -230,18 +248,18 @@ public class ItemService {
         ItemEntity item = travarItem(codigo);
         garantirOsAberta(item.getOs());
         statusService.mudarStatus(item, StatusItemEnum.CANCELADA);
-        valorOsService.recalcular(item.getOs());
+        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(item.getOs()). O status 'Cancelada' gravado no
+        // histórico dispara trg_historicos_status_itens_sincronizar_item_e_os, que tira o item da soma (fn_valor_os)
+        // e grava o novo valor_os; sincronizar envia o histórico ao banco (flush) e relê a OS.
+        valorOsService.sincronizar(item.getOs());
         return paraResponse(item, List.of());
     }
 
-    /** RN-OS-05: ao cancelar a OS, os itens ainda não encerrados são cancelados; os executados ficam como estão. */
-    void cancelarItensDaOs(OrdemServicoEntity os) {
-        for (ItemEntity item : itemRepository.findByOsOrderByCodigo(os)) {
-            if (!statusService.statusAtual(item).isEncerrado()) {
-                statusService.mudarStatus(item, StatusItemEnum.CANCELADA);
-            }
-        }
-    }
+    // REMOVIDO (18/11/2026) [E3-12]: void cancelarItensDaOs(OrdemServicoEntity os). Percorria os itens da OS e gravava
+    // 'Cancelada' em cada item não encerrado (RN-OS-05), um por vez. Saiu porque a procedure
+    // dbo.sp_cancelar_ordem_servico faz o mesmo em lote, numa transação só, junto com o status da OS, a limpeza dos
+    // cronogramas futuros e o valor_os (ver OrdemServicoService.cancelar). A regra RN-OS-05 não mudou: os itens
+    // 'Executada' continuam como estão (a procedure só cancela os que não estão 'Executada' nem 'Cancelada').
 
     /** RN-OS-04: todos os itens estão 'Executada' ou 'Cancelada'. */
     boolean todosEncerrados(OrdemServicoEntity os) {
@@ -302,14 +320,18 @@ public class ItemService {
         return arquivo;
     }
 
-    /** RN-ITE-22: itens com prazo vencido (antes de hoje) e não encerrados, para aparecerem destacados. */
+    /**
+     * RN-ITE-22: itens com prazo vencido (antes de hoje) e não encerrados, para aparecerem destacados.
+     * ALTERADO (18/11/2026) [E3-11]: era a lista de itens com prazo vencido filtrada em Java (uma consulta de status
+     * por item) e devolvida como ItemResponse completo (rota, fotos...). Agora vem da função
+     * dbo.fn_itens_atrasados(hoje), que faz o mesmo filtro (prazo < data de referência e status diferente de
+     * 'Executada' e 'Cancelada') e ainda traz o cliente, os dias de atraso e a próxima etapa pendente com o operador.
+     * O tipo da lista mudou para ItemAtrasadoResponse; os campos que as telas já usavam têm o mesmo nome.
+     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
-    public List<ItemResponse> listarAtrasados() {
-        return itemRepository.findByPrazoEntregaBeforeOrderByPrazoEntrega(LocalDate.now()).stream()
-                .filter(i -> !statusService.statusAtual(i).isEncerrado())
-                .map(i -> paraResponse(i, List.of()))
-                .toList();
+    public List<ItemAtrasadoResponse> listarAtrasados() {
+        return rotinasBanco.itensAtrasados(LocalDate.now());
     }
 
     /** Histórico de status do item (RN-HIT-01: só leitura). */

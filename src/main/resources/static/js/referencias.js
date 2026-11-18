@@ -24,7 +24,10 @@ export const tintas = () => carregar('tintas', '/tintas');
 export const funcionarios = () => carregar('funcionarios', '/funcionarios');
 export const clientes = () => carregar('clientes', '/clientes');
 export const fornecedores = () => carregar('fornecedores', '/fornecedores');
-export const ordens = () => carregar('ordens', '/ordens');
+// ALTERADO (18/11/2026) [E3-41]: era '/ordens' (cada OS com todos os itens, rotas e fotos). As telas que usam esta
+// lista (Peças: cliente, status e prioridade da OS; diálogo "Adicionar item": OS abertas) só precisam do resumo,
+// que agora vem da view dbo.vw_painel_ordens_servico (GET /api/ordens/painel), com os mesmos nomes de campo.
+export const ordens = () => carregar('ordens', '/ordens/painel');
 export const statusOs = () => carregar('statusOs', '/status/os');
 export const statusItens = () => carregar('statusItens', '/status/itens');
 

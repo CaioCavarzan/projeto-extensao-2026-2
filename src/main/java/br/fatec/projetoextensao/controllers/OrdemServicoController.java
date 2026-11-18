@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.fatec.projetoextensao.dtos.AbrirOsRequest;
+import br.fatec.projetoextensao.dtos.EventoAuditoriaResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
 import br.fatec.projetoextensao.dtos.ItemRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.OsResponse;
+import br.fatec.projetoextensao.dtos.PainelOsResponse;
 import br.fatec.projetoextensao.dtos.PrioridadeRequest;
 import br.fatec.projetoextensao.services.ItemService;
 import br.fatec.projetoextensao.services.OrdemServicoService;
@@ -39,6 +41,15 @@ public class OrdemServicoController {
     @GetMapping
     public List<OsResponse> listar() {
         return ordemServicoService.listar();
+    }
+
+    /**
+     * INCLUÍDO (18/11/2026) [E3-18]: painel das OS lido da view dbo.vw_painel_ordens_servico (lista leve, sem os itens;
+     * usada pelas telas de lista). Fica antes de /{numero} por clareza; o Spring já daria preferência ao caminho fixo.
+     */
+    @GetMapping("/painel")
+    public List<PainelOsResponse> painel() {
+        return ordemServicoService.painel();
     }
 
     @GetMapping("/{numero}")
@@ -79,6 +90,12 @@ public class OrdemServicoController {
     @GetMapping("/{numero}/historico")
     public List<HistoricoStatusResponse> historico(@PathVariable("numero") int numero) {
         return ordemServicoService.historico(numero);
+    }
+
+    /** INCLUÍDO (18/11/2026) [E3-18]: linha do tempo da OS, pela função dbo.fn_auditoria_timeline_os (aba Auditoria). */
+    @GetMapping("/{numero}/auditoria")
+    public List<EventoAuditoriaResponse> auditoria(@PathVariable("numero") int numero) {
+        return ordemServicoService.auditoria(numero);
     }
 
     @PostMapping("/{numero}/itens")

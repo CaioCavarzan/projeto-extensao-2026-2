@@ -2,12 +2,18 @@ package br.fatec.projetoextensao.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,16 +23,21 @@ import br.fatec.projetoextensao.dtos.CronogramaEtapaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaEtapaResponse;
 import br.fatec.projetoextensao.dtos.CronogramaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaResponse;
+import br.fatec.projetoextensao.dtos.ReplanejamentoRequest;
+import br.fatec.projetoextensao.dtos.ReplanejamentoResponse;
 import br.fatec.projetoextensao.entities.CronogramaEntity;
 import br.fatec.projetoextensao.entities.CronogramaItemEntity;
 import br.fatec.projetoextensao.entities.CronogramaItemId;
 import br.fatec.projetoextensao.entities.ItemEntity;
 import br.fatec.projetoextensao.entities.ItemRotaProcessoEntity;
+import br.fatec.projetoextensao.entities.UsuarioEntity;
+import br.fatec.projetoextensao.exceptions.ErrosBanco;
 import br.fatec.projetoextensao.exceptions.RecursoNaoEncontradoException;
 import br.fatec.projetoextensao.exceptions.RegraNegocioException;
 import br.fatec.projetoextensao.repositories.CronogramaItemRepository;
 import br.fatec.projetoextensao.repositories.CronogramaRepository;
 import br.fatec.projetoextensao.repositories.ItemRotaProcessoRepository;
+import br.fatec.projetoextensao.repositories.ProcedimentosBanco;
 import br.fatec.projetoextensao.security.Perfis;
 import br.fatec.projetoextensao.validacao.Validacao;
 import br.fatec.projetoextensao.validacao.Valores;
@@ -36,16 +47,25 @@ import lombok.RequiredArgsConstructor;
  * INCLUÍDO (20/10/2026): cronograma de produção (tabelas Cronogramas e CronogramasItens).
  * Regras: RN-CRO-01 a RN-CRO-07, RN-CRI-01 a RN-CRI-09, RN-SIS-04 (cronograma e etapas na mesma transação) e
  * RN-SIS-08 (usuário que registrou = usuário logado).
+ *
+ * ALTERADO (18/11/2026) [E3-14]: novo replanejar, que aciona a procedure dbo.sp_replanejar_cronograma
+ * (etapa3_03_procedures.sql) pelo botão "Replanejar pendências" da tela Cronograma.
  */
 @Service
 @RequiredArgsConstructor
 public class CronogramaService {
+
+    // INCLUÍDO (18/11/2026) [E3-14]: log do replanejamento e formato de data dos avisos (dd/MM/aaaa, como na tela).
+    private static final Logger log = LoggerFactory.getLogger(CronogramaService.class);
+    private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final CronogramaRepository cronogramaRepository;
     private final CronogramaItemRepository cronogramaItemRepository;
     private final ItemRotaProcessoRepository itemRotaProcessoRepository;
     private final StatusService statusService;
     private final UsuarioService usuarioService;
+    // INCLUÍDO (18/11/2026) [E3-14]: a procedure de replanejamento.
+    private final ProcedimentosBanco procedimentosBanco;
 
     /**
      * RN-CRO-01: só é gravado com pelo menos uma etapa. RN-CRO-02: um cronograma por dia. RN-CRO-05/06: data
@@ -177,6 +197,102 @@ public class CronogramaService {
         cronogramaRepository.delete(c);
     }
 
+    /**
+     * INCLUÍDO (18/11/2026) [E3-14]: replanejamento ("fechamento do dia"): as etapas ainda não concluídas do cronograma
+     * do dia de origem passam a constar no cronograma do dia de destino, pela procedure dbo.sp_replanejar_cronograma.
+     *
+     * O que a procedure faz: pega o cronograma da data de origem; cria o cronograma do destino se ele não existir
+     * (observação "Replanejado a partir de aaaa-mm-dd", registrado pelo usuário informado); copia para o fim da fila do
+     * destino (posições seguintes à última) cada etapa da origem que: não foi concluída, é de item que não está
+     * 'Executada' nem 'Cancelada', de OS que não está 'Concluída' nem 'Cancelada', e ainda não está no destino.
+     * As linhas da origem NÃO são apagadas: o dia de origem continua mostrando o que foi planejado (histórico).
+     *
+     * O que o Java faz antes, e por quê:
+     * <ul>
+     *   <li>datas obrigatórias e destino depois da origem: a mesma regra do THROW 50020, conferida antes para dar a
+     *       mensagem sem chamar a procedure;</li>
+     *   <li>destino não pode ser dia que já passou (RN-CRO-06): a procedure não confere isso e criaria um
+     *       cronograma no passado;</li>
+     *   <li>usuário = o logado (RN-SIS-08 e RN-CRO-04), nunca vindo do front; a procedure confere se está ativo
+     *       (THROW 50021);</li>
+     *   <li>conta as etapas que seriam copiadas (mesmos filtros da procedure). Se não houver nenhuma, a procedure NÃO
+     *       é chamada: ela criaria o cronograma do destino mesmo sem ter etapa para copiar, deixando um cronograma
+     *       vazio, o que a RN-CRO-01 não permite.</li>
+     * </ul>
+     */
+    @PreAuthorize(Perfis.QUALQUER)
+    @Transactional
+    public ReplanejamentoResponse replanejar(ReplanejamentoRequest dto) {
+        LocalDate origem = dto == null ? null : dto.dataOrigem();
+        LocalDate destino = dto == null ? null : dto.dataDestino();
+        Validacao v = new Validacao();
+        if (origem == null || destino == null) {
+            v.erro("Informe o dia de origem e o dia de destino.");
+        } else {
+            if (!destino.isAfter(origem)) {
+                v.erro("A data de destino deve ser posterior à data de origem."); // mesma mensagem do THROW 50020
+            }
+            if (destino.isBefore(LocalDate.now())) {
+                v.erro("Não é possível planejar ou alterar um dia que já passou."); // RN-CRO-06
+            }
+        }
+        v.verificar();
+        UsuarioEntity usuario = usuarioService.usuarioLogadoEntidade(); // RN-SIS-08
+
+        Optional<CronogramaEntity> cronogramaOrigem = cronogramaRepository.findByDataPlanejada(origem);
+        Optional<CronogramaEntity> cronogramaDestino = cronogramaRepository.findByDataPlanejada(destino);
+        long pendentes = cronogramaOrigem.map(c -> contarReplanejaveis(c, cronogramaDestino.orElse(null))).orElse(0L);
+        List<String> avisos = new ArrayList<>();
+        if (pendentes == 0) {
+            avisos.add(cronogramaOrigem.isEmpty()
+                    ? "Não há cronograma em " + origem.format(DATA_BR) + ": nada para replanejar."
+                    : "Nenhuma etapa pendente em " + origem.format(DATA_BR) + " para levar a " + destino.format(DATA_BR)
+                            + " (as etapas foram concluídas, são de itens/OS encerrados ou já estão no destino).");
+            return new ReplanejamentoResponse(origem, destino, 0, cronogramaDestino.map(this::paraResponse).orElse(null),
+                    avisos);
+        }
+
+        int movidas;
+        try {
+            movidas = procedimentosBanco.replanejarCronograma(origem, destino, usuario.getFuncionarioCodigo());
+        } catch (DataAccessException e) {
+            throw ErrosBanco.converter(e); // THROW 50020/50021 -> mensagem do script
+        }
+        if (movidas != pendentes) {
+            log.info("Replanejamento de {} para {}: o Java contou {} etapa(s) e a procedure moveu {}.", origem, destino,
+                    pendentes, movidas);
+        }
+        log.info("AUDITORIA login={} acao=REPLANEJAR_CRONOGRAMA origem={} destino={} etapas={}", usuario.getLogin(),
+                origem, destino, movidas);
+        CronogramaResponse resposta = cronogramaRepository.findByDataPlanejada(destino).map(this::paraResponse).orElse(null);
+        avisos.add(movidas + " etapa(s) de " + origem.format(DATA_BR) + " entraram no fim da fila de "
+                + destino.format(DATA_BR) + ".");
+        if (cronogramaDestino.isEmpty() && resposta != null) {
+            avisos.add("O cronograma de " + destino.format(DATA_BR) + " foi criado pelo replanejamento.");
+        }
+        avisos.add("O cronograma de " + origem.format(DATA_BR) + " continua com as etapas, como registro do que estava planejado.");
+        return new ReplanejamentoResponse(origem, destino, movidas, resposta, avisos);
+    }
+
+    /**
+     * INCLUÍDO (18/11/2026) [E3-14]: quantas etapas da origem a procedure vai copiar, com os mesmos filtros dela:
+     * etapa não concluída, item não 'Executada'/'Cancelada', OS não 'Concluída'/'Cancelada' e etapa ainda fora do
+     * destino. Usado só para não chamar a procedure quando não há nada a copiar (ver replanejar).
+     */
+    private long contarReplanejaveis(CronogramaEntity origem, CronogramaEntity destino) {
+        Set<Integer> noDestino = destino == null ? Set.of()
+                : cronogramaItemRepository.findByCronogramaOrderByPosicao(destino).stream()
+                        .map(ci -> ci.getItemRotaProcesso().getCodigo())
+                        .collect(Collectors.toSet());
+        return cronogramaItemRepository.findByCronogramaOrderByPosicao(origem).stream()
+                .map(CronogramaItemEntity::getItemRotaProcesso)
+                .filter(e -> e.getDataConclusao() == null)
+                .filter(e -> !statusService.statusAtual(e.getItem()).isEncerrado())
+                .filter(e -> !statusService.statusAtual(e.getItem().getOs()).isEncerrado())
+                .filter(e -> !noDestino.contains(e.getCodigo()))
+                .count();
+    }
+
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public CronogramaResponse buscar(int codigo) {
@@ -221,6 +337,11 @@ public class CronogramaService {
         if (qtd == null || qtd.signum() <= 0 || !Valores.casasValidas(qtd, Valores.DIGITOS_DECIMAL_10_2)) {
             throw new RegraNegocioException("Quantidade planejada deve ser maior que zero."); // RN-CRI-04
         }
+        // OBSERVAÇÃO (18/11/2026) [E3-14], sem mudança de código: somarPlanejado soma a etapa em TODOS os cronogramas,
+        // inclusive os de dias passados. Depois de um replanejamento (sp_replanejar_cronograma) a mesma etapa fica na
+        // origem e no destino com a quantidade inteira, então aqui ela conta duas vezes e não pode ser planejada de
+        // novo à mão em um terceiro dia. Se a Fênix quiser, a regra RN-CRI-05 pode passar a contar só os cronogramas
+        // de hoje em diante; fica registrado no documento docs/database/INTEGRACAO_ETAPA3_JAVA.md.
         BigDecimal pendente = item.getQtdTotal().subtract(cronogramaItemRepository.somarPlanejado(etapa));
         if (qtd.compareTo(pendente) > 0) {
             throw new RegraNegocioException("Quantidade planejada maior que a pendente ("

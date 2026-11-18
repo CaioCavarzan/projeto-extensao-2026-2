@@ -3,6 +3,9 @@ package br.fatec.projetoextensao.services;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,13 +16,16 @@ import br.fatec.projetoextensao.dtos.TintaResponse;
 import br.fatec.projetoextensao.entities.CorEntity;
 import br.fatec.projetoextensao.entities.FornecedorEntity;
 import br.fatec.projetoextensao.entities.TintaEntity;
+import br.fatec.projetoextensao.exceptions.ErrosBanco;
 import br.fatec.projetoextensao.exceptions.RecursoNaoEncontradoException;
 import br.fatec.projetoextensao.exceptions.RegraNegocioException;
 import br.fatec.projetoextensao.repositories.ItemRepository;
+import br.fatec.projetoextensao.repositories.ProcedimentosBanco;
 import br.fatec.projetoextensao.repositories.TintaRepository;
 import br.fatec.projetoextensao.security.Perfis;
 import br.fatec.projetoextensao.validacao.Validacao;
 import br.fatec.projetoextensao.validacao.Valores;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -29,10 +35,16 @@ import lombok.RequiredArgsConstructor;
  *
  * RN-TIN-08 e RN-TIN-10 (listas de tipo e acabamento) ficam no front, como diz a planilha.
  * RN-TIN-16 (alerta de estoque mínimo) foi descartada na planilha.
+ *
+ * ALTERADO (18/11/2026) [E3-13]: o ajuste de estoque passou a ser feito pela procedure dbo.sp_ajustar_estoque_tinta
+ * (etapa3_03_procedures.sql); a coluna estoque_atual deixou de ser escrita pelo Hibernate (TintaEntity, E3-07).
  */
 @Service
 @RequiredArgsConstructor
 public class TintaService {
+
+    // INCLUÍDO (18/11/2026) [E3-13]: log da conferência do saldo devolvido pela procedure.
+    private static final Logger log = LoggerFactory.getLogger(TintaService.class);
 
     /** RN-TIN-15: o estoque de todas as tintas é registrado em kg. */
     public static final String UNIDADE_ESTOQUE = "kg";
@@ -41,6 +53,9 @@ public class TintaService {
     private final ItemRepository itemRepository;
     private final FornecedorService fornecedorService;
     private final CorService corService;
+    // INCLUÍDO (18/11/2026) [E3-13]: a procedure de ajuste e o EntityManager para reler a tinta depois dela.
+    private final ProcedimentosBanco procedimentosBanco;
+    private final EntityManager entityManager;
 
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
@@ -75,7 +90,9 @@ public class TintaService {
         t.setFornecedor(fornecedor);
         t.setCor(cor);
         aplicar(t, d);
-        t.setEstoque(BigDecimal.ZERO.setScale(2)); // RN-TIN-13 e RN-SIS-10
+        // REMOVIDO (18/11/2026) [E3-07]: t.setEstoque(BigDecimal.ZERO.setScale(2)). estoque_atual não entra mais no
+        // INSERT (insertable = false): a tinta nasce com o DEFAULT 0 do script (RN-TIN-13), e o valor da memória já
+        // é zero (inicializado na TintaEntity).
         return paraResponse(tintaRepository.save(t));
     }
 
@@ -110,6 +127,14 @@ public class TintaService {
      * RN-TIN-14: o estoque muda só por ajuste (entrada de compra = quantidade positiva; baixa = negativa), feito por
      * ADMIN ou OPERADOR, e o saldo nunca fica negativo. A linha da tinta é travada durante o ajuste, para dois
      * ajustes ao mesmo tempo não se perderem. Unidade: kg (RN-TIN-15).
+     *
+     * ALTERADO (18/11/2026) [E3-13]: quem grava o novo saldo agora é a procedure dbo.sp_ajustar_estoque_tinta
+     * (antes: t.setEstoque(novo) + tintaRepository.save(t)). A procedure trava a linha (UPDLOCK, ROWLOCK), recusa
+     * quantidade zero (THROW 50001), tinta inexistente (50002) e saldo negativo (50003) e devolve o saldo final no
+     * parâmetro OUTPUT. As conferências em Java ficaram ANTES da chamada, de propósito: dão a mensagem com o saldo
+     * atual ("saldo atual X kg"), que a procedure não informa, e evitam chamar a procedure quando ela vai recusar (o
+     * ROLLBACK dela desfaria a transação inteira). Se mesmo assim ela recusar (ex.: outro usuário baixou o estoque no
+     * mesmo instante), ErrosBanco traduz o THROW para a mensagem do script.
      */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
@@ -132,8 +157,21 @@ public class TintaService {
         if (!Valores.casasValidas(novo, Valores.DIGITOS_DECIMAL_10_2)) {
             throw new RegraNegocioException("Estoque acima do limite da coluna (decimal(10,2)).");
         }
-        t.setEstoque(novo);
-        return paraResponse(tintaRepository.save(t));
+        // ALTERADO (18/11/2026) [E3-13]: era "t.setEstoque(novo); return paraResponse(tintaRepository.save(t));".
+        BigDecimal saldoDoBanco;
+        try {
+            saldoDoBanco = procedimentosBanco.ajustarEstoqueTinta(codigo, Valores.normalizar(quantidade));
+        } catch (DataAccessException e) {
+            throw ErrosBanco.converter(e);
+        }
+        entityManager.refresh(t); // a procedure gravou estoque_atual no banco: relê a tinta para a resposta
+        if (saldoDoBanco == null || saldoDoBanco.compareTo(Valores.zeroSeNulo(t.getEstoque())) != 0) {
+            // Não deve acontecer (a linha fica travada até o fim da transação). Se acontecer, a resposta mostra o que
+            // está gravado na tabela e o log registra a diferença para o administrador investigar.
+            log.warn("Tinta {}: @estoque_resultante da procedure ({}) difere do estoque_atual gravado ({}).", codigo,
+                    saldoDoBanco, t.getEstoque());
+        }
+        return paraResponse(t);
     }
 
     /** RN-TIN-02: tinta usada em algum item não é excluída. RN-SIS-03: só ADMIN. */

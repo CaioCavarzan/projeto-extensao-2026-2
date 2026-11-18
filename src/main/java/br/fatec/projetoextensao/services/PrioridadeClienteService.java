@@ -1,9 +1,5 @@
 package br.fatec.projetoextensao.services;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -11,10 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.fatec.projetoextensao.config.ParametrosSistema;
 import br.fatec.projetoextensao.entities.ClienteEntity;
-import br.fatec.projetoextensao.entities.OrdemServicoEntity;
-import br.fatec.projetoextensao.enums.StatusOsEnum;
-import br.fatec.projetoextensao.repositories.ClienteRepository;
-import br.fatec.projetoextensao.repositories.OrdemServicoRepository;
+import br.fatec.projetoextensao.repositories.RotinasBancoRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -38,46 +31,41 @@ import lombok.RequiredArgsConstructor;
  *
  * A prioridade da OS (RN-OS-16 e RN-OS-17) nasce com o valor do cliente no momento da abertura e pode ser mudada
  * à mão; ela não é recalculada depois.
+ *
+ * ALTERADO (18/11/2026) [E3-10]: a Etapa 3 transformou esse cálculo na função dbo.fn_prioridade_clientes
+ * (etapa3_01_functions.sql), com a MESMA fórmula: 1ª passada soma valor_os das OS não canceladas de cada cliente
+ * numa variável tabela; 2ª passada aplica mínimo + ROUND(faturamento × amplitude ÷ maior, 0). O Java deixou de
+ * percorrer todas as OS (uma consulta de status por OS) e passou a só ler o resultado da função, passando os
+ * limites do application.properties. O arredondamento ROUND(x, 0) do SQL Server é "metade para longe do zero", igual
+ * ao HALF_UP que o Java usava (para valores positivos), então os resultados não mudam (ex.: 0,5 -> 1; 33,33 -> 33).
  */
 @Service
 @RequiredArgsConstructor
 public class PrioridadeClienteService {
 
-    private final ClienteRepository clienteRepository;
-    private final OrdemServicoRepository ordemServicoRepository;
-    private final StatusService statusService;
+    // ALTERADO (18/11/2026) [E3-10]: eram ClienteRepository, OrdemServicoRepository e StatusService, usados no cálculo
+    // em Java. Agora basta a função do banco (RotinasBancoRepository) e os limites da escala (ParametrosSistema).
+    private final RotinasBancoRepository rotinasBanco;
     private final ParametrosSistema parametros;
 
-    /** Prioridade de todos os clientes (código do cliente -> prioridade), calculada de uma vez. */
+    /**
+     * Prioridade de todos os clientes (código do cliente -> prioridade), calculada de uma vez.
+     * ALTERADO (18/11/2026) [E3-10]: era o laço em Java sobre ordemServicoRepository.findAll() e
+     * clienteRepository.findAll(); agora é uma chamada a dbo.fn_prioridade_clientes(mínimo, máximo).
+     */
     @Transactional(readOnly = true)
     Map<Integer, Integer> calcularTodas() {
-        Map<Integer, BigDecimal> faturamento = new HashMap<>();
-        for (OrdemServicoEntity os : ordemServicoRepository.findAll()) {
-            if (statusService.statusAtual(os) == StatusOsEnum.CANCELADA) {
-                continue;
-            }
-            BigDecimal valor = os.getValorOS() == null ? BigDecimal.ZERO : os.getValorOS();
-            faturamento.merge(os.getCliente().getPessoaCodigo(), valor, BigDecimal::add);
-        }
-        BigDecimal maior = faturamento.values().stream().max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO);
-
-        int minimo = parametros.getPrioridadeMinima();
-        BigDecimal amplitude = BigDecimal.valueOf((long) parametros.getPrioridadeMaxima() - minimo);
-        Map<Integer, Integer> prioridades = new HashMap<>();
-        for (ClienteEntity c : clienteRepository.findAll()) {
-            BigDecimal f = faturamento.getOrDefault(c.getPessoaCodigo(), BigDecimal.ZERO);
-            int prioridade = minimo;
-            if (maior.signum() > 0 && f.signum() > 0) {
-                prioridade = minimo + f.multiply(amplitude).divide(maior, 0, RoundingMode.HALF_UP).intValue();
-            }
-            prioridades.put(c.getPessoaCodigo(), prioridade);
-        }
-        return prioridades;
+        return rotinasBanco.prioridadesClientes(parametros.getPrioridadeMinima(), parametros.getPrioridadeMaxima());
     }
 
-    /** Prioridade de um cliente. */
+    /**
+     * Prioridade de um cliente.
+     * ALTERADO (18/11/2026) [E3-10]: era calcularTodas().get(cliente); agora a função é filtrada pelo cliente no próprio
+     * SQL (where cliente_codigo = ?), o que devolve uma linha em vez da lista inteira.
+     */
     @Transactional(readOnly = true)
     int deCliente(ClienteEntity cliente) {
-        return calcularTodas().getOrDefault(cliente.getPessoaCodigo(), parametros.getPrioridadeMinima());
+        return rotinasBanco.prioridadeCliente(cliente.getPessoaCodigo(), parametros.getPrioridadeMinima(),
+                parametros.getPrioridadeMaxima()).orElse(parametros.getPrioridadeMinima());
     }
 }

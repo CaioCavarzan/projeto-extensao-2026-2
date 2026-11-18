@@ -5,13 +5,19 @@
 // (RN-CRO-01); um por dia; dia que já passou não é planejado nem alterado; só entram etapas não concluídas de itens
 // não encerrados; a quantidade não passa do que falta planejar; a fila é renumerada a cada mudança; "Sugerir fila"
 // ordena pela pontuação (score do item) e pelo prazo.
+// ALTERADO (18/11/2026) [E3-37]: novo botão "Replanejar pendências", que chama a procedure dbo.sp_replanejar_cronograma
+// (POST /api/cronogramas/replanejar): as etapas não concluídas de um dia passam para o fim da fila de outro dia (o
+// cronograma do destino é criado se não existir; o dia de origem continua mostrando o que foi planejado). Também
+// passou a tratar o cronograma que ficou sem etapas, o que agora pode acontecer quando uma OS é cancelada (a procedure
+// sp_cancelar_ordem_servico tira as etapas dela dos cronogramas futuros).
 
 import { del, get, post, put } from '../api.js';
 import { MESES, MESES_CURTOS, data, decimalParaCampo, diaMes, hojeISO, isoDe, lerDecimal, nItem, nOs, numero, quantidade, textoOuNulo } from '../formato.js';
 import { montarPagina } from '../layout.js';
+// ALTERADO (18/11/2026) [E3-37]: + caixaInfo e mostrarAvisos (diálogo e resultado do replanejamento).
 import {
-  areaTexto, botao, botaoIcone, cabecalho, campo, cartao, confirmar, dialogo, el, entrada, esqueleto, icone, mostrarErro,
-  ocupado, parametroUrl, selecao, sucesso, trocar, vazio,
+  areaTexto, botao, botaoIcone, cabecalho, caixaInfo, campo, cartao, confirmar, dialogo, el, entrada, esqueleto, icone,
+  mostrarAvisos, mostrarErro, ocupado, parametroUrl, selecao, sucesso, trocar, vazio,
 } from '../ui.js';
 
 const pagina = await montarPagina({ pagina: 'cronograma', titulo: 'Cronograma' });
@@ -40,6 +46,8 @@ if (pagina) {
 
   conteudo.append(el('div', { class: 'pilha' },
     cabecalho('Cronograma', 'Planejamento diário da produção: uma fila de etapas por dia.', [
+      // INCLUÍDO (18/11/2026) [E3-37]: replanejar a partir do dia selecionado no calendário.
+      botao('Replanejar pendências', { icone: 'refresh-cw', onclick: () => dialogoReplanejar(diaSelecionado) }),
       botao('Novo planejamento', { variante: 'primario', icone: 'plus', onclick: () => dialogoNovo(diaSelecionado >= hoje ? diaSelecionado : hoje).catch(mostrarErro) }),
     ]),
     cardCalendario,
@@ -96,6 +104,9 @@ if (pagina) {
       return;
     }
     const acoes = [];
+    // INCLUÍDO (18/11/2026) [E3-37]: o dia que tem cronograma (mesmo passado: é o caso típico, o dia que não terminou)
+    // pode mandar as etapas pendentes para outro dia.
+    if (c.fila.length) acoes.push(botao('Replanejar pendências', { tamanho: 'sm', icone: 'refresh-cw', onclick: () => dialogoReplanejar(c.dataPlanejada) }));
     if (!passado) {
       acoes.push(acaoBotao('Sugerir fila', 'sparkles', () => post(`/cronogramas/${c.codigo}/fila/sugerir`), 'Fila ordenada pela pontuação e pelo prazo.'));
       acoes.push(botao('Incluir etapa', { tamanho: 'sm', icone: 'plus', onclick: () => dialogoIncluir(c).catch(mostrarErro) }));
@@ -125,10 +136,14 @@ if (pagina) {
             el('p', { class: 'texto-xs texto-mudo', text: `Etapa ${e.ordem}. ${e.rotaNome} · planejado ${numero(e.qtdPlanejado)} · prazo ${e.prazoEntrega ? data(e.prazoEntrega) : '—'} · pontuação ${e.pontuacao != null ? numero(e.pontuacao) : '—'}` }))),
         el('div', { class: 'linha' }, botoes));
     });
+    // INCLUÍDO (18/11/2026) [E3-37]: cronograma sem etapas (ficou vazio depois do cancelamento de uma OS pela procedure).
+    const semEtapas = c.fila.length ? null : caixaInfo(passado
+      ? 'Este cronograma ficou sem etapas (as etapas eram de uma OS cancelada).'
+      : 'Este cronograma ficou sem etapas, provavelmente porque a OS delas foi cancelada. Inclua outras etapas ou exclua o cronograma (RN-CRO-01: cronograma precisa de pelo menos uma etapa).', { tipo: 'alerta', nomeIcone: 'triangle-alert' });
     trocar(areaDia, cartao({
       titulo, descricao: `Registrado por ${c.registradoPor || '—'}${c.observacao ? ` · ${c.observacao}` : ''}${passado ? ' · dia encerrado: só consulta' : ''}`,
       acoes: acoes.length ? acoes : null,
-      corpo: el('div', { class: 'pilha-2' }, linhas),
+      corpo: el('div', { class: 'pilha-2' }, semEtapas, linhas),
     }));
   }
 
@@ -251,6 +266,47 @@ if (pagina) {
         dlg.fechar();
         sucesso('Cronograma atualizado.');
         diaSelecionado = r.dataPlanejada;
+        await carregar();
+      } catch (e) {
+        dlg.mostrarErro(e);
+      }
+    }));
+  }
+
+  /**
+   * INCLUÍDO (18/11/2026) [E3-37]: diálogo do replanejamento (procedure dbo.sp_replanejar_cronograma).
+   * Padrões: origem = o dia escolhido; destino = o dia seguinte, mas nunca antes de hoje (RN-CRO-06). Quem registra é
+   * o usuário logado (o back-end não aceita o usuário vindo da tela). O resultado vem com avisos: quantas etapas
+   * entraram, se o cronograma do destino foi criado e, quando não há o que mover, o motivo.
+   */
+  function dialogoReplanejar(diaOrigem) {
+    const amanha = (iso) => isoDe(new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)) + 1));
+    const destinoPadrao = amanha(diaOrigem) < hoje ? hoje : amanha(diaOrigem);
+    const origem = entrada({ type: 'date', value: diaOrigem });
+    const destino = entrada({ type: 'date', value: destinoPadrao, min: hoje });
+    const confirmarBotao = botao('Replanejar', { variante: 'primario', icone: 'refresh-cw' });
+    const dlg = dialogo({
+      titulo: 'Replanejar pendências',
+      descricao: 'As etapas ainda não concluídas do dia de origem (de peças e OS em aberto) entram no fim da fila do dia de destino.',
+      conteudo: el('div', { class: 'pilha-4' },
+        el('div', { class: 'form-grade' },
+          campo('Dia de origem', origem, { largura: 'c3', obrigatorio: true }),
+          campo('Dia de destino', destino, { largura: 'c3', obrigatorio: true, dica: 'Depois da origem e não antes de hoje.' })),
+        caixaInfo('Feito pela procedure do banco sp_replanejar_cronograma. Se o destino não tiver cronograma, ele é criado. O dia de origem continua com as etapas, como registro do que estava planejado.')),
+      botoes: [botao('Cancelar', { onclick: () => dlg.fechar() }), confirmarBotao],
+    });
+    confirmarBotao.addEventListener('click', () => ocupado(confirmarBotao, async () => {
+      dlg.limparErro();
+      try {
+        const r = await post('/cronogramas/replanejar', { dataOrigem: origem.value || null, dataDestino: destino.value || null });
+        dlg.fechar();
+        if (r.etapasMovidas > 0) {
+          // um aviso só, com a lista do back-end (a pilha de avisos mostra no máximo 3 ao mesmo tempo)
+          sucesso(`${r.etapasMovidas} etapa(s) replanejada(s) para ${data(r.dataDestino)}.`, { lista: r.avisos, duracao: 8000 });
+          diaSelecionado = r.dataDestino;
+        } else {
+          mostrarAvisos(r.avisos); // nada a mover: o aviso diz o motivo
+        }
         await carregar();
       } catch (e) {
         dlg.mostrarErro(e);

@@ -34,6 +34,9 @@ public interface ItemRepository extends JpaRepository<ItemEntity, Integer> {
     boolean existsByTinta(TintaEntity tinta);
 
     // INCLUÍDO (20/10/2026): RN-ITE-22: itens com prazo de entrega antes da data (o Service filtra os que não estão encerrados).
+    // ALTERADO (18/11/2026) [E3-11]: sem uso no sistema desde que ItemService.listarAtrasados passou a ler a função
+    // dbo.fn_itens_atrasados. Mantido (não apaga dado nem muda comportamento) para quem quiser comparar as duas
+    // listas; pode ser excluído quando o grupo confirmar a função no SQL Server de produção.
     List<ItemEntity> findByPrazoEntregaBeforeOrderByPrazoEntrega(LocalDate data);
 
     // INCLUÍDO (20/10/2026): RN-IRP-09: itens finalizados no período (base do % de retrabalho).

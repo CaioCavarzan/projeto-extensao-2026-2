@@ -185,6 +185,26 @@ class SegurancaTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * INCLUÍDO (18/11/2026) [E3-53]: RN-SIS-03 na aba Banco de dados: OPERADOR recebe 403 ao consultar os objetos da
+     * Etapa 3, instalar scripts, fazer backup ou restaurar (o @PreAuthorize barra antes de qualquer acesso ao banco).
+     */
+    @Test
+    @WithMockUser(username = "admin.seguranca", roles = "ADMIN")
+    void rnSis03_bancoDeDadosSoAdmin() throws Exception {
+        usuario("operador.banco");
+        mvc.perform(get("/api/banco/situacao").header("Authorization", basic("operador.banco", "senhaForte1")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.mensagens[0]").value("Ação permitida só para administradores."));
+        for (String rota : new String[] {"/api/banco/objetos/instalar", "/api/banco/backup"}) {
+            mvc.perform(post(rota).header("Authorization", basic("operador.banco", "senhaForte1")))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/banco/restauracao").header("Authorization", basic("operador.banco", "senhaForte1"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"confirmacao\":\"RESTAURAR banco_fenix\"}"))
+                .andExpect(status().isForbidden());
+    }
+
     /** INCLUÍDO (21/10/2026): os arquivos do front abrem sem login e levam a Content-Security-Policy. */
     @Test
     void arquivosDoFrontSaoPublicosEComCsp() throws Exception {

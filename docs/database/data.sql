@@ -121,6 +121,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Pedro Henr
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '01514830191', 'Admin / Sistema', 4500.00, '2026-02-02');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 1, 'cardosopedrohenrique2006@gmail.com', '$2a$10$ElnaDfkOPxzr2DeROg8ZRe346yR8iqIV4H8Ifq7vf6G8CDXElW.ae', 'Qual o nome do seu primeiro animal de estimação?', '$2a$10$d60OtVr8GTH7F7nLVhXGOOq.GyFWzoxAiNDYohiHDizXv6.hEuzy.', 1);
+
 -- Caio Henrique Cavarzan - Admin / Sistema
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015163', 'Rua Antônio de Godoy', '2992');
 set @endereco = scope_identity();
@@ -128,6 +129,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Caio Henri
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '18050960790', 'Admin / Sistema', 4200.00, '2026-02-02');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 1, 'caiocavarzan@gmail.com', '$2a$10$Cg9nJasPXCPPD9VbVC/zPOfm7g1FrNaoJKf8/DRs78a.mK7tMpodq', 'Qual o nome da cidade onde você nasceu?', '$2a$10$tWRs7PqCBVltcU6/5tXwyui3kGVesTUnI/Y39qqU5uBGpT9EoOYwq', 1);
+
 -- Gustavo Henrique Vitor - Admin / Sistema
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15025030', 'Rua Amazonas', '784');
 set @endereco = scope_identity();
@@ -135,6 +137,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Gustavo He
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '48885047092', 'Admin / Sistema', 4200.00, '2026-02-02');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 1, 'pexepi123@gmail.com', '$2a$10$W7sZXGStSFXf6R.2o2UajuEfw5g72IXiMhUozG1PNr.h9tQuWqmyq', 'Qual seu time de futebol?', '$2a$10$KtKiy1cQ3bvOw9cIoEe2k.4O3OYTzHACUVKr97KmzvAF7gZEauxn.', 1);
+
 -- Marcio Mateus Gonçalves Filho - Admin / Sistema
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15025104', 'Rua Prudente de Moraes', '607');
 set @endereco = scope_identity();
@@ -142,6 +145,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Marcio Mat
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '08068460705', 'Admin / Sistema', 4350.00, '2026-02-02');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 1, 'goncalvesmarcio06@outlook.com', '$2a$10$.wbx.ewP4VDsesuxx6hIPuvC0vF/eTiYRjaq8Curg2.8yNGCnfAMK', 'Qual foi sua primeira escola?', '$2a$10$0aS7.bnzqPTDEIpbkev.ie16mASDe/BaVsVQLr7cHue24slQtmv7i', 1);
+
 -- Alessandro Ribeiro Marques - Sócio - Administrativo
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15093445', 'Avenida Anísio Haddad', '4882');
 set @endereco = scope_identity();
@@ -149,6 +153,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Alessandro
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '89552282799', 'Sócio - Administrativo', 6800.00, '2018-03-05');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 0, 'fenix.afinanceiro@gmail.com', '$2a$10$PBreE0lpHSZUCRdMc9.PcudFG8h0bgCIYoEjFdXUi4RqM7aRWGd2q', 'Qual o nome da sua mãe?', '$2a$10$qphHhN2cKK2KxdTSnR.KgeYuYjnPTirJKv5zmn/2yeC..mT8PSpe2', 1);
+
 -- Vanessa Fabiana dos Santos Marques - Sócia - CEO
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015488', 'Rua Bernardino de Campos', '247');
 set @endereco = scope_identity();
@@ -156,6 +161,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Vanessa Fa
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '76822739092', 'Sócia - CEO', 7200.00, '2018-03-05');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 0, 'vanessafabianacardoso@gmail.com', '$2a$10$TaVH8oU.QE4hBSi217h4i.w3glc5sMIBUyNT0W4IEQPk.CvkQ5Ftm', 'Qual o nome da sua mãe?', '$2a$10$EPM08XIFUb3xdWYfgrEt2uLJp2gsyoS1Bv1.EXpXJ3/Znqrv072T.', 1);
+
 -- Richard - Pintor
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15045505', 'Avenida Murchid Homsi', '898');
 set @endereco = scope_identity();
@@ -163,6 +169,7 @@ insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Richard', 
 set @pessoa = scope_identity();
 insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) values (@pessoa, '93045698778', 'Pintor', 2850.00, '2023-05-02');
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 0, 'pintor01.fenix@gmail.com', '$2a$10$7wGVQr5gAnVtpbdnr9M.8.1EZUdRBccKeIWHo83Kt.x2lRg3Cze8O', 'Qual o nome do seu primeiro animal de estimação?', '$2a$10$mDumUmSdPrmvEhUB1AF0rOMBYdet0mMLkNZrZfOQzpwUYtIekjJLu', 1);
+
 -- André - Jatista
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015611', 'Rua Marechal Deodoro', '1835');
 set @endereco = scope_identity();
@@ -172,55 +179,62 @@ insert into Funcionarios (pessoa_codigo, cpf, cargo, salario, data_admissao) val
 insert into Usuarios (funcionario_codigo, is_admin, login, senha_hash, pergunta_seguranca, resposta_hash, ativo) values (@pessoa, 0, 'jatista01.fenix@gmail.com', '$2a$10$UiT2XqBA8/61pkSdfTIao.cJe72p2Bm6AO6U8jkcbuezEm55crdSG', 'Qual seu time de futebol?', '$2a$10$jznq/obzR74MG5Yqg5pKH.jnavoAEjlvi5W29bzClq6eAR582FNga', 1);
 
 -- ---------------------------------------------------------------------------------------------
--- 3. Fornecedores (aba Credores + os dois que só aparecem nas tintas).
---    prazo_pagamento = quantos dias a Fênix combinou com o fornecedor para pagar as requisições: 30, 60 ou 90 dias
---    (valores combinados INVENTADOS: nenhuma planilha tem o prazo). CNPJ, e-mail, telefone e endereço INVENTADOS.
+-- 3. Fornecedores
 -- ---------------------------------------------------------------------------------------------
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15060204', 'Rua Vitorino de Lemos', '1731');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Epristintas', 'comercial.epristintas@example.com', '1730017837', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '76565093000163', 1, '30 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015689', 'Avenida Alberto Andaló', '540');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Inove / Realsi', 'comercial.inove.realsi@example.com', '1738368871', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '21197038000176', 1, '60 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15020849', 'Rua Campos Sales', '991');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Novar', 'comercial.novar@example.com', '1738429542', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '08843424000120', 1, '30 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15085756', 'Avenida José Munia', '217');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('WEG Tintas', 'comercial.weg.tintas@example.com', '17912926924', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '03195657000140', 1, '90 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015951', 'Avenida Coronel Spínola de Castro', '3542');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Concigas', 'comercial.concigas@example.com', '17925934719', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '70441584000116', 1, '30 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15085922', 'Avenida Francisco Chagas de Oliveira', '108');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Espafer - Granalha', 'comercial.espafer.granalha@example.com', '17964041288', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '54144989000136', 1, '60 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15025742', 'Rua Goiás', '2450');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Calmon - Granalha', 'comercial.calmon.granalha@example.com', '17936051508', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '80557015000194', 1, '60 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15015943', 'Avenida Duque de Caxias', '4192');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('FlexTintas', 'comercial.flextintas@example.com', '17945535103', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '80361052000122', 1, '30 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15020005', 'Rua XV de Novembro', '2365');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('5 S Tintas', 'comercial.5.s.tintas@example.com', '1731037608', @endereco);
 set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '52493479000149', 1, '90 dias');
+
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15090470', 'Avenida Lauro Pereira', '896');
 set @endereco = scope_identity();
 insert into Pessoas (nome, email, telefone, endereco_codigo) values ('Space Colors', 'comercial.space.colors@example.com', '1739868426', @endereco);
@@ -228,10 +242,7 @@ set @pessoa = scope_identity();
 insert into Fornecedores (pessoa_codigo, cnpj, ativo, prazo_pagamento) values (@pessoa, '02153100000183', 1, '60 dias');
 
 -- ---------------------------------------------------------------------------------------------
--- 4. Clientes (aba Identificação): 26 clientes, os das 12 OSs mais outros da planilha.
---    Telefone de contato e nome do contato vêm da planilha quando existem. CNPJ real só nos 3 que a planilha tem;
---    todos os outros CPF/CNPJ, e-mails e endereços são INVENTADOS. Fonte de aquisição: a da planilha quando existe.
---    Telefones gravados só com dígitos (o sistema grava assim e a tela aplica a máscara).
+-- 4. Clientes 
 -- ---------------------------------------------------------------------------------------------
 -- Vai e Vem (ID 1 na planilha) - PJ; fonte inventada
 insert into Enderecos (uf, cidade, cep, logradouro, nr_imovel) values ('SP', 'São José do Rio Preto', '15062610', 'Rua Flavio Bianchini', '8445');
@@ -417,9 +428,7 @@ insert into Clientes (pessoa_codigo, fonte_codigo, observacao) values (@pessoa, 
 insert into PessoasFisicas (cliente_codigo, cpf, nome_social) values (@pessoa, '07176274037', null);
 
 -- ---------------------------------------------------------------------------------------------
--- 5. Tintas (aba Cadastros): as 58 de fornecedor identificado, de 101 cadastradas (as outras 43 não têm fornecedor).
---    Tipo e acabamento com a grafia da lista do sistema (Poliéster, Híbrido, Atlântico).
---    Preço: o da planilha; onde estava vazio (marcado 'preço inventado') foi sorteado entre 20 e 56 por kg.
+-- 5. Tintas
 -- ---------------------------------------------------------------------------------------------
 insert into Tintas (fornecedor_codigo, cor_codigo, descricao, tipo, acabamento, ref_fornecedor, estoque_atual, valor_unit) values
     ((select codigo from Pessoas where nome = 'Epristintas'), (select codigo from Cores where nome = 'Branco Azulado Lipa'), 'Branco Azulado Brilhante Hibrido', null, null, 'B-1157', 13.50, 28.00),
@@ -482,10 +491,7 @@ insert into Tintas (fornecedor_codigo, cor_codigo, descricao, tipo, acabamento, 
     ((select codigo from Pessoas where nome = 'WEG Tintas'), (select codigo from Cores where nome = 'Marrom Mesclado'), 'Politherm 46 WR R MT Marrom Mediterraneo Mesclado', 'Poliéster', null, '10888950', 25.00, 27.05);  -- preço inventado
 
 -- ---------------------------------------------------------------------------------------------
--- 6. Ordens de serviço: 12 OSs reais da planilha (número, cliente, itens e valores), adaptadas ao banco do sistema.
---    Status da planilha -> status do sistema: Entregue/Concluída -> Concluída; Em Produção -> Em produção; Pendente -> Criada;
---    Pausada e Cancelada iguais. valor_os = soma dos itens não cancelados. prioridade = prioridade do cliente pelo
---    faturamento (0 a 100, regra de 22/10) sobre as OSs desta carga. Quem abriu a OS: um dos administradores do grupo.
+-- 6. Ordens de serviço
 -- ---------------------------------------------------------------------------------------------
 set identity_insert OrdensDeServico on;
 insert into OrdensDeServico (nr_os, cliente_codigo, usuario_codigo, data_entrada, valor_os, prioridade) values
@@ -505,10 +511,6 @@ set identity_insert OrdensDeServico off;
 
 -- ---------------------------------------------------------------------------------------------
 -- 7. Itens das OSs, com fotos, etapas (ItensRotasProcessos) e histórico de status de cada item.
---    Rota: Jato -> Jateamento; Jato e Pintura/Reforma -> Jateamento, Pintura; Banho | Pintura -> Banho, Pintura; Pintura -> Pintura.
---    ('Pintura | Jato' da planilha foi ordenado como Jateamento, Pintura.) Cor/tinta só nos itens com Pintura; a tinta é uma
---    das cadastradas com a mesma cor. Operador: André (Jateamento, Banho) e Richard (Pintura). Datas das etapas inventadas
---    a partir da entrada e da finalização da planilha, só em dias úteis (12/10 é feriado).
 -- ---------------------------------------------------------------------------------------------
 
 -- OS 1 (OS 859 na planilha) - Brazil Metais - Concluída
@@ -836,7 +838,7 @@ insert into HistoricosStatusItens (item_codigo, status_item_codigo, data_hora) v
     (@item, (select codigo from StatusItens where status = 'Pendente'), '2026-10-07T10:33:00');
 
 -- ---------------------------------------------------------------------------------------------
--- 8. Histórico de status das OSs. Criada = abertura da OS; Em produção = início da 1ª etapa (regra RN-OS-06);
+-- 8. Histórico de status das OSs. Criada = abertura da OS; Em produção = início da 1ª etapa;
 --    Concluída = pouco depois da última etapa (todos os itens Executada); Pausada e Cancelada: datas inventadas.
 -- ---------------------------------------------------------------------------------------------
 insert into HistoricosStatusOs (os_codigo, status_codigo, data_hora) values
@@ -870,9 +872,7 @@ insert into HistoricosStatusOs (os_codigo, status_codigo, data_hora) values
     (12, (select codigo from StatusOs where status = 'Criada'), '2026-10-07T10:33:00');
 
 -- ---------------------------------------------------------------------------------------------
--- 9. Cronogramas (um por dia) e a fila de etapas de cada dia (CronogramasItens). Os dias passados repetem as etapas
---    que começaram naquele dia; hoje (22/10) e os próximos dias planejam o que ainda falta. A quantidade planejada de
---    uma etapa nunca passa da quantidade do item. pontuacao fica NULL (a fórmula de pontuação foi retirada).
+-- 9. Cronogramas (um por dia) e a fila de etapas de cada dia (CronogramasItens).
 -- ---------------------------------------------------------------------------------------------
 
 -- Cronograma de 30/09/2026

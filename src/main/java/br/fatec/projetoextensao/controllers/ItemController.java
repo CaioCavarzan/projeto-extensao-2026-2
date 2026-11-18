@@ -20,6 +20,7 @@ import br.fatec.projetoextensao.dtos.EntregaRequest;
 import br.fatec.projetoextensao.dtos.EtapaResponse;
 import br.fatec.projetoextensao.dtos.FotoResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
+import br.fatec.projetoextensao.dtos.ItemAtrasadoResponse;
 import br.fatec.projetoextensao.dtos.ItemAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.NovaEtapaRequest;
@@ -49,8 +50,10 @@ public class ItemController {
         return itemService.listarTodos();
     }
 
+    // ALTERADO (18/11/2026) [E3-18]: era List<ItemResponse>; agora a lista vem da função dbo.fn_itens_atrasados e cada
+    // linha é um ItemAtrasadoResponse (com cliente, dias de atraso, etapa pendente e operador).
     @GetMapping("/atrasados")
-    public List<ItemResponse> atrasados() {
+    public List<ItemAtrasadoResponse> atrasados() {
         return itemService.listarAtrasados();
     }
 

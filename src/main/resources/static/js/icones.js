@@ -98,6 +98,8 @@ const ICONES = {
   'flame': '<path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4" />',
   'trending-up': '<path d="M16 7h6v6" /> <path d="m22 7-8.5 8.5-5-5L2 17" />',
   'trending-down': '<path d="M16 17h6v-6" /> <path d="m22 17-8.5-8.5-5 5L2 7" />',
+  // INCLUÍDO (18/11/2026) [E3-39]: ícone "database" do Lucide 0.545.0, usado na aba Configurações > Banco de dados.
+  'database': '<ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 5V19A9 3 0 0 0 21 19V5" /> <path d="M3 12A9 3 0 0 0 21 12" />',
 };
 
 const SVG = 'http://www.w3.org/2000/svg';

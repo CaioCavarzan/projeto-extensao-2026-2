@@ -20,6 +20,8 @@ import br.fatec.projetoextensao.dtos.CronogramaAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.CronogramaEtapaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaResponse;
+import br.fatec.projetoextensao.dtos.ReplanejamentoRequest;
+import br.fatec.projetoextensao.dtos.ReplanejamentoResponse;
 import br.fatec.projetoextensao.services.CronogramaService;
 import lombok.RequiredArgsConstructor;
 
@@ -84,5 +86,14 @@ public class CronogramaController {
     @PostMapping("/{codigo}/fila/sugerir")
     public CronogramaResponse sugerirFila(@PathVariable("codigo") int codigo) {
         return cronogramaService.sugerirFila(codigo);
+    }
+
+    /**
+     * INCLUÍDO (18/11/2026) [E3-18]: replanejar as etapas pendentes de um dia para outro, pela procedure
+     * dbo.sp_replanejar_cronograma. Corpo: {"dataOrigem": "2026-11-18", "dataDestino": "2026-11-19"}.
+     */
+    @PostMapping("/replanejar")
+    public ReplanejamentoResponse replanejar(@RequestBody ReplanejamentoRequest dto) {
+        return cronogramaService.replanejar(dto);
     }
 }

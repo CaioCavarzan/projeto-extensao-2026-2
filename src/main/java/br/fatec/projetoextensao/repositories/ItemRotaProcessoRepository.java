@@ -37,6 +37,9 @@ public interface ItemRotaProcessoRepository extends JpaRepository<ItemRotaProces
     List<ItemRotaProcessoEntity> findByDataConclusaoIsNull();
 
     // INCLUÍDO (21/10/2026): dashboard: etapas concluídas no dia (DashboardService.resumo).
+    // ALTERADO (18/11/2026) [E3-15]: sem uso no sistema desde que DashboardService.resumo passou a somar as etapas
+    // concluídas hoje pela view dbo.vw_produtividade_funcionario. Mantido (não muda comportamento) para conferência;
+    // pode ser excluído quando o grupo confirmar a view no SQL Server de produção.
     long countByDataConclusaoGreaterThanEqualAndDataConclusaoLessThan(LocalDateTime inicio, LocalDateTime fim);
 
 }

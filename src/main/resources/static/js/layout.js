@@ -163,7 +163,8 @@ function barraTopo(usuario, admin, aoAlternar) {
       atrasados.slice(0, 4).forEach((i) => itens.push(itemMenu('', () => { location.href = `peca.html?codigo=${i.codigo}`; }, {
         detalhe: el('div', { class: 'largura-total' },
           el('div', { class: 'linha-entre' }, el('span', { class: 'medio', text: `${nOs(i.osNumero)} · item ${nItem(i.codigo)} atrasado` }), status('Atrasada')),
-          el('span', { class: 'texto-xs texto-mudo', text: `Prazo ${diaMes(i.prazoEntrega)} · ${i.descricao}` })),
+          // ALTERADO (18/11/2026) [E3-35]: + dias de atraso, campo da função dbo.fn_itens_atrasados (GET /api/itens/atrasados).
+          el('span', { class: 'texto-xs texto-mudo', text: `Prazo ${diaMes(i.prazoEntrega)} (${i.diasAtraso} dia(s)) · ${i.descricao}` })),
       })));
       if (atrasados.length > 4) itens.push(itemMenu(`Ver os ${atrasados.length} itens atrasados`, () => { location.href = 'pecas.html?atrasadas=1'; }, { nomeIcone: 'arrow-right' }));
       const pausadas = resumo.osPorStatus?.['Pausada'] || 0;

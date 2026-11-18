@@ -265,7 +265,9 @@ if (pagina) {
 
   async function carregar() {
     try {
-      const [lista, ordens, listaFontes] = await Promise.all([get('/clientes'), get('/ordens'), ref.fontes()]);
+      // ALTERADO (18/11/2026) [E3-42]: era get('/ordens'). Para somar OS e valor por cliente basta o painel da view
+      // vw_painel_ordens_servico (clienteCodigo, status e valorOs com os mesmos nomes), sem carregar itens e fotos.
+      const [lista, ordens, listaFontes] = await Promise.all([get('/clientes'), get('/ordens/painel'), ref.fontes()]);
       clientes = lista.sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao));
       fontes = listaFontes;
       resumoOs = new Map();

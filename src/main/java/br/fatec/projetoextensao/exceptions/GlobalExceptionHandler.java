@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.core.io.ClassPathResource;
+// INCLUÍDO (18/11/2026) [E3-04]: tipos de exceção em que o erro de um trigger/procedure da Etapa 3 pode chegar.
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -40,6 +43,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import br.fatec.projetoextensao.dtos.ErroResponse;
 import br.fatec.projetoextensao.security.Perfis;
+import jakarta.persistence.PersistenceException;
 
 /**
  * INCLUÍDO (20/10/2026): RN-SIS-07. Toda regra violada vira uma resposta com mensagem clara (coluna K da planilha) e
@@ -57,6 +61,10 @@ import br.fatec.projetoextensao.security.Perfis;
  * classe-mãe ResponseEntityExceptionHandler, com o status correto.
  * ALTERADO (21/10/2026): esses erros padrão passaram a sair também no formato ErroResponse e em português
  * (handleExceptionInternal, no fim da classe); antes saíam no formato padrão do Spring, em inglês, que a tela não lê.
+ * ALTERADO (18/11/2026) [E3-04]: erros dos objetos da Etapa 3 (THROW 5xxxx das procedures e triggers e objeto não
+ * instalado) passam por ErrosBanco: saem com a mensagem escrita no script e o status certo (400, 404, 409 ou 503),
+ * venham eles como DataIntegrityViolationException, DataAccessException, PersistenceException ou
+ * TransactionSystemException. Novo: ObjetoBancoAusenteException -> 503.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -133,6 +141,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /** RN-SIS-07: erro do banco traduzido pela constraint; RN-SIS-12: registro em uso (FK) não é excluído. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> integridade(DataIntegrityViolationException ex, WebRequest request) {
+        // INCLUÍDO (18/11/2026) [E3-04]: antes de procurar o nome da constraint, confere se o erro veio de um objeto
+        // da Etapa 3. Por quê: o Spring classifica alguns erros do SQL Server como "violação de integridade" (ex.:
+        // 8115, estouro aritmético) e, sem esta linha, a mensagem do trigger/procedure seria trocada pela genérica
+        // "os dados não respeitam uma regra do banco".
+        ResponseEntity<ErroResponse> daEtapa3 = respostaDoErroDoBanco(ex, request);
+        if (daEtapa3 != null) {
+            return daEtapa3;
+        }
         String detalhe = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase(Locale.ROOT);
         String mensagem = null;
         for (Map.Entry<String, String> e : MENSAGENS_DO_BANCO.entrySet()) {
@@ -149,6 +165,43 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         log.warn("Violação de integridade traduzida para '{}': {}", mensagem, ex.getMostSpecificCause().getMessage());
         return resposta(HttpStatus.CONFLICT, "Conflito", List.of(mensagem), request);
+    }
+
+    /**
+     * INCLUÍDO (18/11/2026) [E3-04]: erro levantado por um objeto da Etapa 3 (THROW das procedures e dos triggers, ou
+     * objeto não instalado) que não foi convertido pelo Service. Acontece, por exemplo, quando o trigger recusa a
+     * gravação no flush do Hibernate ou no commit da transação: aí a exceção chega como DataAccessException (Spring),
+     * PersistenceException (Hibernate) ou TransactionSystemException (commit), com a SQLException lá dentro.
+     * ErrosBanco acha o código (50110, 50120...) e a resposta sai com a mensagem do script e o status certo; sem
+     * código conhecido, segue o tratamento de erro inesperado (500 com mensagem genérica, detalhe só no log).
+     */
+    @ExceptionHandler({DataAccessException.class, PersistenceException.class, TransactionSystemException.class})
+    public ResponseEntity<ErroResponse> erroDoBanco(RuntimeException ex, WebRequest request) {
+        ResponseEntity<ErroResponse> daEtapa3 = respostaDoErroDoBanco(ex, request);
+        return daEtapa3 != null ? daEtapa3 : inesperado(ex, request);
+    }
+
+    /** INCLUÍDO (18/11/2026) [E3-04]: objeto da Etapa 3 não instalado no banco: 503, com o nome do objeto e o script. */
+    @ExceptionHandler(ObjetoBancoAusenteException.class)
+    public ResponseEntity<ErroResponse> objetoAusente(ObjetoBancoAusenteException ex, WebRequest request) {
+        log.error("Objeto da Etapa 3 ausente no banco: {}", ex.getObjeto().getNome());
+        return resposta(HttpStatus.SERVICE_UNAVAILABLE, "Serviço indisponível", List.of(ex.getMessage()), request);
+    }
+
+    /** INCLUÍDO (18/11/2026) [E3-04]: resposta para o erro do banco traduzido por ErrosBanco, ou null se não houver tradução. */
+    private ResponseEntity<ErroResponse> respostaDoErroDoBanco(Exception ex, WebRequest request) {
+        RuntimeException traduzida = ErrosBanco.traduzir(ex);
+        if (traduzida == null) {
+            return null;
+        }
+        log.debug("Erro do banco traduzido ({}): {}", traduzida.getClass().getSimpleName(), traduzida.getMessage());
+        if (traduzida instanceof RegraNegocioException r) {
+            return regraNegocio(r, request);
+        }
+        if (traduzida instanceof RecursoNaoEncontradoException n) {
+            return naoEncontrado(n, request);
+        }
+        return objetoAusente((ObjetoBancoAusenteException) traduzida, request);
     }
 
     /** RN-FOT-06: arquivo acima do limite de upload (spring.servlet.multipart.max-file-size). */
