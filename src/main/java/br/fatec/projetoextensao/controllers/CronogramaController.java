@@ -26,10 +26,11 @@ import br.fatec.projetoextensao.services.CronogramaService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): cronograma diário de produção. Um cronograma por dia (RN-CRO-02), gravado já com pelo
- * menos uma etapa (RN-CRO-01) e com o usuário logado (RN-CRO-04). A fila é renumerada 0, 1, 2... ao incluir,
- * remover ou reordenar (RN-CRI-07); POST /{codigo}/fila/sugerir ordena pela pontuação e pelo prazo (RN-CRI-09).
+ * Cronograma diário de produção. Um cronograma por dia, gravado já com pelo
+ * menos uma etapa e com o usuário logado. A fila é renumerada 0, 1, 2... ao incluir,
+ * remover ou reordenar; POST /{codigo}/fila/sugerir ordena pela pontuação e pelo prazo.
  */
+
 @RestController
 @RequestMapping("/api/cronogramas")
 @RequiredArgsConstructor
@@ -87,11 +88,7 @@ public class CronogramaController {
     public CronogramaResponse sugerirFila(@PathVariable("codigo") int codigo) {
         return cronogramaService.sugerirFila(codigo);
     }
-
-    /**
-     * INCLUÍDO (18/11/2026) [E3-18]: replanejar as etapas pendentes de um dia para outro, pela procedure
-     * dbo.sp_replanejar_cronograma. Corpo: {"dataOrigem": "2026-11-18", "dataDestino": "2026-11-19"}.
-     */
+   
     @PostMapping("/replanejar")
     public ReplanejamentoResponse replanejar(@RequestBody ReplanejamentoRequest dto) {
         return cronogramaService.replanejar(dto);

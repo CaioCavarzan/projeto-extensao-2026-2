@@ -15,21 +15,9 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-06]: chamada das 3 stored procedures da Etapa 3 no SQL Server, pelo JDBC.
- *
- * Como uma procedure com OUTPUT é chamada em Java (passo a passo, igual nos três métodos):
- * <ol>
- *   <li>descarregarJpa(): manda ao banco o que o Hibernate ainda não gravou nesta transação (flush), porque a
- *       procedure só enxerga o que já está no banco;</li>
- *   <li>"{call dbo.sp_nome(?, ?, ?)}": sintaxe padrão do JDBC para procedure, um ? por parâmetro, na ordem do
- *       script;</li>
- *   <li>setInt / setBigDecimal / setDate: parâmetros de entrada;</li>
- *   <li>registerOutParameter: avisa o driver que aquele ? é OUTPUT e de que tipo SQL ele é;</li>
- *   <li>execute() e depois getInt / getBigDecimal no índice do OUTPUT.</li>
- * </ol>
- * O JdbcTemplate pega a conexão da transação do Spring (a mesma do Hibernate) e converte SQLException em
- * DataAccessException; o código do THROW da procedure continua na causa (ErrosBanco lê de lá).
+ * Chamada das 3 stored procedures da Etapa 3 no SQL Server, pelo JDBC.
  */
+
 @Repository
 @RequiredArgsConstructor
 public class ProcedimentosBancoSqlServer implements ProcedimentosBanco {
@@ -78,7 +66,6 @@ public class ProcedimentosBancoSqlServer implements ProcedimentosBanco {
         return movidas == null ? 0 : movidas;
     }
 
-    /** O mesmo cuidado do RotinasBancoRepository: flush antes do JDBC, dentro de transação de escrita. */
     private void descarregarJpa() {
         if (TransactionSynchronizationManager.isActualTransactionActive()
                 && !TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {

@@ -16,27 +16,19 @@ import br.fatec.projetoextensao.security.Perfis;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-15]: indicadores de produção lidos das views da Etapa 3, para a aba Produtividade da
+ * Indicadores de produção lidos das views da Etapa 3, para a aba Produtividade da
  * tela Produção e para os relatórios (Produção diária, Produtividade e Retrabalho mensal).
- * <ul>
- *   <li>produtividade(inicio, fim): linhas da dbo.vw_produtividade_funcionario no período;</li>
- *   <li>retrabalhoMensal(meses): linhas da dbo.vw_retrabalho_mensal dos últimos meses.</li>
- * </ul>
- * O % de retrabalho de um período qualquer (ex.: de 05/11 a 18/11) continua em
- * ItemRotaProcessoService.percentualRetrabalho, em Java: a view agrupa por mês e não responde a um intervalo de dias.
  */
+
 @Service
 @RequiredArgsConstructor
 public class IndicadorService {
 
-    /** Limite do período de produtividade: um ano (evita consulta enorme por engano na tela). */
     static final long MAX_DIAS_PRODUTIVIDADE = 366;
-    /** Limite de meses do retrabalho mensal: três anos. */
     static final int MAX_MESES_RETRABALHO = 36;
 
     private final RotinasBancoRepository rotinasBanco;
 
-    /** Etapas concluídas por dia, funcionário e processo entre inicio e fim (inclusive). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<ProdutividadeResponse> produtividade(LocalDate inicio, LocalDate fim) {
@@ -49,7 +41,6 @@ public class IndicadorService {
         return rotinasBanco.produtividade(inicio, fim);
     }
 
-    /** % de retrabalho de cada mês, do mês de (hoje - meses + 1) até o atual. Mês sem item executado não aparece. */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<RetrabalhoMensalResponse> retrabalhoMensal(int meses) {

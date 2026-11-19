@@ -3,9 +3,10 @@ package br.fatec.projetoextensao.dtos;
 import java.util.List;
 
 /**
- * INCLUÍDO (20/10/2026). Cliente devolvido pela API. tipo = "PF" ou "PJ"; nomeExibicao = nome social quando houver (RN-PF-06);
- * papeis = todos os papéis da pessoa (RN-PES-02); avisos = mensagens que não impedem a gravação (RN-PES-02, RN-CLI-03).
+ * Cliente devolvido pela API. tipo = "PF" ou "PJ"; nomeExibicao = nome social quando houver;
+ * papeis = todos os papéis da pessoa; avisos = mensagens que não impedem a gravação.
  */
+
 public record ClienteResponse(
         int codigo,
         String tipo,

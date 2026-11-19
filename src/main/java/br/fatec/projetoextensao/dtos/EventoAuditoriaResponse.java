@@ -3,7 +3,7 @@ package br.fatec.projetoextensao.dtos;
 import java.time.LocalDateTime;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-19]: um evento da linha do tempo da OS, lido da função dbo.fn_auditoria_timeline_os
+ * Um evento da linha do tempo da OS, lido da função dbo.fn_auditoria_timeline_os
  * (aba Auditoria da tela da OS).
  *
  * categoria: "Ordem de Serviço", "Peça (Item)" ou "Etapa de Produção", como a função devolve.
@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
  * HistoricosStatusItens só têm a data e o status). Para não induzir a erro na tela, o Java acrescenta
  * papelResponsavel, que diz o que esse nome significa: "abriu a OS" ou "operador da etapa".
  */
+
 public record EventoAuditoriaResponse(
         long sequencia,
         int osNumero,

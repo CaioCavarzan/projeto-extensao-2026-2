@@ -64,13 +64,6 @@ public class ItemEntity{
     @Column(name = "valor_total_item")
     private BigDecimal valorTotalPeca;
 
-    // ALTERADO (18/11/2026) [E3-07]: era @Column(name = "data_finalizacao"), preenchida pelo Java
-    // (StatusService.mudarStatus, RN-ITE-26). Agora quem preenche é o trigger
-    // trg_historicos_status_itens_sincronizar_item_e_os, quando o item recebe o status 'Executada' no histórico
-    // (com a mesma proteção do CHECK ck_itens_datas_fim: nunca antes da data de entrada). insertable = false e
-    // updatable = false: o Hibernate não escreve mais a coluna; sem isso, qualquer UPDATE posterior do item (ex.:
-    // registrar a entrega com nr_ose) gravaria por cima o valor que está na memória e apagaria a data do trigger.
-    // O StatusService relê o item depois do status 'Executada' (EntityManager.refresh).
     @Column(name = "data_finalizacao", insertable = false, updatable = false)
     private LocalDateTime dataFinalizacao;
     

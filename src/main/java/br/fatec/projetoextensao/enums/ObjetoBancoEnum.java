@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-02]: catálogo dos 13 objetos de banco da Etapa 3 que o Java passou a acionar
+ * Catálogo dos 13 objetos de banco da Etapa 3
  * (scripts docs/database/functions.sql, views.sql, procedures.sql e triggers.sql).
  *
  * Por que existe: o mesmo nome de objeto aparece em vários lugares (consultas do RotinasBancoRepository, chamadas do
@@ -19,6 +19,7 @@ import java.util.Locale;
  *   <li>onde o sistema usa o objeto, mostrado na tela para o grupo achar o código Java correspondente.</li>
  * </ul>
  */
+
 public enum ObjetoBancoEnum {
 
     FN_VALOR_OS("dbo.fn_valor_os", "FN", "Função escalar", Scripts.FUNCTIONS,
@@ -64,8 +65,6 @@ public enum ObjetoBancoEnum {
 
     /**
      * Nomes dos scripts do grupo, na ordem em que precisam rodar (copiados para o classpath em bancodados/).
-     * ALTERADO (19/11/2026): nomes curtos (antes etapa3_01_functions.sql a etapa3_04_triggers.sql). Como o nome
-     * do arquivo não diz mais a ordem, ela vale só por ETAPA3_EM_ORDEM.
      */
     public static final class Scripts {
         public static final String FUNCTIONS = "functions.sql";
@@ -98,17 +97,14 @@ public enum ObjetoBancoEnum {
         this.usoNoSistema = usoNoSistema;
     }
 
-    /** Nome com o schema, como está nos scripts (ex.: dbo.fn_valor_os). */
     public String getNome() {
         return nome;
     }
 
-    /** Nome sem o schema (ex.: fn_valor_os), como fica na coluna sys.objects.name. */
     public String getNomeSemSchema() {
         return nome.substring(nome.indexOf('.') + 1);
     }
 
-    /** Código do tipo em sys.objects.type (FN, IF, TF, V, P, TR). */
     public String getTipoSqlServer() {
         return tipoSqlServer;
     }
@@ -129,10 +125,6 @@ public enum ObjetoBancoEnum {
         return usoNoSistema;
     }
 
-    /**
-     * Objeto do catálogo citado num texto (ex.: a mensagem "Invalid object name 'dbo.fn_itens_atrasados'" do SQL
-     * Server). Procura pelo nome sem o schema, que aparece em qualquer idioma da mensagem; null se nenhum aparece.
-     */
     public static ObjetoBancoEnum citadoEm(String texto) {
         if (texto == null) {
             return null;

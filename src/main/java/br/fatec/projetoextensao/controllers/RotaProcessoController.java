@@ -19,11 +19,12 @@ import br.fatec.projetoextensao.services.RotaProcessoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): etapas do processo (tabela RotasProcessos: Jateamento, Banho e Pintura, RN-ROT-01).
+ * Etapas do processo (tabela RotasProcessos: Jateamento, Banho e Pintura).
  * A Pintura não é renomeada nem excluída, porque as regras do item a reconhecem pelo nome.
- * Listar: ADMIN e OPERADOR (as telas usam a lista nas caixas de seleção). Cadastrar, renomear e excluir: só ADMIN
- * (RN-SIS-03: alterar as listas de apoio). Registro em uso não é excluído (RN-SIS-12).
+ * Listar: ADMIN e OPERADOR (as telas usam a lista nas caixas de seleção). Cadastrar, renomear e excluir: só ADMIN. 
+ * Registro em uso não é excluído.
  */
+
 @RestController
 @RequestMapping("/api/etapas")
 @RequiredArgsConstructor

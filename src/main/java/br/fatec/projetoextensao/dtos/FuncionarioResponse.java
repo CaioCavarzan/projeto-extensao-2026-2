@@ -5,9 +5,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * INCLUÍDO (20/10/2026). Funcionário devolvido pela API. salario vem null para OPERADOR (RN-FUN-09).
+ * Funcionário devolvido pela API. salario vem null para OPERADOR.
  * temAcesso = tem usuário; acessoAtivo = usuário ativo (null quando não tem usuário).
  */
+
 public record FuncionarioResponse(
         int codigo,
         String nome,

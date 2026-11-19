@@ -15,10 +15,11 @@ import br.fatec.projetoextensao.services.UsuarioService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): gestão de usuários, só ADMIN (RN-SIS-03). O usuário é criado pelo próprio funcionário no
- * cadastre-se (RN-USU-02); aqui o ADMIN muda o perfil (RN-USU-03) e bloqueia ou desbloqueia o acesso (RN-USU-04),
- * sem tirar o último ADMIN ativo (RN-USU-06). {codigo} é o código do funcionário dono do acesso (RN-USU-09).
+ * Gestão de usuários, só ADMIN. O usuário é criado pelo próprio funcionário no
+ * cadastre-se; aqui o ADMIN muda o perfil e bloqueia ou desbloqueia o acesso,
+ * sem tirar o último ADMIN ativo. {codigo} é o código do funcionário dono do acesso.
  */
+
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor

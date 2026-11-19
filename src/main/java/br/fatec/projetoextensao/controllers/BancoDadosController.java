@@ -14,8 +14,8 @@ import br.fatec.projetoextensao.services.BancoDadosService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-18]: aba Configurações > Banco de dados. Todos os métodos do BancoDadosService exigem
- * o perfil ADMIN (@PreAuthorize, RN-SIS-03); o OPERADOR recebe 403.
+ * Aba Configurações > Banco de dados. Todos os métodos do BancoDadosService exigem
+ * o perfil ADMIN (@PreAuthorize); o OPERADOR recebe 403.
  * <ul>
  *   <li>GET  /api/banco/situacao: os 13 objetos da Etapa 3 (instalados ou não) e o último backup;</li>
  *   <li>POST /api/banco/objetos/instalar: roda functions/views/procedures/triggers.sql (CREATE OR ALTER);</li>
@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
  *   <li>POST /api/banco/restauracao: rotina 2 do backup_restore.sql, com {"confirmacao": "RESTAURAR banco_fenix"}.</li>
  * </ul>
  */
+
 @RestController
 @RequestMapping("/api/banco")
 @RequiredArgsConstructor

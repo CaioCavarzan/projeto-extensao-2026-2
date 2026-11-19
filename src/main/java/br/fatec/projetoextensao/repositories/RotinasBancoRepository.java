@@ -25,27 +25,10 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-05]: leitura das 4 functions e das 3 views da Etapa 3 (scripts functions.sql e
+ * Leitura das 4 functions e das 3 views da Etapa 3 (scripts functions.sql e
  * views.sql). É o único lugar do Java que escreve SQL para esses objetos.
- *
- * Por que JdbcClient (SQL "puro") e não um repository do Spring Data:
- * <ul>
- *   <li>as functions de tabela (fn_itens_atrasados, fn_prioridade_clientes, fn_auditoria_timeline_os) e as views
- *       devolvem linhas que não são entidades: não têm @Entity nem chave, são relatórios prontos;</li>
- *   <li>cada linha vira direto o DTO que a API devolve (ItemAtrasadoResponse, PainelOsResponse...), sem passar por
- *       entidade e sem o Hibernate guardar nada na memória da transação.</li>
- * </ul>
- * O JdbcClient usa a MESMA conexão e a MESMA transação do JPA (o JpaTransactionManager do Spring Boot entrega a
- * conexão do Hibernate ao JDBC), então a consulta enxerga o que a transação já gravou.
- *
- * Cuidado que este repository resolve sozinho: o Hibernate junta as alterações e só manda o INSERT/UPDATE ao banco
- * no "flush" (normalmente no fim da transação, ou antes de uma consulta JPQL). Uma consulta JDBC NÃO provoca esse
- * flush. Sem ele, por exemplo, a fn_prioridade_clientes não veria o valor de uma OS que acabou de mudar na mesma
- * transação. Por isso todo método chama descarregarJpa() antes de consultar.
- *
- * O SQL abaixo é o mesmo no SQL Server e no H2 dos testes automáticos (lá os objetos são imitados pelo arquivo
- * src/test/resources/etapa3-h2.sql), por isso só usa SQL padrão: select, where, order by, group by.
  */
+
 @Repository
 @RequiredArgsConstructor
 public class RotinasBancoRepository {
@@ -55,7 +38,6 @@ public class RotinasBancoRepository {
 
     // ------------------------------------------------------------------ functions
 
-    /** dbo.fn_valor_os(@nr_os): soma de valor_total_item dos itens não cancelados da OS (null conta como 0). */
     public BigDecimal valorOs(int numeroOs) {
         descarregarJpa();
         return jdbc.sql("select dbo.fn_valor_os(:nrOs)")
@@ -64,10 +46,6 @@ public class RotinasBancoRepository {
                 .single();
     }
 
-    /**
-     * dbo.fn_itens_atrasados(@data_referencia): peças com prazo antes da data de referência e status diferente de
-     * 'Executada' e 'Cancelada' (RN-ITE-22). Ordem: mais dias de atraso primeiro.
-     */
     public List<ItemAtrasadoResponse> itensAtrasados(LocalDate referencia) {
         descarregarJpa();
         return jdbc.sql("""
@@ -84,10 +62,6 @@ public class RotinasBancoRepository {
                 .list();
     }
 
-    /**
-     * dbo.fn_prioridade_clientes(@prioridade_minima, @prioridade_maxima): código do cliente -> prioridade, para
-     * todos os clientes (RN-CLI-09). Os limites vêm do application.properties (fenix.prioridade.*).
-     */
     public Map<Integer, Integer> prioridadesClientes(int minima, int maxima) {
         descarregarJpa();
         Map<Integer, Integer> prioridades = new LinkedHashMap<>();
@@ -100,7 +74,6 @@ public class RotinasBancoRepository {
         return prioridades;
     }
 
-    /** Prioridade de um cliente só (a mesma função, filtrada pelo cliente). */
     public Optional<Integer> prioridadeCliente(int clienteCodigo, int minima, int maxima) {
         descarregarJpa();
         return jdbc.sql("""
@@ -114,11 +87,6 @@ public class RotinasBancoRepository {
                 .optional();
     }
 
-    /**
-     * dbo.fn_auditoria_timeline_os(@nr_os): eventos da OS em ordem cronológica (status da OS, status dos itens,
-     * início e conclusão das etapas). papelResponsavel explica o nome da coluna responsavel (ver
-     * EventoAuditoriaResponse): nas etapas é o operador; nos status é quem abriu a OS.
-     */
     public List<EventoAuditoriaResponse> linhaDoTempoOs(int numeroOs) {
         descarregarJpa();
         return jdbc.sql("""
@@ -146,7 +114,6 @@ public class RotinasBancoRepository {
             qtd_itens_em_aberto, qtd_itens_atrasados, valor_incompleto
             """;
 
-    /** dbo.vw_painel_ordens_servico: todas as OS, da mais nova para a mais antiga. */
     public List<PainelOsResponse> painelOs() {
         descarregarJpa();
         return jdbc.sql("select " + COLUNAS_PAINEL + " from dbo.vw_painel_ordens_servico order by nr_os desc")
@@ -154,7 +121,6 @@ public class RotinasBancoRepository {
                 .list();
     }
 
-    /** dbo.vw_painel_ordens_servico de uma OS só. */
     public Optional<PainelOsResponse> painelOs(int numeroOs) {
         descarregarJpa();
         return jdbc.sql("select " + COLUNAS_PAINEL + " from dbo.vw_painel_ordens_servico where nr_os = :nrOs")
@@ -163,7 +129,6 @@ public class RotinasBancoRepository {
                 .optional();
     }
 
-    /** Quantidade de OS por status atual, contada pela view (RN-HOS-03: status atual = último do histórico). */
     public Map<String, Long> osPorStatus() {
         descarregarJpa();
         Map<String, Long> contagem = new LinkedHashMap<>();
@@ -178,7 +143,6 @@ public class RotinasBancoRepository {
         return contagem;
     }
 
-    /** dbo.vw_produtividade_funcionario entre duas datas de produção (inclusive). */
     public List<ProdutividadeResponse> produtividade(LocalDate inicio, LocalDate fim) {
         descarregarJpa();
         return jdbc.sql("""
@@ -197,7 +161,6 @@ public class RotinasBancoRepository {
                 .list();
     }
 
-    /** dbo.vw_retrabalho_mensal a partir do mês de {@code desde} (meses sem item executado não aparecem). */
     public List<RetrabalhoMensalResponse> retrabalhoMensal(LocalDate desde) {
         descarregarJpa();
         return jdbc.sql("""
@@ -216,11 +179,6 @@ public class RotinasBancoRepository {
 
     // ------------------------------------------------------------------ apoio às procedures
 
-    /**
-     * Cronograma de hoje em diante que tem etapa NÃO concluída de itens desta OS: são exatamente as linhas que a
-     * dbo.sp_cancelar_ordem_servico apaga de CronogramasItens (mesmo filtro do DELETE da procedure). Lido ANTES de
-     * chamar a procedure, para o Java avisar quantas etapas saíram e qual cronograma ficou vazio.
-     */
     public List<CronogramaAfetado> cronogramasFuturosComEtapasDaOs(int numeroOs, LocalDate hoje) {
         descarregarJpa();
         return jdbc.sql("""
@@ -243,10 +201,8 @@ public class RotinasBancoRepository {
                 .list();
     }
 
-    /** Cronograma que perde etapas no cancelamento: quantas são da OS cancelada e quantas o cronograma tinha. */
     public record CronogramaAfetado(int codigo, LocalDate dataPlanejada, int etapasDaOs, int etapasNoCronograma) {
 
-        /** Todas as etapas do cronograma eram desta OS: depois do cancelamento ele fica vazio (RN-CRO-01). */
         public boolean ficaVazio() {
             return etapasDaOs >= etapasNoCronograma;
         }
@@ -254,11 +210,6 @@ public class RotinasBancoRepository {
 
     // ------------------------------------------------------------------ apoio
 
-    /**
-     * Manda ao banco o que o Hibernate ainda guarda na memória da transação (flush), para a consulta JDBC enxergar.
-     * Só faz sentido dentro de uma transação de escrita: sem transação não há o que descarregar, e na de leitura
-     * (readOnly) o Hibernate não acumula alterações.
-     */
     void descarregarJpa() {
         if (TransactionSynchronizationManager.isActualTransactionActive()
                 && !TransactionSynchronizationManager.isCurrentTransactionReadOnly()) {

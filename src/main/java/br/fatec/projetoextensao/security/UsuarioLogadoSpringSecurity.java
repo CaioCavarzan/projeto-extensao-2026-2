@@ -10,9 +10,10 @@ import org.springframework.stereotype.Component;
 import br.fatec.projetoextensao.services.UsuarioLogado;
 
 /**
- * INCLUÍDO (20/10/2026): lê do contexto de segurança do Spring quem fez a requisição (RN-SIS-08).
+ * Lê do contexto de segurança do Spring quem fez a requisição.
  * Os Services usam a interface UsuarioLogado e nunca recebem o usuário pelo corpo da requisição.
  */
+
 @Component
 public class UsuarioLogadoSpringSecurity implements UsuarioLogado {
 

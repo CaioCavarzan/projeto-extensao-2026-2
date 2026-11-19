@@ -45,14 +45,6 @@ public class OrdemServicoEntity{
          dataEntrada = LocalDateTime.now();}
      }
 
-    // ALTERADO (18/11/2026) [E3-07]: era @Column(name = "valor_os"), gravado pelo Java (ValorOsService.recalcular).
-    // Agora quem grava valor_os é o banco: os triggers trg_itens_sincronizar_valor_os e
-    // trg_historicos_status_itens_sincronizar_item_e_os (e a procedure sp_cancelar_ordem_servico) recalculam o valor
-    // com dbo.fn_valor_os a cada mudança de item. insertable = false e updatable = false fazem o Hibernate NUNCA
-    // escrever esta coluna. Por quê: o Hibernate manda todas as colunas no UPDATE da OS (ex.: ao mudar a prioridade);
-    // sem isso, ele regravaria o valor antigo que tem na memória por cima do valor que o trigger acabou de calcular.
-    // Na abertura a coluna fica fora do INSERT e vale o DEFAULT 0 do script. O valor atualizado é relido com
-    // ValorOsService.sincronizar (EntityManager.refresh).
     @Column(name = "valor_os", insertable = false, updatable = false)
     private BigDecimal valorOS = BigDecimal.ZERO;
 

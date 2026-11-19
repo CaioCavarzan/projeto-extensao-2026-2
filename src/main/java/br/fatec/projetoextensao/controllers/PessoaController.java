@@ -12,10 +12,11 @@ import br.fatec.projetoextensao.services.PessoaService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): correção de CPF ou CNPJ digitado errado, só ADMIN. A correção vale para todos os papéis da
- * pessoa (o CPF do funcionário e o do cliente PF são o mesmo, RN-PES-03; o CNPJ do fornecedor e o do cliente PJ,
- * RN-PES-04) e não aceita documento de outra pessoa (RN-PES-06). Responde com os papéis da pessoa.
+ * Correção de CPF ou CNPJ digitado errado, só ADMIN. A correção vale para todos os papéis da
+ * pessoa (o CPF do funcionário e o do cliente PF são o mesmo; o CNPJ do fornecedor e o do cliente PJ) 
+ * e não aceita documento de outra pessoa. Responde com os papéis da pessoa.
  */
+
 @RestController
 @RequestMapping("/api/pessoas")
 @RequiredArgsConstructor

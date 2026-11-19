@@ -6,11 +6,9 @@ import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (19/11/2026): próximo nr_os lido do IDENTITY de OrdensDeServico no SQL Server.
- *
- * sys.identity_columns.last_value é o último número gerado (inclusive os consumidos por ROLLBACK) e fica NULL
- * enquanto a tabela nunca recebeu linha; nesse caso o próximo é o próprio seed.
+ * Próximo nr_os lido do IDENTITY de OrdensDeServico no SQL Server.
  */
+
 @Repository
 @RequiredArgsConstructor
 public class NumeracaoOsSqlServer implements NumeracaoOs {

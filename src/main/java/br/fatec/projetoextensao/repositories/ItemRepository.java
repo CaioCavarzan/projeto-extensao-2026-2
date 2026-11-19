@@ -21,28 +21,18 @@ import br.fatec.projetoextensao.entities.TintaEntity;
 @Repository
 public interface ItemRepository extends JpaRepository<ItemEntity, Integer> {
 
-    // INCLUÍDO (20/10/2026): Itens da OS (RN-OS-04, RN-OS-05, RN-OS-14).
     List<ItemEntity> findByOsOrderByCodigo(OrdemServicoEntity os);
 
-    // INCLUÍDO (21/10/2026): tela Peças: todos os itens, do mais recente para o mais antigo (ItemService.listar).
     List<ItemEntity> findAllByOrderByCodigoDesc();
 
-    // INCLUÍDO (20/10/2026): RN-COR-01: cor usada em item não é excluída.
     boolean existsByCor(CorEntity cor);
 
-    // INCLUÍDO (20/10/2026): RN-TIN-02: tinta usada em item não é excluída.
     boolean existsByTinta(TintaEntity tinta);
 
-    // INCLUÍDO (20/10/2026): RN-ITE-22: itens com prazo de entrega antes da data (o Service filtra os que não estão encerrados).
-    // ALTERADO (18/11/2026) [E3-11]: sem uso no sistema desde que ItemService.listarAtrasados passou a ler a função
-    // dbo.fn_itens_atrasados. Mantido (não apaga dado nem muda comportamento) para quem quiser comparar as duas
-    // listas; pode ser excluído quando o grupo confirmar a função no SQL Server de produção.
     List<ItemEntity> findByPrazoEntregaBeforeOrderByPrazoEntrega(LocalDate data);
 
-    // INCLUÍDO (20/10/2026): RN-IRP-09: itens finalizados no período (base do % de retrabalho).
     List<ItemEntity> findByDataFinalizacaoGreaterThanEqualAndDataFinalizacaoLessThan(LocalDateTime inicio, LocalDateTime fim);
 
-    // INCLUÍDO (20/10/2026): RN-HIT-02, RN-IRP-01 e RN-FOT-02: operações no item com a linha travada (status, próxima ordem e limite de fotos).
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from ItemEntity i where i.codigo = :codigo")
     Optional<ItemEntity> buscarParaAtualizar(@Param("codigo") int codigo);

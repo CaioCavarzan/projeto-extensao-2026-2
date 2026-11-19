@@ -12,14 +12,14 @@ import java.util.Set;
 import br.fatec.projetoextensao.enums.ObjetoBancoEnum;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-03]: tradução dos erros que os objetos da Etapa 3 levantam no SQL Server para as exceções
+ * Tradução dos erros que os objetos da Etapa 3 levantam no SQL Server para as exceções
  * de negócio do projeto (RegraNegocioException, RecursoNaoEncontradoException e ObjetoBancoAusenteException).
  *
  * Por que existe: as procedures e os triggers do grupo validam regras e, quando uma regra falha, fazem
  * "THROW 5xxxx, 'mensagem', 1". No Java esse erro chega como SQLException (código = 5xxxx) embrulhada em
  * exceções do Spring ou do Hibernate (DataAccessException, PersistenceException...), em profundidades diferentes
  * conforme o caminho (JdbcTemplate, flush do Hibernate, commit). Sem esta classe, a mensagem em português escrita
- * pelo grupo no THROW se perderia e a tela mostraria "erro interno" (HTTP 500), o que fere a RN-SIS-07.
+ * pelo grupo no THROW se perderia e a tela mostraria "erro interno" (HTTP 500).
  *
  * Como funciona: percorre a cadeia de causas (getCause) e, em cada SQLException, a lista de erros seguintes
  * (getNextException: o SQL Server pode mandar mais de um erro na mesma resposta, por exemplo o 50003 seguido do
@@ -45,6 +45,7 @@ import br.fatec.projetoextensao.enums.ObjetoBancoEnum;
  * tela e o banco falarem a mesma língua. 208/2812/4121 só são traduzidos quando a mensagem cita um dos 13 objetos
  * do catálogo (ObjetoBancoEnum); outra tabela ou objeto inexistente continua sendo erro interno.
  */
+
 public final class ErrosBanco {
 
     // Erros lançados pelos scripts da Etapa 3 (THROW). Os números são os dos scripts do grupo.

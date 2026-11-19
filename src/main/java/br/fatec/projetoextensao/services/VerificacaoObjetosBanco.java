@@ -14,15 +14,10 @@ import br.fatec.projetoextensao.repositories.CatalogoBancoRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-17]: ao iniciar, confere no SQL Server se os 13 objetos da Etapa 3 estão instalados e
+ * Ao iniciar, confere no SQL Server se os 13 objetos da Etapa 3 estão instalados e
  * escreve o resultado no log (no mesmo estilo de VerificacaoListasFixas).
- *
- * Por que só avisa e não instala sozinho: criar objetos no banco é uma decisão do administrador (pode haver uma
- * versão do script sendo testada no SSMS). Sem os objetos, o sistema sobe, mas as telas que dependem deles
- * respondem 503 com o nome do objeto que falta (ObjetoBancoAusenteException). A instalação é feita em Configurações >
- * Banco de dados ou rodando no SSMS functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem.
- * No H2 dos testes automáticos a conferência é pulada (os objetos são imitados pelo etapa3-h2.sql).
  */
+
 @Component
 @RequiredArgsConstructor
 public class VerificacaoObjetosBanco {

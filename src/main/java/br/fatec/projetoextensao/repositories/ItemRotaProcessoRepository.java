@@ -17,29 +17,19 @@ import br.fatec.projetoextensao.entities.FuncionarioEntity;
 @Repository
 public interface ItemRotaProcessoRepository extends JpaRepository<ItemRotaProcessoEntity, Integer> {
 
-    // INCLUÍDO (20/10/2026): Rota do item na ordem de execução (RN-IRP-01, RN-IRP-05, RN-IRP-06).
     List<ItemRotaProcessoEntity> findByItemOrderByOrdem(ItemEntity item);
 
-    // INCLUÍDO (20/10/2026): RN-ROT-01: etapa usada em algum item não é excluída.
     boolean existsByRotaProcesso(RotaProcessoEntity rotaProcesso);
 
-    // INCLUÍDO (20/10/2026): RN-FUN-02: funcionário que operou etapa não é excluído.
     boolean existsByFuncionario(FuncionarioEntity funcionario);
 
-    // INCLUÍDO (20/10/2026): RN-IRP-01: a próxima ordem é a maior ordem do item mais 1 (0 quando o item ainda não tem etapa).
     @Query("select coalesce(max(e.ordem), 0) from ItemRotaProcessoEntity e where e.item = :item")
     int maiorOrdem(@Param("item") ItemEntity item);
 
-    // INCLUÍDO (20/10/2026): RN-IRP-09: etapas dos itens finalizados no período (cálculo do % de retrabalho).
     List<ItemRotaProcessoEntity> findByItemIn(Collection<ItemEntity> itens);
 
-    // INCLUÍDO (21/10/2026): fila de produção (tela Produção e montagem do cronograma): etapas ainda não concluídas.
     List<ItemRotaProcessoEntity> findByDataConclusaoIsNull();
 
-    // INCLUÍDO (21/10/2026): dashboard: etapas concluídas no dia (DashboardService.resumo).
-    // ALTERADO (18/11/2026) [E3-15]: sem uso no sistema desde que DashboardService.resumo passou a somar as etapas
-    // concluídas hoje pela view dbo.vw_produtividade_funcionario. Mantido (não muda comportamento) para conferência;
-    // pode ser excluído quando o grupo confirmar a view no SQL Server de produção.
     long countByDataConclusaoGreaterThanEqualAndDataConclusaoLessThan(LocalDateTime inicio, LocalDateTime fim);
 
 }

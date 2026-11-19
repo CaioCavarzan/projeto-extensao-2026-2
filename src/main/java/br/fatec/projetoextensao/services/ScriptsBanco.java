@@ -10,18 +10,9 @@ import java.util.regex.Pattern;
 
 import org.springframework.core.io.ClassPathResource;
 
-/**
- * INCLUÍDO (18/11/2026) [E3-16]: leitura dos scripts do grupo (copiados de docs/database para o classpath em
- * bancodados/, ver o pom.xml) e divisão em lotes pelo "GO".
- *
- * Por que dividir: "GO" não é comando SQL. É um separador que o SSMS e o sqlcmd entendem e o driver JDBC não. O
- * SSMS manda ao servidor cada trecho entre dois GO como um lote separado; aqui é feito o mesmo, linha a linha (uma
- * linha que só tem "go"). Isso é obrigatório para os scripts da Etapa 3: CREATE FUNCTION/VIEW/PROCEDURE/TRIGGER
- * precisa ser o primeiro comando do lote.
- */
+
 final class ScriptsBanco {
 
-    /** Pasta do classpath onde o pom.xml coloca os scripts (E3-01). */
     static final String PASTA = "bancodados/";
 
     private static final Pattern LINHA_GO = Pattern.compile("^\\s*go\\s*$", Pattern.CASE_INSENSITIVE);
@@ -31,7 +22,6 @@ final class ScriptsBanco {
     private ScriptsBanco() {
     }
 
-    /** Conteúdo do script (UTF-8, como os arquivos do grupo), sem o BOM se o editor tiver gravado um. */
     static String ler(String nomeArquivo) {
         try (InputStream in = new ClassPathResource(PASTA + nomeArquivo).getInputStream()) {
             String texto = new String(in.readAllBytes(), StandardCharsets.UTF_8);
@@ -42,7 +32,6 @@ final class ScriptsBanco {
         }
     }
 
-    /** Lotes do script, na ordem; lotes só com comentário ou em branco são descartados. */
     static List<String> lotes(String script) {
         List<String> lotes = new ArrayList<>();
         StringBuilder atual = new StringBuilder();
@@ -58,12 +47,10 @@ final class ScriptsBanco {
         return lotes;
     }
 
-    /** O lote é só "use <banco>" (troca de banco da conexão)? */
     static boolean ehUse(String lote) {
         return semComentarios(lote).toLowerCase(Locale.ROOT).matches("use\\s+\\S+;?");
     }
 
-    /** Texto do lote sem comentários e com espaços normalizados (para reconhecer o que o lote faz). */
     static String semComentarios(String lote) {
         String t = COMENTARIO_BLOCO.matcher(lote).replaceAll(" ");
         t = COMENTARIO_LINHA.matcher(t).replaceAll(" ");

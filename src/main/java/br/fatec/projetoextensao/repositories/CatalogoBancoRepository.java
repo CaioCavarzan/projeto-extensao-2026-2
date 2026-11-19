@@ -24,13 +24,12 @@ import br.fatec.projetoextensao.enums.ObjetoBancoEnum;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-16]: consultas ao catálogo do próprio SQL Server, para saber se os 13 objetos da Etapa 3
+ * Consultas ao catálogo do próprio SQL Server, para saber se os 13 objetos da Etapa 3
  * estão instalados (sys.objects e sys.triggers) e qual foi o último backup (msdb). Usado pela aba Configurações >
  * Banco de dados (BancoDadosService) e pela conferência ao iniciar o sistema (VerificacaoObjetosBanco).
  *
- * Só funciona no SQL Server (as tabelas sys.* e o banco msdb não existem no H2 dos testes); por isso quem usa
- * pergunta antes ehSqlServer().
  */
+
 @Repository
 @RequiredArgsConstructor
 public class CatalogoBancoRepository {
@@ -40,28 +39,21 @@ public class CatalogoBancoRepository {
     private final JdbcTemplate jdbcTemplate;
     private final JdbcClient jdbc;
 
-    /** O banco configurado em spring.datasource.url é SQL Server? (H2 nos testes automáticos) */
     public boolean ehSqlServer() {
         Boolean sim = jdbcTemplate.execute((ConnectionCallback<Boolean>) c ->
                 c.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT).contains("sql server"));
         return Boolean.TRUE.equals(sim);
     }
 
-    /** Nome do banco em que a conexão do sistema está (db_name()). */
     public String bancoAtual() {
         return jdbc.sql("select db_name()").query(String.class).single();
     }
 
-    /** Primeira linha de @@version (ex.: "Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64)"). */
     public String versao() {
         String v = jdbc.sql("select @@version").query(String.class).single();
         return v == null ? null : v.lines().findFirst().orElse(v).trim();
     }
 
-    /**
-     * Situação de cada objeto do catálogo (ObjetoBancoEnum): existe em sys.objects no schema dbo? com o tipo
-     * esperado? (trigger) está habilitado? quando foi alterado pela última vez?
-     */
     public List<ObjetoBancoResponse> situacaoObjetos() {
         List<String> nomes = new ArrayList<>();
         for (ObjetoBancoEnum o : ObjetoBancoEnum.values()) {
@@ -95,10 +87,6 @@ public class CatalogoBancoRepository {
         return lista;
     }
 
-    /**
-     * Último backup completo (type = 'D') do banco, pelo histórico que o próprio SQL Server grava em msdb. Vazio se
-     * nunca houve backup ou se o login do sistema não pode ler o msdb (o motivo vai para o log).
-     */
     public Optional<BackupResponse> ultimoBackup(String banco) {
         try {
             return jdbc.sql("""

@@ -3,8 +3,9 @@ package br.fatec.projetoextensao.dtos;
 import java.math.BigDecimal;
 
 /**
- * INCLUÍDO (20/10/2026). Tinta devolvida pela API. unidadeEstoque = "kg" (RN-TIN-15); precoAConfirmar = valor_unit igual a 0 (RN-TIN-18).
+ * Tinta devolvida pela API. unidadeEstoque = "kg"; precoAConfirmar = valor_unit igual a 0.
  */
+
 public record TintaResponse(
         int codigo,
         int fornecedorCodigo,

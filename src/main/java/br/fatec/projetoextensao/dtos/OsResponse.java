@@ -5,8 +5,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * INCLUÍDO (20/10/2026). OS devolvida pela API. valorIncompleto = há item ativo sem valor (RN-OS-15).
+ * S devolvida pela API. valorIncompleto = há item ativo sem valor.
  */
+
 public record OsResponse(
         int numero,
         int clienteCodigo,

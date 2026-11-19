@@ -11,10 +11,8 @@ import br.fatec.projetoextensao.entities.StatusOsEntity;
 @Repository
 public interface StatusOsRepository extends JpaRepository<StatusOsEntity, Integer> {
 
-    // INCLUÍDO (20/10/2026): RN-SOS-01: o Java se refere a cada status pelo nome fixo (StatusOsEnum).
     Optional<StatusOsEntity> findByStatus(String status);
 
-    // INCLUÍDO (20/10/2026): Listagem na ordem de cadastro.
     List<StatusOsEntity> findAllByOrderByCodigo();
 
 }

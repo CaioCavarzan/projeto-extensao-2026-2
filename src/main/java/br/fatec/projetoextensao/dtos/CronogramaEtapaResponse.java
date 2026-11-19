@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * INCLUÍDO (20/10/2026). Etapa na fila do cronograma.
+ * Etapa na fila do cronograma.
  */
+
 public record CronogramaEtapaResponse(
         int etapaCodigo,
         int itemCodigo,

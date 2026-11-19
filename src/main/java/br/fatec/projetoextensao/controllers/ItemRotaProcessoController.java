@@ -19,11 +19,12 @@ import br.fatec.projetoextensao.services.ItemRotaProcessoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): execução das etapas da rota do item (tabela ItensRotasProcessos), na tela Produção.
- * Iniciar exige operador (RN-IRP-03) e as etapas anteriores concluídas (RN-IRP-05); concluir exige a etapa iniciada
- * (RN-IRP-04); a hora vem do servidor (RN-IRP-07). Retrabalho = nova etapa igual, no fim da rota (RN-IRP-02).
- * Só etapa ainda não iniciada sai da rota (RN-IRP-08). Corrigir datas: só ADMIN (RN-IRP-07).
+ * Execução das etapas da rota do item (tabela ItensRotasProcessos), na tela Produção.
+ * Iniciar exige operador e as etapas anteriores concluídas; concluir exige a etapa iniciada; 
+ * a hora vem do servidor. Retrabalho = nova etapa igual, no fim da rota.
+ * Só etapa ainda não iniciada sai da rota. Corrigir datas: só ADMIN.
  */
+
 @RestController
 @RequestMapping("/api/etapas-item")
 @RequiredArgsConstructor

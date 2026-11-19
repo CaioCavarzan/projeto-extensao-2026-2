@@ -4,10 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-19]: uma linha da view dbo.vw_retrabalho_mensal, o indicador mensal do PDCA (RN-IRP-09):
+ * Uma linha da view dbo.vw_retrabalho_mensal, o indicador mensal do PDCA:
  * itens executados no mês (pela data_finalizacao), quantos tiveram etapa repetida, o % de retrabalho e o valor dos
  * itens executados. Meses sem item executado não aparecem na view.
  */
+
 public record RetrabalhoMensalResponse(
         LocalDate mesReferencia,
         int ano,

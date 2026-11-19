@@ -29,31 +29,21 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): tintas e estoque (tabela Tintas).
- * Regras: RN-TIN-01 a RN-TIN-18, RN-FOR-03 (fornecedor inativo não é escolhido para tinta nova),
- * RN-SIS-03 (excluir: só ADMIN), RN-SIS-11 (valores em BigDecimal com 2 casas).
- *
- * RN-TIN-08 e RN-TIN-10 (listas de tipo e acabamento) ficam no front, como diz a planilha.
- * RN-TIN-16 (alerta de estoque mínimo) foi descartada na planilha.
- *
- * ALTERADO (18/11/2026) [E3-13]: o ajuste de estoque passou a ser feito pela procedure dbo.sp_ajustar_estoque_tinta
- * (procedures.sql); a coluna estoque_atual deixou de ser escrita pelo Hibernate (TintaEntity, E3-07).
+ * Tintas e estoque (tabela Tintas).
  */
+
 @Service
 @RequiredArgsConstructor
 public class TintaService {
 
-    // INCLUÍDO (18/11/2026) [E3-13]: log da conferência do saldo devolvido pela procedure.
     private static final Logger log = LoggerFactory.getLogger(TintaService.class);
 
-    /** RN-TIN-15: o estoque de todas as tintas é registrado em kg. */
     public static final String UNIDADE_ESTOQUE = "kg";
 
     private final TintaRepository tintaRepository;
     private final ItemRepository itemRepository;
     private final FornecedorService fornecedorService;
     private final CorService corService;
-    // INCLUÍDO (18/11/2026) [E3-13]: a procedure de ajuste e o EntityManager para reler a tinta depois dela.
     private final ProcedimentosBanco procedimentosBanco;
     private final EntityManager entityManager;
 
@@ -69,37 +59,26 @@ public class TintaService {
         return paraResponse(buscarEntidade(codigo));
     }
 
-    /**
-     * Cadastro (RN-TIN-01 a RN-TIN-17). O estoque nasce 0 (RN-TIN-13) e só muda por ajuste (RN-TIN-14).
-     * RN-FOR-03: o fornecedor precisa estar ativo.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public TintaResponse cadastrar(TintaRequest dto) {
         DadosTinta d = validar(dto);
-        FornecedorEntity fornecedor = fornecedorService.buscarEntidade(dto.fornecedorCodigo()); // RN-TIN-04
+        FornecedorEntity fornecedor = fornecedorService.buscarEntidade(dto.fornecedorCodigo()); 
         if (!fornecedor.isAtivo()) {
-            throw new RegraNegocioException("Fornecedor inativo: escolha outro."); // RN-FOR-03
+            throw new RegraNegocioException("Fornecedor inativo: escolha outro."); 
         }
-        CorEntity cor = corService.buscarEntidade(dto.corCodigo()); // RN-TIN-05
+        CorEntity cor = corService.buscarEntidade(dto.corCodigo()); 
         if (d.referencia() != null
                 && tintaRepository.existsByFornecedorAndReferenciaFornecedorIgnoreCase(fornecedor, d.referencia())) {
-            throw RegraNegocioException.conflito("Este fornecedor já tem tinta com essa referência."); // RN-TIN-12
+            throw RegraNegocioException.conflito("Este fornecedor já tem tinta com essa referência."); 
         }
         TintaEntity t = new TintaEntity();
         t.setFornecedor(fornecedor);
         t.setCor(cor);
         aplicar(t, d);
-        // REMOVIDO (18/11/2026) [E3-07]: t.setEstoque(BigDecimal.ZERO.setScale(2)). estoque_atual não entra mais no
-        // INSERT (insertable = false): a tinta nasce com o DEFAULT 0 do script (RN-TIN-13), e o valor da memória já
-        // é zero (inicializado na TintaEntity).
         return paraResponse(tintaRepository.save(t));
     }
 
-    /**
-     * Alteração (mesmas validações do cadastro). A cor de uma tinta já usada em itens não muda, porque a tinta
-     * aplicada precisa ter a cor pedida (RN-ITE-04). Trocar de fornecedor exige fornecedor ativo (RN-FOR-03).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public TintaResponse atualizar(int codigo, TintaRequest dto) {
@@ -107,15 +86,15 @@ public class TintaService {
         DadosTinta d = validar(dto);
         FornecedorEntity fornecedor = fornecedorService.buscarEntidade(dto.fornecedorCodigo());
         if (fornecedor.getPessoaCodigo() != t.getFornecedor().getPessoaCodigo() && !fornecedor.isAtivo()) {
-            throw new RegraNegocioException("Fornecedor inativo: escolha outro."); // RN-FOR-03
+            throw new RegraNegocioException("Fornecedor inativo: escolha outro."); 
         }
         CorEntity cor = corService.buscarEntidade(dto.corCodigo());
         if (cor.getCodigo() != t.getCor().getCodigo() && itemRepository.existsByTinta(t)) {
-            throw new RegraNegocioException("Tinta já usada em itens: a cor não pode mudar."); // RN-ITE-04
+            throw new RegraNegocioException("Tinta já usada em itens: a cor não pode mudar."); 
         }
         if (d.referencia() != null && tintaRepository
                 .existsByFornecedorAndReferenciaFornecedorIgnoreCaseAndCodigoNot(fornecedor, d.referencia(), codigo)) {
-            throw RegraNegocioException.conflito("Este fornecedor já tem tinta com essa referência."); // RN-TIN-12
+            throw RegraNegocioException.conflito("Este fornecedor já tem tinta com essa referência."); 
         }
         t.setFornecedor(fornecedor);
         t.setCor(cor);
@@ -123,19 +102,6 @@ public class TintaService {
         return paraResponse(tintaRepository.save(t));
     }
 
-    /**
-     * RN-TIN-14: o estoque muda só por ajuste (entrada de compra = quantidade positiva; baixa = negativa), feito por
-     * ADMIN ou OPERADOR, e o saldo nunca fica negativo. A linha da tinta é travada durante o ajuste, para dois
-     * ajustes ao mesmo tempo não se perderem. Unidade: kg (RN-TIN-15).
-     *
-     * ALTERADO (18/11/2026) [E3-13]: quem grava o novo saldo agora é a procedure dbo.sp_ajustar_estoque_tinta
-     * (antes: t.setEstoque(novo) + tintaRepository.save(t)). A procedure trava a linha (UPDLOCK, ROWLOCK), recusa
-     * quantidade zero (THROW 50001), tinta inexistente (50002) e saldo negativo (50003) e devolve o saldo final no
-     * parâmetro OUTPUT. As conferências em Java ficaram ANTES da chamada, de propósito: dão a mensagem com o saldo
-     * atual ("saldo atual X kg"), que a procedure não informa, e evitam chamar a procedure quando ela vai recusar (o
-     * ROLLBACK dela desfaria a transação inteira). Se mesmo assim ela recusar (ex.: outro usuário baixou o estoque no
-     * mesmo instante), ErrosBanco traduz o THROW para a mensagem do script.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public TintaResponse ajustarEstoque(int codigo, AjusteEstoqueRequest dto) {
@@ -157,24 +123,20 @@ public class TintaService {
         if (!Valores.casasValidas(novo, Valores.DIGITOS_DECIMAL_10_2)) {
             throw new RegraNegocioException("Estoque acima do limite da coluna (decimal(10,2)).");
         }
-        // ALTERADO (18/11/2026) [E3-13]: era "t.setEstoque(novo); return paraResponse(tintaRepository.save(t));".
         BigDecimal saldoDoBanco;
         try {
             saldoDoBanco = procedimentosBanco.ajustarEstoqueTinta(codigo, Valores.normalizar(quantidade));
         } catch (DataAccessException e) {
             throw ErrosBanco.converter(e);
         }
-        entityManager.refresh(t); // a procedure gravou estoque_atual no banco: relê a tinta para a resposta
+        entityManager.refresh(t); 
         if (saldoDoBanco == null || saldoDoBanco.compareTo(Valores.zeroSeNulo(t.getEstoque())) != 0) {
-            // Não deve acontecer (a linha fica travada até o fim da transação). Se acontecer, a resposta mostra o que
-            // está gravado na tabela e o log registra a diferença para o administrador investigar.
             log.warn("Tinta {}: @estoque_resultante da procedure ({}) difere do estoque_atual gravado ({}).", codigo,
                     saldoDoBanco, t.getEstoque());
         }
         return paraResponse(t);
     }
 
-    /** RN-TIN-02: tinta usada em algum item não é excluída. RN-SIS-03: só ADMIN. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public void excluir(int codigo) {
@@ -202,13 +164,12 @@ public class TintaService {
             v.verificar();
         }
         if (dto.fornecedorCodigo() == null || dto.corCodigo() == null) {
-            v.erro("Informe o fornecedor e a cor da tinta."); // RN-TIN-01
+            v.erro("Informe o fornecedor e a cor da tinta."); 
         }
-        String descricao = v.obrigatorio(dto.descricao(), "Descrição da tinta", 100); // RN-TIN-06
-        String tipo = v.opcional(dto.tipo(), "Tipo", 50); // RN-TIN-07
-        String acabamento = v.opcional(dto.acabamento(), "Acabamento", 50); // RN-TIN-09
-        String referencia = v.opcional(dto.referenciaFornecedor(), "Referência do fornecedor", 100); // RN-TIN-11
-        // RN-TIN-17: obrigatório, >= 0 (CHECK ck_tintas_valor), 2 casas (decimal(18,2)).
+        String descricao = v.obrigatorio(dto.descricao(), "Descrição da tinta", 100); 
+        String tipo = v.opcional(dto.tipo(), "Tipo", 50); 
+        String acabamento = v.opcional(dto.acabamento(), "Acabamento", 50); 
+        String referencia = v.opcional(dto.referenciaFornecedor(), "Referência do fornecedor", 100); 
         BigDecimal valor = v.valor(dto.valorUnitario(), true, BigDecimal.ZERO, true, Valores.DIGITOS_DECIMAL_18_2,
                 "Valor unitário inválido.");
         v.verificar();
@@ -225,7 +186,7 @@ public class TintaService {
 
     private TintaResponse paraResponse(TintaEntity t) {
         BigDecimal valor = t.getValorUnitario();
-        boolean precoAConfirmar = valor == null || valor.signum() == 0; // RN-TIN-18
+        boolean precoAConfirmar = valor == null || valor.signum() == 0; 
         return new TintaResponse(t.getCodigo(), t.getFornecedor().getPessoaCodigo(),
                 t.getFornecedor().getPessoa().getNome(), t.getFornecedor().isAtivo(), t.getCor().getCodigo(),
                 t.getCor().getNome(), t.getDescricao(), t.getTipo(), t.getAcabamento(), t.getReferenciaFornecedor(),

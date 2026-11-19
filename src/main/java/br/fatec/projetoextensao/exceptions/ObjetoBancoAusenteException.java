@@ -3,7 +3,7 @@ package br.fatec.projetoextensao.exceptions;
 import br.fatec.projetoextensao.enums.ObjetoBancoEnum;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-03]: um objeto da Etapa 3 (function, view, procedure ou trigger) não está instalado no
+ * Um objeto da Etapa 3 (function, view, procedure ou trigger) não está instalado no
  * banco, e por isso a operação não pôde ser feita. Vira HTTP 503 no GlobalExceptionHandler.
  *
  * Por que existe: desde a integração da Etapa 3 o Java depende desses objetos (ex.: o valor da OS é calculado pelos
@@ -11,6 +11,7 @@ import br.fatec.projetoextensao.enums.ObjetoBancoEnum;
  * 4121), que sem esta tradução chegaria à tela como "erro interno". Com ela, a mensagem diz qual objeto falta e onde
  * instalar.
  */
+
 public class ObjetoBancoAusenteException extends RuntimeException {
 
     private final transient ObjetoBancoEnum objeto;

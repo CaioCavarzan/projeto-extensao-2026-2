@@ -46,22 +46,7 @@ import br.fatec.projetoextensao.validacao.Valores;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): itens da OS, status do item e fotos (tabelas Itens, HistoricosStatusItens e Fotos).
- * Regras: RN-ITE-01 a RN-ITE-29, RN-HIT-01 a RN-HIT-07 (via StatusService), RN-FOT-01 a RN-FOT-09, RN-OS-07
- * (OS encerrada não aceita alterações, exceto nr_ose e fotos) e RN-ITE-08 (alterar item recalcula o valor da OS).
- *
- * score_prioridade (RN-ITE-29) nunca vem do front e fica NULL: a regra com a fórmula do score foi retirada da
- * planilha. Quando a fórmula for definida, o cálculo entra aqui, num método chamado ao incluir e alterar o item.
- *
- * ALTERADO (18/11/2026) [E3-08, E3-11, E3-12]: integração com a Etapa 3 do banco.
- * <ul>
- *   <li>o valor da OS (RN-ITE-08) é recalculado pelos triggers ao gravar o item ou o status dele; aqui só se relê
- *       a OS com valorOsService.sincronizar;</li>
- *   <li>a cor do item é conferida também pelo trigger trg_itens_sincronizar_valor_os (THROW 50110 se a cor da tinta
- *       for outra). validarCorETinta continua: dá a mensagem certa antes de chegar ao banco;</li>
- *   <li>listarAtrasados lê a função dbo.fn_itens_atrasados;</li>
- *   <li>cancelarItensDaOs saiu: quem cancela os itens no cancelamento da OS é a procedure sp_cancelar_ordem_servico.</li>
- * </ul>
+ * Itens da OS, status do item e fotos (tabelas Itens, HistoricosStatusItens e Fotos).
  */
 @Service
 @RequiredArgsConstructor
@@ -79,33 +64,22 @@ public class ItemService {
     private final TintaService tintaService;
     private final ArmazenamentoFotos armazenamentoFotos;
     private final ParametrosSistema parametros;
-    // INCLUÍDO (18/11/2026) [E3-11]: leitura da função dbo.fn_itens_atrasados (listarAtrasados).
     private final RotinasBancoRepository rotinasBanco;
 
     // ------------------------------------------------------------------ inclusão
 
-    /**
-     * Inclui um item numa OS já aberta (RN-OS-07: a OS não pode estar 'Concluída' nem 'Cancelada').
-     * O item nasce 'Pendente' com a rota (RN-ITE-02 e RN-ITE-03) e o valor da OS é recalculado (RN-ITE-08).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse incluir(int osNumero, ItemRequest dto) {
         OrdemServicoEntity os = ordemServicoRepository.buscarParaAtualizar(osNumero)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("OS não encontrada.")); // RN-ITE-10
+                .orElseThrow(() -> new RecursoNaoEncontradoException("OS não encontrada.")); 
         garantirOsAberta(os);
         List<String> avisos = new ArrayList<>();
         ItemEntity item = criarItem(os, dto, avisos);
-        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(os) (soma feita em Java). O INSERT do item já
-        // disparou o trigger trg_itens_sincronizar_valor_os, que gravou o novo valor_os; sincronizar só relê a OS.
-        valorOsService.sincronizar(os); // RN-ITE-08 e RN-OS-14
+        valorOsService.sincronizar(os); 
         return paraResponse(item, avisos);
     }
 
-    /**
-     * Cria o item, o status inicial e a rota, na transação de quem chamou (abertura da OS ou inclusão).
-     * Regras do item: RN-ITE-03 a RN-ITE-05, RN-ITE-11 a RN-ITE-20, RN-ITE-23, RN-ITE-24 e RN-ITE-29.
-     */
     ItemEntity criarItem(OrdemServicoEntity os, ItemRequest dto, List<String> avisos) {
         if (dto == null) {
             throw new RegraNegocioException("Informe os dados do item.");
@@ -114,49 +88,44 @@ public class ItemService {
         DadosItem d = validarDados(v, dto.descricao(), dto.qtdTotal(), dto.unidade(), dto.prazoEntrega(),
                 dto.valorTotalItem(), LocalDate.now());
         if (dto.etapas() == null || dto.etapas().isEmpty()) {
-            v.erro("Informe pelo menos uma etapa do processo."); // RN-ITE-03
+            v.erro("Informe pelo menos uma etapa do processo."); 
         }
         v.verificar();
 
         List<RotaProcessoEntity> rotas = new ArrayList<>();
         for (Integer codigo : dto.etapas()) {
             if (codigo == null) {
-                throw new RecursoNaoEncontradoException("Etapa não encontrada."); // RN-IRP-11
+                throw new RecursoNaoEncontradoException("Etapa não encontrada."); 
             }
             rotas.add(rotaProcessoService.buscarEntidade(codigo));
         }
         boolean temPintura = rotas.stream().anyMatch(RotaProcessoService::ehPintura);
-        CorEntity cor = dto.corCodigo() == null ? null : corService.buscarEntidade(dto.corCodigo()); // RN-ITE-13
+        CorEntity cor = dto.corCodigo() == null ? null : corService.buscarEntidade(dto.corCodigo()); 
         TintaEntity tinta = dto.tintaCodigo() == null ? null : tintaService.buscarEntidade(dto.tintaCodigo());
         validarCorETinta(temPintura, cor, tinta, avisos);
 
         ItemEntity item = new ItemEntity();
-        item.setOs(os); // RN-ITE-01 e RN-ITE-10
+        item.setOs(os); 
         item.setDescricao(d.descricao());
         item.setQtdTotal(d.qtdTotal());
         item.setUnidade(d.unidade());
         item.setCor(cor);
         item.setTinta(tinta);
         item.setPrazoEntrega(d.prazoEntrega());
-        item.setValorTotalPeca(d.valor()); // RN-ITE-24: valor total do item, informado pelo usuário
-        item.setScorePrioridade(null); // RN-ITE-29: calculado pelo sistema, nunca digitado
-        // RN-ITE-18 e RN-ITE-19: hora do servidor, nunca antes da entrada da OS.
+        item.setValorTotalPeca(d.valor()); 
+        item.setScorePrioridade(null); 
         LocalDateTime agora = LocalDateTime.now();
         item.setDataEntrada(os.getDataEntrada() != null && agora.isBefore(os.getDataEntrada()) ? os.getDataEntrada() : agora);
         item = itemRepository.save(item);
 
-        statusService.registrarInicial(item); // RN-ITE-02: 'Pendente'
-        itemRotaProcessoService.criarEtapasIniciais(item, rotas); // RN-ITE-03 e RN-IRP-01
-        statusService.avaliarProntidao(item); // aba Fluxo de status: Pendente -> Aguardando execução
+        statusService.registrarInicial(item); 
+        itemRotaProcessoService.criarEtapasIniciais(item, rotas); 
+        statusService.avaliarProntidao(item); 
         return item;
     }
 
     // ------------------------------------------------------------------ alteração
 
-    /**
-     * Alteração do item. RN-ITE-01: a OS do item não muda (não há OS no DTO). RN-ITE-07: item 'Executada' ou
-     * 'Cancelada' não é alterado. RN-OS-07: item de OS encerrada não é alterado. RN-ITE-08: recalcula o valor da OS.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse atualizar(int codigo, ItemAtualizacaoRequest dto) {
@@ -184,18 +153,11 @@ public class ItemService {
         item.setPrazoEntrega(d.prazoEntrega());
         item.setValorTotalPeca(d.valor());
         itemRepository.save(item);
-        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(item.getOs()). O UPDATE do item (enviado no flush
-        // de sincronizar) dispara trg_itens_sincronizar_valor_os, que recalcula valor_os no banco; o Java só relê.
-        valorOsService.sincronizar(item.getOs()); // RN-ITE-08
+        valorOsService.sincronizar(item.getOs()); 
         statusService.avaliarProntidao(item);
         return paraResponse(item, avisos);
     }
 
-    /**
-     * Define (ou retira, com null) a tinta aplicada. RN-ITE-11: exige cor pedida; RN-ITE-04: a tinta tem a mesma cor
-     * pedida; RN-ITE-05: só item com Pintura na rota tem tinta; RN-ITE-12: tinta sem estoque gera aviso, não erro.
-     * Com a tinta definida, o item pode passar a 'Aguardando execução' (aba Fluxo de status).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse definirTinta(int codigo, Integer tintaCodigo) {
@@ -213,9 +175,8 @@ public class ItemService {
         return paraResponse(item, avisos);
     }
 
-    // ------------------------------------------------------------------ status (RN-HIT-02: só manuais aqui)
+    // ------------------------------------------------------------------ status 
 
-    /** Aguardando execução -> Pausada (manual, aba Fluxo de status). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse pausar(int codigo) {
@@ -225,10 +186,6 @@ public class ItemService {
         return paraResponse(item, List.of());
     }
 
-    /**
-     * Pausada -> Aguardando execução (manual). Só vale para item pausado: Pendente -> Aguardando execução é
-     * automático, quando o item fica pronto (aba Fluxo de status), e não pode ser forçado por aqui.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse retomar(int codigo) {
@@ -241,27 +198,16 @@ public class ItemService {
         return paraResponse(item, List.of());
     }
 
-    /** -> Cancelada (manual). RN-OS-15 e RN-ITE-08: item cancelado sai da soma e o valor da OS é recalculado. */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse cancelar(int codigo) {
         ItemEntity item = travarItem(codigo);
         garantirOsAberta(item.getOs());
         statusService.mudarStatus(item, StatusItemEnum.CANCELADA);
-        // ALTERADO (18/11/2026) [E3-08]: era valorOsService.recalcular(item.getOs()). O status 'Cancelada' gravado no
-        // histórico dispara trg_historicos_status_itens_sincronizar_item_e_os, que tira o item da soma (fn_valor_os)
-        // e grava o novo valor_os; sincronizar envia o histórico ao banco (flush) e relê a OS.
         valorOsService.sincronizar(item.getOs());
         return paraResponse(item, List.of());
     }
 
-    // REMOVIDO (18/11/2026) [E3-12]: void cancelarItensDaOs(OrdemServicoEntity os). Percorria os itens da OS e gravava
-    // 'Cancelada' em cada item não encerrado (RN-OS-05), um por vez. Saiu porque a procedure
-    // dbo.sp_cancelar_ordem_servico faz o mesmo em lote, numa transação só, junto com o status da OS, a limpeza dos
-    // cronogramas futuros e o valor_os (ver OrdemServicoService.cancelar). A regra RN-OS-05 não mudou: os itens
-    // 'Executada' continuam como estão (a procedure só cancela os que não estão 'Executada' nem 'Cancelada').
-
-    /** RN-OS-04: todos os itens estão 'Executada' ou 'Cancelada'. */
     boolean todosEncerrados(OrdemServicoEntity os) {
         return itemRepository.findByOsOrderByCodigo(os).stream()
                 .allMatch(i -> statusService.statusAtual(i).isEncerrado());
@@ -269,20 +215,16 @@ public class ItemService {
 
     // ------------------------------------------------------------------ entrega
 
-    /**
-     * RN-ITE-28: nr_ose é registrado na entrega, com a OSE assinada pelo cliente; o item só é dado como entregue
-     * com nr_ose. RN-ITE-27: até 50 caracteres. RN-OS-07 e RN-ITE-07: vale também com a OS ou o item encerrados.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public ItemResponse registrarEntrega(int codigo, String nrOse) {
         ItemEntity item = travarItem(codigo);
         String numero = Textos.limpar(nrOse);
         if (numero == null) {
-            throw new RegraNegocioException("Informe o número da OSE assinada."); // RN-ITE-28
+            throw new RegraNegocioException("Informe o número da OSE assinada."); 
         }
         if (numero.length() > 50) {
-            throw new RegraNegocioException("Nº da OSE: no máximo 50 caracteres."); // RN-ITE-27
+            throw new RegraNegocioException("Nº da OSE: no máximo 50 caracteres."); 
         }
         item.setNumeroOse(numero);
         itemRepository.save(item);
@@ -297,17 +239,12 @@ public class ItemService {
         return paraResponse(buscarEntidade(codigo), List.of());
     }
 
-    /** INCLUÍDO (21/10/2026): tela Peças: todos os itens, do mais recente para o mais antigo. RN-ITE-22: marca de atraso. */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<ItemResponse> listarTodos() {
         return itemRepository.findAllByOrderByCodigoDesc().stream().map(i -> paraResponse(i, List.of())).toList();
     }
 
-    /**
-     * INCLUÍDO (21/10/2026): arquivo de uma foto, para a tela mostrar a imagem. RN-FOT-01: o banco guarda só o
-     * caminho relativo; o arquivo fica na pasta fenix.fotos.diretorio. Todas as fotos são gravadas em JPG (RN-FOT-09).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public Path arquivoDaFoto(int fotoCodigo) {
@@ -320,21 +257,12 @@ public class ItemService {
         return arquivo;
     }
 
-    /**
-     * RN-ITE-22: itens com prazo vencido (antes de hoje) e não encerrados, para aparecerem destacados.
-     * ALTERADO (18/11/2026) [E3-11]: era a lista de itens com prazo vencido filtrada em Java (uma consulta de status
-     * por item) e devolvida como ItemResponse completo (rota, fotos...). Agora vem da função
-     * dbo.fn_itens_atrasados(hoje), que faz o mesmo filtro (prazo < data de referência e status diferente de
-     * 'Executada' e 'Cancelada') e ainda traz o cliente, os dias de atraso e a próxima etapa pendente com o operador.
-     * O tipo da lista mudou para ItemAtrasadoResponse; os campos que as telas já usavam têm o mesmo nome.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<ItemAtrasadoResponse> listarAtrasados() {
         return rotinasBanco.itensAtrasados(LocalDate.now());
     }
 
-    /** Histórico de status do item (RN-HIT-01: só leitura). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<HistoricoStatusResponse> historico(int codigo) {
@@ -345,41 +273,30 @@ public class ItemService {
 
     // ------------------------------------------------------------------ fotos
 
-    /**
-     * Anexa uma foto ao item. Vale também com o item ou a OS encerrados (RN-ITE-07 e RN-OS-07).
-     * RN-FOT-02: no máximo 10 fotos por item (contadas com o item travado).
-     * RN-FOT-06: JPG ou PNG de até 10 MB. RN-FOT-07: tipo conferido pelo conteúdo e o arquivo precisa abrir como
-     * imagem. RN-FOT-09: a imagem é reduzida para no máximo 1920 px e gravada como JPG 80%.
-     * RN-FOT-08: nome gerado pelo sistema. RN-FOT-01: o arquivo fica na pasta do servidor e o banco guarda o caminho.
-     * RN-FOT-03: o código da foto é gerado pelo banco.
-     *
-     * O Controller recebe o MultipartFile e passa os bytes (multipartFile.getBytes()); o nome original do arquivo
-     * não é usado.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public FotoResponse anexarFoto(int itemCodigo, byte[] conteudo) {
         ItemEntity item = travarItem(itemCodigo);
         if (conteudo == null || conteudo.length == 0) {
-            throw new RegraNegocioException("Envie a foto."); // RN-FOT-05
+            throw new RegraNegocioException("Envie a foto."); 
         }
         long limiteBytes = parametros.getTamanhoMaximoFotoMb() * 1024L * 1024L;
         String mensagemTipo = "Envie uma imagem JPG ou PNG de até " + parametros.getTamanhoMaximoFotoMb() + " MB.";
         if (conteudo.length > limiteBytes || Imagens.detectarTipo(conteudo) == null) {
-            throw new RegraNegocioException(mensagemTipo); // RN-FOT-06 e RN-FOT-07
+            throw new RegraNegocioException(mensagemTipo); 
         }
         BufferedImage imagem = Imagens.ler(conteudo);
         if (imagem == null) {
-            throw new RegraNegocioException("Arquivo inválido. Envie uma imagem JPG ou PNG."); // RN-FOT-07
+            throw new RegraNegocioException("Arquivo inválido. Envie uma imagem JPG ou PNG."); 
         }
         if (fotoRepository.countByItem(item) >= parametros.getMaxFotosPorItem()) {
             throw new RegraNegocioException("Este item já tem " + parametros.getMaxFotosPorItem()
-                    + " fotos. Exclua uma para anexar outra."); // RN-FOT-02
+                    + " fotos. Exclua uma para anexar outra."); 
         }
         String caminho;
         try {
             byte[] jpg = Imagens.reduzirParaJpg(imagem, parametros.getLadoMaximoFotoPx(), parametros.getQualidadeJpg());
-            caminho = armazenamentoFotos.gravar(jpg, "jpg"); // RN-FOT-08 e RN-FOT-09
+            caminho = armazenamentoFotos.gravar(jpg, "jpg"); 
         } catch (IOException e) {
             throw new RegraNegocioException("Não foi possível salvar a foto.");
         }
@@ -391,7 +308,6 @@ public class ItemService {
         return new FotoResponse(foto.getCodigo(), item.getCodigo(), foto.getFoto());
     }
 
-    /** RN-FOT-01: excluir a foto apaga também o arquivo (depois que a exclusão no banco é confirmada). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public void removerFoto(int fotoCodigo) {
@@ -415,7 +331,7 @@ public class ItemService {
 
     ItemEntity buscarEntidade(int codigo) {
         return itemRepository.findById(codigo)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado.")); // RN-HIT-05, RN-FOT-04
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado.")); 
     }
 
     private ItemEntity travarItem(int codigo) {
@@ -423,14 +339,12 @@ public class ItemService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Item não encontrado."));
     }
 
-    /** RN-OS-07: OS 'Concluída' ou 'Cancelada' não aceita alterações. */
     private void garantirOsAberta(OrdemServicoEntity os) {
         if (statusService.statusAtual(os).isEncerrado()) {
             throw new RegraNegocioException("OS encerrada: não aceita alterações.");
         }
     }
 
-    /** RN-ITE-07: item 'Executada' ou 'Cancelada' não tem os dados alterados. */
     private void garantirItemAberto(ItemEntity item) {
         if (statusService.statusAtual(item).isEncerrado()) {
             throw new RegraNegocioException("Item encerrado não pode ser alterado.");
@@ -443,49 +357,46 @@ public class ItemService {
 
     private DadosItem validarDados(Validacao v, String descricaoInformada, BigDecimal qtd, String unidadeInformada,
                                    LocalDate prazo, BigDecimal valorInformado, LocalDate dataEntrada) {
-        String descricao = v.obrigatorio(descricaoInformada, "Descrição do item", 100); // RN-ITE-14
+        String descricao = v.obrigatorio(descricaoInformada, "Descrição do item", 100); 
         // RN-ITE-15: obrigatório, > 0 (CHECK ck_itens_qtd), até 2 casas (decimal(10,2)).
         BigDecimal qtdTotal = v.valor(qtd, true, BigDecimal.ZERO, false, Valores.DIGITOS_DECIMAL_10_2,
                 "Quantidade deve ser maior que zero.");
-        String unidade = Textos.maiusculas(unidadeInformada); // RN-ITE-17: gravada em maiúsculas
+        String unidade = Textos.maiusculas(unidadeInformada); 
         if (unidade == null || unidade.length() > 10) {
-            v.erro("Campo obrigatório: Unidade (até 10 caracteres)."); // RN-ITE-16
+            v.erro("Campo obrigatório: Unidade (até 10 caracteres)."); 
         } else if (parametros.getUnidadesItem().stream().noneMatch(u -> u.trim().equalsIgnoreCase(unidade))) {
-            v.erro("Unidade inválida."); // RN-ITE-17
+            v.erro("Unidade inválida."); 
         }
         if (prazo != null && prazo.isBefore(dataEntrada)) {
-            v.erro("O prazo de entrega não pode ser anterior à entrada."); // RN-ITE-20 (CHECK ck_itens_prazo)
+            v.erro("O prazo de entrega não pode ser anterior à entrada."); 
         }
-        // RN-ITE-23 e RN-ITE-24: opcional, >= 0 (CHECK ck_itens_valor), 2 casas; é o valor total do item.
         BigDecimal valor = v.valor(valorInformado, false, BigDecimal.ZERO, true, Valores.DIGITOS_DECIMAL_18_2,
                 "Valor do item inválido.");
         return new DadosItem(descricao, qtdTotal, unidade, prazo, valor);
     }
 
-    /** RN-ITE-04, RN-ITE-05, RN-ITE-11 e RN-ITE-12. */
     private void validarCorETinta(boolean temPintura, CorEntity cor, TintaEntity tinta, List<String> avisos) {
         if (temPintura && cor == null) {
-            throw new RegraNegocioException("Informe a cor: o item tem pintura."); // RN-ITE-05
+            throw new RegraNegocioException("Informe a cor: o item tem pintura."); 
         }
         if (!temPintura && (cor != null || tinta != null)) {
-            throw new RegraNegocioException("Item sem pintura na rota não leva cor nem tinta."); // RN-ITE-05
+            throw new RegraNegocioException("Item sem pintura na rota não leva cor nem tinta."); 
         }
         if (tinta == null) {
             return;
         }
         if (cor == null) {
-            throw new RegraNegocioException("Para informar a tinta, informe antes a cor pedida."); // RN-ITE-11
+            throw new RegraNegocioException("Para informar a tinta, informe antes a cor pedida."); 
         }
         if (tinta.getCor().getCodigo() != cor.getCodigo()) {
             throw new RegraNegocioException("A tinta escolhida é de outra cor (" + tinta.getCor().getNome()
-                    + "); a cor pedida é " + cor.getNome() + "."); // RN-ITE-04
+                    + "); a cor pedida é " + cor.getNome() + "."); 
         }
         if (tinta.getEstoque() == null || tinta.getEstoque().signum() <= 0) {
-            avisos.add("Atenção: tinta sem estoque."); // RN-ITE-12
+            avisos.add("Atenção: tinta sem estoque."); 
         }
     }
 
-    /** Se a transação for desfeita, o arquivo gravado não fica solto na pasta (RN-FOT-01). */
     private void apagarArquivoSeDesfizer(String caminho) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

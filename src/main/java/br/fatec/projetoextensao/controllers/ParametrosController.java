@@ -13,10 +13,11 @@ import br.fatec.projetoextensao.services.UsuarioService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): parâmetros que a tela usa para montar listas e conferir antes de enviar. Os valores vêm do
+ * Parâmetros que a tela usa para montar listas e conferir antes de enviar. Os valores vêm do
  * application.properties (fenix.*) e das listas fixas dos Services, então a tela acompanha qualquer mudança sem ser
- * editada. Exige login como toda a API (RN-SIS-01); não há dado sensível.
+ * editada. Exige login como toda a API; não há dado sensível.
  */
+
 @RestController
 @RequestMapping("/api/parametros")
 @RequiredArgsConstructor

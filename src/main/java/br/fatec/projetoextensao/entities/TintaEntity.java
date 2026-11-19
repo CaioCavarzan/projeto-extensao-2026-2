@@ -47,11 +47,6 @@ public class TintaEntity{
     @Column(name = "ref_fornecedor")
     private String referenciaFornecedor;
     
-    // ALTERADO (18/11/2026) [E3-07]: era @Column(name = "estoque_atual"), gravado pelo Java (TintaService). Agora o
-    // estoque só muda pela procedure dbo.sp_ajustar_estoque_tinta (RN-TIN-14: só por ajuste), que trava a linha
-    // (UPDLOCK) e não deixa o saldo ficar negativo. insertable = false e updatable = false: na tinta nova vale o
-    // DEFAULT 0 do script (RN-TIN-13) e a alteração do cadastro (descrição, tipo, preço...) não regrava o estoque
-    // que estava na memória, o que poderia desfazer um ajuste feito ao mesmo tempo por outro usuário.
     @Column(name = "estoque_atual", insertable = false, updatable = false)
     private BigDecimal estoque = BigDecimal.ZERO;
     

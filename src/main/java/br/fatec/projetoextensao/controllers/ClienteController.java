@@ -22,11 +22,12 @@ import br.fatec.projetoextensao.services.ClienteService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): clientes. Todo cliente é PF ou PJ, nunca os dois (RN-CLI-01): por isso há uma rota de
+ * Clientes. Todo cliente é PF ou PJ, nunca os dois: por isso há uma rota de
  * cadastro para cada tipo, e o tipo não muda na alteração. Se o CPF já é de um funcionário (ou o CNPJ de um
- * fornecedor), o cadastro reaproveita a mesma pessoa e devolve o aviso em "avisos" (RN-PES-02 a RN-PES-04).
- * GET /semelhantes: aviso de possível duplicidade antes de cadastrar (RN-CLI-03). Excluir: só ADMIN (RN-CLI-02).
+ * fornecedor), o cadastro reaproveita a mesma pessoa e devolve o aviso em "avisos".
+ * GET /semelhantes: aviso de possível duplicidade antes de cadastrar. Excluir: só ADMIN.
  */
+
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor

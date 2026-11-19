@@ -18,11 +18,12 @@ import br.fatec.projetoextensao.services.ItemRotaProcessoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): indicador do PDCA de GQA (RN-IRP-09): % de retrabalho = itens com alguma etapa repetida
+ * Indicador do PDCA de GQA: % de retrabalho = itens com alguma etapa repetida
  * ÷ itens executados no período × 100. Datas no formato AAAA-MM-DD; o período inclui as duas datas.
- * ALTERADO (18/11/2026) [E3-18]: novos /produtividade (view vw_produtividade_funcionario) e /retrabalho/mensal
+ * Novos /produtividade (view vw_produtividade_funcionario) e /retrabalho/mensal
  * (view vw_retrabalho_mensal), atendidos pelo IndicadorService.
  */
+
 @RestController
 @RequestMapping("/api/indicadores")
 @RequiredArgsConstructor
@@ -46,7 +47,6 @@ public class IndicadorController {
         return itemRotaProcessoService.itensComRetrabalho(inicio, fim);
     }
 
-    /** INCLUÍDO (18/11/2026) [E3-18]: etapas concluídas por dia, funcionário e processo (vw_produtividade_funcionario). */
     @GetMapping("/produtividade")
     public List<ProdutividadeResponse> produtividade(
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
@@ -54,7 +54,6 @@ public class IndicadorController {
         return indicadorService.produtividade(inicio, fim);
     }
 
-    /** INCLUÍDO (18/11/2026) [E3-18]: % de retrabalho mês a mês (vw_retrabalho_mensal); padrão: últimos 12 meses. */
     @GetMapping("/retrabalho/mensal")
     public List<RetrabalhoMensalResponse> retrabalhoMensal(
             @RequestParam(name = "meses", defaultValue = "12") int meses) {

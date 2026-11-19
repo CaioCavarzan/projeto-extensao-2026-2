@@ -26,11 +26,12 @@ import br.fatec.projetoextensao.services.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): ordens de serviço. POST abre a OS com os itens na mesma transação (RN-OS-01 e RN-SIS-04);
- * número, usuário, data de entrada e valor não vêm no corpo (RN-SIS-05). Mudanças de status pelas ações
- * pausar, retomar, concluir (RN-OS-04) e cancelar (só ADMIN, RN-OS-05), conforme o fluxo de status (RN-HOS-02).
- * POST /{numero}/itens inclui um item numa OS aberta (RN-OS-07).
+ * Ordens de serviço. POST abre a OS com os itens na mesma transação;
+ * número, usuário, data de entrada e valor não vêm no corpo. Mudanças de status pelas ações
+ * pausar, retomar, concluir e cancelar (só ADMIN), conforme o fluxo de status.
+ * POST /{numero}/itens inclui um item numa OS aberta.
  */
+
 @RestController
 @RequestMapping("/api/ordens")
 @RequiredArgsConstructor
@@ -44,16 +45,11 @@ public class OrdemServicoController {
         return ordemServicoService.listar();
     }
 
-    /**
-     * INCLUÍDO (18/11/2026) [E3-18]: painel das OS lido da view dbo.vw_painel_ordens_servico (lista leve, sem os itens;
-     * usada pelas telas de lista). Fica antes de /{numero} por clareza; o Spring já daria preferência ao caminho fixo.
-     */
     @GetMapping("/painel")
     public List<PainelOsResponse> painel() {
         return ordemServicoService.painel();
     }
 
-    /** INCLUÍDO (19/11/2026): número previsto e data de entrada da próxima OS (tela Nova OS, antes de salvar). */
     @GetMapping("/proxima")
     public ProximaOsResponse proxima() {
         return ordemServicoService.proxima();
@@ -99,7 +95,6 @@ public class OrdemServicoController {
         return ordemServicoService.historico(numero);
     }
 
-    /** INCLUÍDO (18/11/2026) [E3-18]: linha do tempo da OS, pela função dbo.fn_auditoria_timeline_os (aba Auditoria). */
     @GetMapping("/{numero}/auditoria")
     public List<EventoAuditoriaResponse> auditoria(@PathVariable("numero") int numero) {
         return ordemServicoService.auditoria(numero);

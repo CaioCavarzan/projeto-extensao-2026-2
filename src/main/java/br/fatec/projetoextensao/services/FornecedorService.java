@@ -26,17 +26,15 @@ import br.fatec.projetoextensao.validacao.Validacao;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): fornecedores (tabela Fornecedores).
- * Regras: RN-FOR-01 a RN-FOR-09, RN-PES-02 (o fornecedor que já é cliente PJ reaproveita a mesma pessoa),
- * RN-PES-05 (fornecedor nunca é funcionário), RN-SIS-03 (inativar e excluir: só ADMIN).
+ * Fornecedores (tabela Fornecedores).
  */
+
 @Service
 @RequiredArgsConstructor
 public class FornecedorService {
 
     private static final Logger log = LoggerFactory.getLogger(FornecedorService.class);
 
-    /** RN-FOR-09: lista padronizada de prazos de pagamento (definida pelo grupo na planilha). */
     public static final List<String> PRAZOS_PAGAMENTO = List.of("À vista", "30 dias", "30/60/90 dias");
 
     private final FornecedorRepository fornecedorRepository;
@@ -45,10 +43,6 @@ public class FornecedorService {
     private final PessoaService pessoaService;
     private final UsuarioLogado usuarioLogado;
 
-    /**
-     * Cadastro de fornecedor, com a pessoa na mesma transação (RN-PES-01, RN-SIS-04). Se o CNPJ já pertence a um
-     * cliente PJ, o fornecedor é ligado à mesma pessoa (RN-PES-02 e RN-PES-04). Nasce ativo (RN-FOR-07).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public FornecedorResponse cadastrar(FornecedorRequest dto) {
@@ -56,45 +50,43 @@ public class FornecedorService {
             throw new RegraNegocioException("Informe os dados do fornecedor.");
         }
         Validacao v = new Validacao();
-        String cnpj = Documentos.normalizarCnpj(dto.cnpj()); // RN-FOR-05: sem máscara e em maiúsculas
+        String cnpj = Documentos.normalizarCnpj(dto.cnpj()); 
         if (cnpj == null || cnpj.isEmpty()) {
-            v.erro("Informe o CNPJ do fornecedor."); // RN-FOR-01
+            v.erro("Informe o CNPJ do fornecedor."); 
         } else if (!cnpj.matches("[0-9A-Z]{12}\\d{2}")) {
-            v.erro("CNPJ inválido ou já cadastrado."); // RN-FOR-05 (formato do CHECK)
+            v.erro("CNPJ inválido ou já cadastrado."); 
         } else if (!Documentos.cnpjValido(cnpj)) {
-            v.erro("CNPJ inválido."); // RN-FOR-06
+            v.erro("CNPJ inválido."); 
         }
         String prazo = validarPrazo(v, dto.prazoPagamento());
         v.verificar();
 
         if (fornecedorRepository.existsByCnpj(cnpj)) {
-            throw RegraNegocioException.conflito("CNPJ inválido ou já cadastrado."); // RN-FOR-05
+            throw RegraNegocioException.conflito("CNPJ inválido ou já cadastrado."); 
         }
         List<String> avisos = new ArrayList<>();
         PessoaEntity pessoa;
         Optional<PessoaEntity> existente = pessoaService.buscarPorCnpj(cnpj);
         if (existente.isPresent()) {
-            // RN-PES-02: o CNPJ é de um cliente PJ -> o papel de fornecedor reaproveita a mesma pessoa.
             pessoa = existente.get();
             if (funcionarioRepository.existsById(pessoa.getCodigo())) {
                 throw RegraNegocioException.conflito(
-                        "Uma pessoa não pode ser funcionário e fornecedor; cadastre a empresa como outra pessoa."); // RN-PES-05
+                        "Uma pessoa não pode ser funcionário e fornecedor; cadastre a empresa como outra pessoa."); 
             }
             avisos.add("Esta pessoa já está cadastrada como cliente; o novo papel foi ligado a ela.");
         } else {
-            pessoa = pessoaService.criarPessoa(dto.pessoa()); // RN-PES-01
+            pessoa = pessoaService.criarPessoa(dto.pessoa()); 
         }
 
         FornecedorEntity f = new FornecedorEntity();
-        f.setPessoa(pessoa); // RN-FOR-04: a chave é o código da pessoa (@MapsId)
+        f.setPessoa(pessoa); 
         f.setCnpj(cnpj);
         f.setPrazoPagamento(prazo);
-        f.setAtivo(true); // RN-FOR-07 e RN-SIS-10
+        f.setAtivo(true); 
         f = fornecedorRepository.save(f);
         return paraResponse(f, avisos);
     }
 
-    /** Alteração dos dados da pessoa e do prazo. O CNPJ é corrigido em PessoaService.corrigirCnpj (só ADMIN). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public FornecedorResponse atualizar(int codigo, FornecedorAtualizacaoRequest dto) {
@@ -110,7 +102,6 @@ public class FornecedorService {
         return paraResponse(fornecedorRepository.save(f), List.of());
     }
 
-    /** RN-FOR-02: fornecedor com tintas é inativado em vez de excluído. RN-SIS-03: só ADMIN. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public FornecedorResponse inativar(int codigo) {
@@ -128,10 +119,6 @@ public class FornecedorService {
         return paraResponse(fornecedorRepository.save(f), List.of());
     }
 
-    /**
-     * RN-FOR-02: fornecedor com tintas não é excluído (é inativado). RN-SIS-03: só ADMIN.
-     * RN-PES-07: a pessoa sem outro papel também é excluída.
-     */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public void excluir(int codigo) {
@@ -145,7 +132,6 @@ public class FornecedorService {
         pessoaService.excluirSeSemPapel(pessoa);
     }
 
-    /** somenteAtivos = true: lista para escolher fornecedor de tinta nova (RN-FOR-03). */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<FornecedorResponse> listar(boolean somenteAtivos) {
@@ -163,10 +149,9 @@ public class FornecedorService {
 
     FornecedorEntity buscarEntidade(int codigo) {
         return fornecedorRepository.findById(codigo)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Fornecedor não encontrado.")); // RN-TIN-04
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Fornecedor não encontrado.")); 
     }
 
-    /** RN-FOR-08 (obrigatório, até 50) e RN-FOR-09 (lista padronizada; gravado com a grafia da lista). */
     private String validarPrazo(Validacao v, String valor) {
         String prazo = v.obrigatorio(valor, "Prazo de pagamento", 50);
         if (prazo == null) {

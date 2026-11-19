@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-19]: uma linha da view dbo.vw_painel_ordens_servico (GET /api/ordens/painel).
+ * Uma linha da view dbo.vw_painel_ordens_servico (GET /api/ordens/painel).
  *
  * Por que existe: as listas de OS (tela Ordens de Serviço, Clientes, Peças e relatório de OS) usavam
  * GET /api/ordens, que monta cada OS com todos os itens, rotas e fotos só para contar itens e achar atrasos. A view
@@ -15,8 +15,9 @@ import java.time.LocalDateTime;
  * Colunas da view -> campos: nr_os -> numero; aberta_por -> registradaPor; status_atual -> status;
  * status_desde -> statusDesde; tipo_cliente ('PF'/'PJ') -> tipoCliente; documento_cliente -> documentoCliente;
  * qtd_itens, qtd_itens_executados, qtd_itens_cancelados, qtd_itens_em_aberto, qtd_itens_atrasados e
- * valor_incompleto (RN-OS-15).
+ * valor_incompleto.
  */
+
 public record PainelOsResponse(
         int numero,
         LocalDateTime dataEntrada,
