@@ -1,19 +1,7 @@
--- INCLUÍDO (18/11/2026) [E3-51]: objetos da Etapa 3 imitados no H2 dos testes automáticos (perfil "test").
--- Roda depois do schema-h2.sql (application-test.properties). O H2 não executa T-SQL (OUTER/CROSS APPLY, TOP,
--- variável tabela, THROW, inserted/deleted), então cada objeto do SQL Server tem aqui uma versão com o MESMO nome
--- (schema dbo), as MESMAS colunas e as MESMAS regras, escrita no SQL do H2 ou em Java:
---   * functions  -> CREATE ALIAS para métodos de br.fatec.projetoextensao.bancodados.RotinasH2;
---   * views      -> CREATE VIEW com subconsultas no lugar do APPLY;
---   * triggers   -> CREATE TRIGGER ... FOR EACH ROW CALL classes de TriggersH2;
---   * procedures -> não ficam no banco: a classe ProcedimentosBancoH2 (perfil test) faz o papel delas.
--- As duas views h2_status_* existem SÓ aqui: são o "status atual" (registro mais recente do histórico, RN-HOS-03
--- e RN-HIT-03), que no T-SQL é o OUTER APPLY (select top (1) ... order by data_hora desc).
--- Regra deste arquivo: nenhum ";" dentro de um comando (o Spring separa os comandos pelo ";").
--- ATENÇÃO: isto não substitui o teste no SQL Server de verdade (Etapa3SqlServerIT, ver docs/database/INTEGRACAO_ETAPA3_JAVA.md).
 
 create schema if not exists dbo;
 
--- status atual de cada item e de cada OS
+-- status atual de cada item e de cada Ordem de Serviço
 create view dbo.h2_status_item_atual as
 select h.item_codigo, s.status, h.data_hora
 from HistoricosStatusItens h
