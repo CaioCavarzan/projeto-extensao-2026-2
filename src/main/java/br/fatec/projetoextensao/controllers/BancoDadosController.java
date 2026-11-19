@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
  * o perfil ADMIN (@PreAuthorize, RN-SIS-03); o OPERADOR recebe 403.
  * <ul>
  *   <li>GET  /api/banco/situacao: os 13 objetos da Etapa 3 (instalados ou não) e o último backup;</li>
- *   <li>POST /api/banco/objetos/instalar: roda etapa3_01 a etapa3_04 (CREATE OR ALTER);</li>
+ *   <li>POST /api/banco/objetos/instalar: roda functions/views/procedures/triggers.sql (CREATE OR ALTER);</li>
  *   <li>POST /api/banco/backup: rotina 1 do backup_restore.sql (BACKUP DATABASE + RESTORE VERIFYONLY);</li>
  *   <li>POST /api/banco/restauracao: rotina 2 do backup_restore.sql, com {"confirmacao": "RESTAURAR banco_fenix"}.</li>
  * </ul>

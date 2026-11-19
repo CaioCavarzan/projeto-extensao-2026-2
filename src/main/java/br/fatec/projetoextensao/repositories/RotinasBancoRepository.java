@@ -25,8 +25,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-05]: leitura das 4 functions e das 3 views da Etapa 3 (scripts etapa3_01_functions.sql e
- * etapa3_02_views.sql). É o único lugar do Java que escreve SQL para esses objetos.
+ * INCLUÍDO (18/11/2026) [E3-05]: leitura das 4 functions e das 3 views da Etapa 3 (scripts functions.sql e
+ * views.sql). É o único lugar do Java que escreve SQL para esses objetos.
  *
  * Por que JdbcClient (SQL "puro") e não um repository do Spring Data:
  * <ul>

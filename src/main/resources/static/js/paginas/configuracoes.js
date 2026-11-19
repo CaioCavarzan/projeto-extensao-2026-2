@@ -124,7 +124,7 @@ if (pagina) {
         // ALTERADO (18/11/2026) [E3-38]: o cálculo passou para a função do banco dbo.fn_prioridade_clientes (Etapa 3).
         ['Prioridade do cliente', 'Calculada: faturamento do cliente ÷ maior faturamento × 100 (OS canceladas não contam)', 'função dbo.fn_prioridade_clientes (PrioridadeClienteService)', 'RN-CLI-09'],
         // INCLUÍDO (18/11/2026) [E3-38]: regras que passaram a ser cumpridas pelos objetos da Etapa 3.
-        ['Valor da OS', 'Soma dos itens não cancelados, gravada pelo banco a cada mudança de item', 'triggers + dbo.fn_valor_os (etapa3_04_triggers.sql)', 'RN-OS-14 e RN-OS-15'],
+        ['Valor da OS', 'Soma dos itens não cancelados, gravada pelo banco a cada mudança de item', 'triggers + dbo.fn_valor_os (triggers.sql)', 'RN-OS-14 e RN-OS-15'],
         ['Itens atrasados', 'Prazo de entrega antes de hoje e item não executado nem cancelado', 'função dbo.fn_itens_atrasados', 'RN-ITE-22'],
         ['Unidades do item', p.unidades.join(', '), 'fenix.itens.unidades', 'RN-ITE-17 — definida em 22/10'],
         ['Fotos por item', String(p.maxFotosPorItem), 'fenix.fotos.max-por-item', 'decisão de 20/10'],
@@ -185,7 +185,7 @@ if (pagina) {
   /**
    * INCLUÍDO (18/11/2026) [E3-38]: aba Banco de dados.
    * GET /api/banco/situacao: os 13 objetos da Etapa 3 (sys.objects) e o último backup (msdb). Ações:
-   *  - "Instalar ou atualizar objetos": POST /api/banco/objetos/instalar (roda etapa3_01 a etapa3_04, CREATE OR ALTER);
+   *  - "Instalar ou atualizar objetos": POST /api/banco/objetos/instalar (roda functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem; CREATE OR ALTER);
    *  - "Fazer backup agora": POST /api/banco/backup (rotina 1 do backup_restore.sql);
    *  - "Restaurar último backup": POST /api/banco/restauracao com o texto de confirmação (rotina 2 do script).
    * As mensagens do SQL Server (andamento do backup, "The backup set on file 1 is valid."...) aparecem num diálogo.
@@ -212,7 +212,7 @@ if (pagina) {
       } catch (e) {
         if (e?.status === 401) return;
         trocar(area, caixaErro(e?.mensagens || [e?.message || 'Não foi possível consultar o banco.']),
-          caixaInfo('Os objetos também podem ser instalados pelo SSMS: rode docs/database/etapa3_01_functions.sql, etapa3_02_views.sql, etapa3_03_procedures.sql e etapa3_04_triggers.sql, nessa ordem.'));
+          caixaInfo('Os objetos também podem ser instalados pelo SSMS: rode docs/database/functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem.'));
       }
     }
 

@@ -49,7 +49,7 @@ import lombok.RequiredArgsConstructor;
  * RN-SIS-08 (usuário que registrou = usuário logado).
  *
  * ALTERADO (18/11/2026) [E3-14]: novo replanejar, que aciona a procedure dbo.sp_replanejar_cronograma
- * (etapa3_03_procedures.sql) pelo botão "Replanejar pendências" da tela Cronograma.
+ * (procedures.sql) pelo botão "Replanejar pendências" da tela Cronograma.
  */
 @Service
 @RequiredArgsConstructor

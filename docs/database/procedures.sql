@@ -1,5 +1,5 @@
 -- =================================================================================================
--- arquivo : docs/database/etapa3_03_procedures.sql
+-- arquivo : docs/database/procedures.sql
 -- banco   : banco_fenix (sql server)
 -- ordem   : 3º script da etapa 3 (depende de dbo.fn_valor_os)
 -- objetos : 1. dbo.sp_ajustar_estoque_tinta

@@ -16,17 +16,17 @@ Como as **Views**, **Procedures** e **Triggers** invocam a função escalar `dbo
 | :---: | :--- | :--- | :--- |
 | **Pré** | [schema.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/schema.sql) | DDL Estrutural | Criação do banco `banco_fenix`, 19 tabelas do domínio, PKs, FKs, UKs e Constraints `CHECK` |
 | **Pré** | [data.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/data.sql) | DML de Carga | Massa de dados realista (clientes PF/PJ, funcionários, usuários, tintas, OS, itens, rotas e cronogramas) |
-| **1º** | [etapa3_01_functions.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_01_functions.sql) | **4 Functions** | `dbo.fn_valor_os`, `dbo.fn_itens_atrasados`, `dbo.fn_prioridade_clientes`, `dbo.fn_auditoria_timeline_os` |
-| **2º** | [etapa3_02_views.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_02_views.sql) | **3 Views** | `dbo.vw_painel_ordens_servico`, `dbo.vw_produtividade_funcionario`, `dbo.vw_retrabalho_mensal` |
-| **3º** | [etapa3_03_procedures.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_03_procedures.sql) | **3 Procedures** | `dbo.sp_ajustar_estoque_tinta`, `dbo.sp_cancelar_ordem_servico`, `dbo.sp_replanejar_cronograma` |
-| **4º** | [etapa3_04_triggers.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_04_triggers.sql) | **3 Triggers** | `dbo.trg_itens_sincronizar_valor_os`, `dbo.trg_historicos_status_os_proteger`, `dbo.trg_historicos_status_itens_sincronizar_item_e_os` |
+| **1º** | [functions.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/functions.sql) | **4 Functions** | `dbo.fn_valor_os`, `dbo.fn_itens_atrasados`, `dbo.fn_prioridade_clientes`, `dbo.fn_auditoria_timeline_os` |
+| **2º** | [views.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/views.sql) | **3 Views** | `dbo.vw_painel_ordens_servico`, `dbo.vw_produtividade_funcionario`, `dbo.vw_retrabalho_mensal` |
+| **3º** | [procedures.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/procedures.sql) | **3 Procedures** | `dbo.sp_ajustar_estoque_tinta`, `dbo.sp_cancelar_ordem_servico`, `dbo.sp_replanejar_cronograma` |
+| **4º** | [triggers.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/triggers.sql) | **3 Triggers** | `dbo.trg_itens_sincronizar_valor_os`, `dbo.trg_historicos_status_os_proteger`, `dbo.trg_historicos_status_itens_sincronizar_item_e_os` |
 | **Extra** | [backup_restore.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/backup_restore.sql) | **Backup & Restore** | Backup Full online com verificação física (`restore verifyonly`) e Restore seguro (`single_user with rollback immediate`) |
 
 ---
 
 ## Parte A — Explicação Detalhada e Visão de Mercado dos 13 Recursos
 
-### 1. Functions ([etapa3_01_functions.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_01_functions.sql))
+### 1. Functions ([functions.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/functions.sql))
 
 #### 1.1 `dbo.fn_valor_os(@nr_os int)` — *Scalar Function* (`returns decimal(18, 2)`)
 * **Tabelas atreladas:** `dbo.Itens`, `dbo.HistoricosStatusItens`, `dbo.StatusItens`.
@@ -53,7 +53,7 @@ Como as **Views**, **Procedures** e **Triggers** invocam a função escalar `dbo
 
 ---
 
-### 2. Views ([etapa3_02_views.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_02_views.sql))
+### 2. Views ([views.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/views.sql))
 
 #### 2.1 `dbo.vw_painel_ordens_servico`
 * **Tabelas atreladas:** `dbo.OrdensDeServico`, `dbo.Clientes`, `dbo.Pessoas`, `dbo.PessoasFisicas`, `dbo.PessoasJuridicas`, `dbo.Usuarios`, `dbo.HistoricosStatusOs`, `dbo.StatusOs`, `dbo.Itens`, `dbo.HistoricosStatusItens`, `dbo.StatusItens`.
@@ -72,7 +72,7 @@ Como as **Views**, **Procedures** e **Triggers** invocam a função escalar `dbo
 
 ---
 
-### 3. Stored Procedures ([etapa3_03_procedures.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_03_procedures.sql))
+### 3. Stored Procedures ([procedures.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/procedures.sql))
 
 #### 3.1 `dbo.sp_ajustar_estoque_tinta`
 * **Assinatura:** `(@tinta_codigo int, @quantidade decimal(10, 2), @estoque_resultante decimal(10, 2) output)`
@@ -99,7 +99,7 @@ Como as **Views**, **Procedures** e **Triggers** invocam a função escalar `dbo
 
 ---
 
-### 4. Triggers ([etapa3_04_triggers.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/etapa3_04_triggers.sql))
+### 4. Triggers ([triggers.sql](file:///d:/Workspace/Projects/projeto-extensao-2026-2/docs/database/triggers.sql))
 
 #### 4.1 `dbo.trg_itens_sincronizar_valor_os` (`after insert, update, delete` em `dbo.Itens`)
 * **Tabelas atreladas:** `dbo.Itens` (tabela alvo), `dbo.Tintas`, `dbo.OrdensDeServico`.
@@ -271,7 +271,7 @@ public int replanejar(LocalDate dataOrigem, LocalDate dataDestino) {
 
 Os blocos abaixo estão **100% prontos para copiar, colar e executar com `F5` no SQL Server Management Studio (SSMS)** durante a apresentação para a professora, sem depender da aplicação Java estar aberta. Todos os testes de escrita utilizam transações com `rollback tran` ao final para que você possa demonstrar quantas vezes quiser sem sujar a base de dados.
 
-### Bloco 1 — Demonstração das 4 Functions (`etapa3_01_functions.sql`)
+### Bloco 1 — Demonstração das 4 Functions (`functions.sql`)
 ```sql
 use banco_fenix
 go
@@ -303,7 +303,7 @@ go
 
 ---
 
-### Bloco 2 — Demonstração das 3 Views (`etapa3_02_views.sql`)
+### Bloco 2 — Demonstração das 3 Views (`views.sql`)
 ```sql
 use banco_fenix
 go
@@ -345,7 +345,7 @@ go
 
 ---
 
-### Bloco 3 — Demonstração das 3 Stored Procedures (`etapa3_03_procedures.sql`)
+### Bloco 3 — Demonstração das 3 Stored Procedures (`procedures.sql`)
 ```sql
 use banco_fenix
 go
@@ -415,7 +415,7 @@ go
 
 ---
 
-### Bloco 4 — Demonstração das 3 Triggers (`etapa3_04_triggers.sql`)
+### Bloco 4 — Demonstração das 3 Triggers (`triggers.sql`)
 ```sql
 use banco_fenix
 go

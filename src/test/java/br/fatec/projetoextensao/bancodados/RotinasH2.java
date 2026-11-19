@@ -21,7 +21,7 @@ import org.h2.tools.SimpleResultSet;
  * Por que existe: os testes rodam no H2 (banco em memória), que não executa T-SQL (OUTER APPLY, TOP, variável
  * tabela...). Para o Java ser testado chamando "dbo.fn_..." exatamente como no SQL Server, o arquivo
  * src/test/resources/etapa3-h2.sql registra estes métodos como funções do H2 (CREATE ALIAS). Cada método devolve as
- * MESMAS colunas, com os mesmos nomes, e aplica as MESMAS regras do script etapa3_01_functions.sql (os comentários
+ * MESMAS colunas, com os mesmos nomes, e aplica as MESMAS regras do script functions.sql (os comentários
  * apontam o trecho equivalente). O primeiro parâmetro (Connection) é preenchido pelo próprio H2.
  *
  * Funções de tabela: o H2 chama o método duas vezes; na primeira (URL "jdbc:columnlist:connection") só quer saber

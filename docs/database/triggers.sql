@@ -1,5 +1,5 @@
 -- =================================================================================================
--- arquivo : docs/database/etapa3_04_triggers.sql
+-- arquivo : docs/database/triggers.sql
 -- banco   : banco_fenix (sql server)
 -- ordem   : 4º script da etapa 3 (depende de dbo.fn_valor_os)
 -- objetos : 1. dbo.trg_itens_sincronizar_valor_os

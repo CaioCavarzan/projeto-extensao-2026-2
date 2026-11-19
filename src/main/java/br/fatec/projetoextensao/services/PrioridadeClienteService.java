@@ -33,7 +33,7 @@ import lombok.RequiredArgsConstructor;
  * à mão; ela não é recalculada depois.
  *
  * ALTERADO (18/11/2026) [E3-10]: a Etapa 3 transformou esse cálculo na função dbo.fn_prioridade_clientes
- * (etapa3_01_functions.sql), com a MESMA fórmula: 1ª passada soma valor_os das OS não canceladas de cada cliente
+ * (functions.sql), com a MESMA fórmula: 1ª passada soma valor_os das OS não canceladas de cada cliente
  * numa variável tabela; 2ª passada aplica mínimo + ROUND(faturamento × amplitude ÷ maior, 0). O Java deixou de
  * percorrer todas as OS (uma consulta de status por OS) e passou a só ler o resultado da função, passando os
  * limites do application.properties. O arredondamento ROUND(x, 0) do SQL Server é "metade para longe do zero", igual

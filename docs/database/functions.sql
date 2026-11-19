@@ -1,5 +1,5 @@
 -- =================================================================================================
--- arquivo : docs/database/etapa3_01_functions.sql
+-- arquivo : docs/database/functions.sql
 -- banco   : banco_fenix (sql server)
 -- ordem   : 1º script da etapa 3 (pré-requisito para views, procedures e triggers)
 -- objetos : 1. dbo.fn_valor_os              (scalar function)

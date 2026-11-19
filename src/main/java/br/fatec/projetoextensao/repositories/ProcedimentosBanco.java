@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-06]: as 3 stored procedures da Etapa 3 (script etapa3_03_procedures.sql), vistas pelo
+ * INCLUÍDO (18/11/2026) [E3-06]: as 3 stored procedures da Etapa 3 (script procedures.sql), vistas pelo
  * Java como métodos comuns. Cada método devolve o parâmetro OUTPUT da procedure.
  *
  * Por que uma interface: no sistema de verdade quem atende é ProcedimentosBancoSqlServer, que chama a procedure com

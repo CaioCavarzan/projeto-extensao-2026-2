@@ -5,7 +5,7 @@ import java.util.Locale;
 
 /**
  * INCLUÍDO (18/11/2026) [E3-02]: catálogo dos 13 objetos de banco da Etapa 3 que o Java passou a acionar
- * (scripts docs/database/etapa3_01 a etapa3_04).
+ * (scripts docs/database/functions.sql, views.sql, procedures.sql e triggers.sql).
  *
  * Por que existe: o mesmo nome de objeto aparece em vários lugares (consultas do RotinasBancoRepository, chamadas do
  * ProcedimentosBancoSqlServer, conferência na inicialização, aba Configurações > Banco de dados e tradução de erro
@@ -62,12 +62,16 @@ public enum ObjetoBancoEnum {
             "Histórico do item só recebe inclusões; preenche data_finalizacao e recalcula valor_os.",
             "Automático ao gravar status do item (StatusService)");
 
-    /** Nomes dos scripts do grupo, na ordem em que precisam rodar (copiados para o classpath em bancodados/). */
+    /**
+     * Nomes dos scripts do grupo, na ordem em que precisam rodar (copiados para o classpath em bancodados/).
+     * ALTERADO (19/11/2026): nomes curtos (antes etapa3_01_functions.sql a etapa3_04_triggers.sql). Como o nome
+     * do arquivo não diz mais a ordem, ela vale só por ETAPA3_EM_ORDEM.
+     */
     public static final class Scripts {
-        public static final String FUNCTIONS = "etapa3_01_functions.sql";
-        public static final String VIEWS = "etapa3_02_views.sql";
-        public static final String PROCEDURES = "etapa3_03_procedures.sql";
-        public static final String TRIGGERS = "etapa3_04_triggers.sql";
+        public static final String FUNCTIONS = "functions.sql";
+        public static final String VIEWS = "views.sql";
+        public static final String PROCEDURES = "procedures.sql";
+        public static final String TRIGGERS = "triggers.sql";
         public static final String BACKUP_RESTORE = "backup_restore.sql";
 
         /** Ordem de instalação: functions -> views -> procedures -> triggers (dependências do fn_valor_os). */

@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
  * RN-TIN-16 (alerta de estoque mínimo) foi descartada na planilha.
  *
  * ALTERADO (18/11/2026) [E3-13]: o ajuste de estoque passou a ser feito pela procedure dbo.sp_ajustar_estoque_tinta
- * (etapa3_03_procedures.sql); a coluna estoque_atual deixou de ser escrita pelo Hibernate (TintaEntity, E3-07).
+ * (procedures.sql); a coluna estoque_atual deixou de ser escrita pelo Hibernate (TintaEntity, E3-07).
  */
 @Service
 @RequiredArgsConstructor

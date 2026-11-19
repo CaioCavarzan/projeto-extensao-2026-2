@@ -29,7 +29,7 @@ import jakarta.persistence.EntityManager;
  * Por que existe: o H2 não tem stored procedure com parâmetro OUTPUT, então ProcedimentosBancoSqlServer (que usa
  * "{call dbo.sp_...}") não roda nele. Esta classe só existe em src/test, só vale no perfil "test" (@Profile) e tem
  * preferência sobre a do SQL Server (@Primary). Ela faz no banco de teste as MESMAS alterações do script
- * etapa3_03_procedures.sql, passo a passo, e recusa com os MESMOS códigos e mensagens (THROW 50001 a 50021), na
+ * procedures.sql, passo a passo, e recusa com os MESMOS códigos e mensagens (THROW 50001 a 50021), na
  * mesma forma em que o JdbcTemplate entregaria o erro do SQL Server (UncategorizedSQLException com a SQLException
  * dentro). Assim os Services são testados de ponta a ponta, inclusive a tradução dos erros.
  */

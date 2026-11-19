@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
  * Por que só avisa e não instala sozinho: criar objetos no banco é uma decisão do administrador (pode haver uma
  * versão do script sendo testada no SSMS). Sem os objetos, o sistema sobe, mas as telas que dependem deles
  * respondem 503 com o nome do objeto que falta (ObjetoBancoAusenteException). A instalação é feita em Configurações >
- * Banco de dados ou rodando os scripts etapa3_01 a etapa3_04 no SSMS, nessa ordem.
+ * Banco de dados ou rodando no SSMS functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem.
  * No H2 dos testes automáticos a conferência é pulada (os objetos são imitados pelo etapa3-h2.sql).
  */
 @Component
@@ -47,7 +47,8 @@ public class VerificacaoObjetosBanco {
                 log.info("Objetos da Etapa 3 no banco: {} de {} instalados.", objetos.size(), objetos.size());
             } else {
                 log.error("Objetos da Etapa 3 FALTANDO no banco ({} de {}): {}. Instale em Configurações > Banco de dados "
-                        + "ou rode docs/database/etapa3_01 a etapa3_04 no SSMS, nessa ordem.", faltando.size(),
+                        + "ou rode no SSMS docs/database/functions.sql, views.sql, procedures.sql e triggers.sql, "
+                        + "nessa ordem.", faltando.size(),
                         objetos.size(), String.join(", ", faltando));
             }
             if (!desabilitados.isEmpty()) {

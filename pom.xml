@@ -78,8 +78,8 @@
 
 	<build>
 		<!-- INCLUÍDO (18/11/2026) [E3-01]: copia para dentro do WAR (pasta bancodados/ do classpath) os scripts da
-		     Etapa 3 que ficam em docs/database: etapa3_01_functions.sql, etapa3_02_views.sql, etapa3_03_procedures.sql,
-		     etapa3_04_triggers.sql e backup_restore.sql.
+		     Etapa 3 que ficam em docs/database: functions.sql, views.sql, procedures.sql,
+		     triggers.sql e backup_restore.sql.
 		     Por quê: a aba Configurações > Banco de dados (BancoDadosService) instala os objetos e faz o backup e o
 		     restore executando ESTES MESMOS arquivos do grupo, e não uma cópia colada dentro do código Java. Assim só
 		     existe uma fonte (docs/database): se o grupo corrigir um script, o sistema passa a usar a correção na
@@ -109,7 +109,12 @@
 				<directory>${basedir}/docs/database</directory>
 				<targetPath>bancodados</targetPath>
 				<includes>
-					<include>etapa3_*.sql</include>
+					<!-- ALTERADO (19/11/2026): nomes curtos (antes etapa3_01_functions.sql a etapa3_04_triggers.sql).
+					     A ordem de execução não vem do nome do arquivo: fica em ObjetoBancoEnum.Scripts. -->
+					<include>functions.sql</include>
+					<include>views.sql</include>
+					<include>procedures.sql</include>
+					<include>triggers.sql</include>
 					<include>backup_restore.sql</include>
 				</includes>
 			</resource>

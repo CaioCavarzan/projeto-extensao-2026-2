@@ -1,5 +1,5 @@
 -- =================================================================================================
--- arquivo : docs/database/etapa3_02_views.sql
+-- arquivo : docs/database/views.sql
 -- banco   : banco_fenix (sql server)
 -- ordem   : 2º script da etapa 3
 -- objetos : 1. dbo.vw_painel_ordens_servico
