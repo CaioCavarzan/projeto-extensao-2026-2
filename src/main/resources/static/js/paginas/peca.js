@@ -87,7 +87,7 @@ if (pagina) {
     });
     const salvar = botao('Salvar', { variante: 'primario' });
     const dlg = dialogo({
-      titulo: 'Definir tinta', descricao: `Cor pedida: ${item.corNome}. Só aparecem tintas dessa cor (RN-ITE-04).`,
+      titulo: 'Definir tinta', descricao: `Cor pedida: ${item.corNome}. Só aparecem tintas dessa cor.`,
       conteudo: [campo('Tinta', s), aviso], botoes: [botao('Cancelar', { onclick: () => dlg.fechar() }), salvar],
     });
     salvar.addEventListener('click', () => ocupado(salvar, async () => {
@@ -246,7 +246,7 @@ if (pagina) {
       b.addEventListener('click', async () => {
         const nr = await pedirTexto({
           titulo: 'Registrar entrega', rotulo: 'Nº da OSE assinada pelo cliente', valor: item.nrOse || '',
-          dica: 'Ordem de Serviço Externa, assinada na entrega (RN-ITE-28). Até 50 caracteres.', textoConfirmar: 'Registrar',
+          dica: 'Ordem de Serviço Externa, assinada na entrega. Até 50 caracteres.', textoConfirmar: 'Registrar',
         });
         if (nr === null) return;
         acao(b, () => put(`/itens/${codigo}/entrega`, { nrOse: nr }), 'Entrega registrada.');
@@ -270,7 +270,7 @@ if (pagina) {
         info('droplet', 'Cor pedida', item.corNome || (temPintura ? 'Não informada' : 'Sem pintura')),
         info('palette', 'Tinta', tinta),
         info('calendar', 'Data de entrada', dataHora(item.dataEntrada)),
-        info('calendar-clock', 'Prazo de entrega', el('span', { class: item.atrasado ? 'texto-perigo seminegrito' : '', text: data(item.prazoEntrega) }), item.atrasado ? 'Atrasado (RN-ITE-22)' : undefined),
+        info('calendar-clock', 'Prazo de entrega', el('span', { class: item.atrasado ? 'texto-perigo seminegrito' : '', text: data(item.prazoEntrega) }), item.atrasado ? 'Atrasado' : undefined),
         info('dollar-sign', 'Valor', el('span', { class: 'seminegrito texto-primario', text: moeda(item.valorTotalItem) }), item.valorTotalItem == null ? 'Sem valor: OS com valor incompleto' : undefined),
         info('gauge', 'Score de prioridade', item.scorePrioridade != null ? numero(item.scorePrioridade) : 'Calculado pelo sistema'),
         info('check-check', 'Finalização', item.dataFinalizacao ? dataHora(item.dataFinalizacao) : '—'),
@@ -321,7 +321,7 @@ if (pagina) {
       titulo: 'Rota de produção', tituloSecao: true,
       descricao: 'Etapas na ordem; cada uma começa só depois que a anterior foi concluída.',
       acoes: podeAlterar ? botao('Adicionar etapa', { tamanho: 'sm', icone: 'plus', onclick: () => dialogoAdicionarEtapa(item).catch(mostrarErro) }) : null,
-      corpo: linhasEtapas.length ? el('div', { class: 'pilha-2' }, linhasEtapas) : vazio('Sem etapas: inclua pelo menos uma (RN-ITE-03).', 'route'),
+      corpo: linhasEtapas.length ? el('div', { class: 'pilha-2' }, linhasEtapas) : vazio('Sem etapas: inclua pelo menos uma.', 'route'),
     });
 
     // Fotos
@@ -372,7 +372,7 @@ if (pagina) {
 
     const avisos = [];
     if (item.status === 'Pendente') avisos.push(el('div', { class: 'alerta alerta-aviso' }, icone('triangle-alert'), el('div', { text: 'Item pendente: confira a rota, a cor pedida (se tem Pintura) e os dados obrigatórios. Ele passa a "Aguardando execução" sozinho quando estiver completo.' })));
-    if (osFechada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: `A ${nOs(os.numero)} está ${os.status.toLowerCase()}: o item não é mais alterado, mas ainda aceita fotos e o registro da entrega (RN-OS-07).` })));
+    if (osFechada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: `A ${nOs(os.numero)} está ${os.status.toLowerCase()}: o item não é mais alterado, mas ainda aceita fotos e o registro da entrega.` })));
 
     trocar(area,
       voltar('Voltar para Peças', 'pecas.html'),

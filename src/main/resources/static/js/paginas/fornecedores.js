@@ -70,7 +70,7 @@ if (pagina) {
     }
     const elemento = el('div', { class: 'pilha' },
       el('div', { class: 'form-grade' }, pessoa.nome, campoCnpj, pessoa.email, pessoa.telefone,
-        campo('Prazo de pagamento', prazo, { largura: 'c3', obrigatorio: true, dica: 'Lista padronizada (RN-FOR-09).' })),
+        campo('Prazo de pagamento', prazo, { largura: 'c3', obrigatorio: true, dica: 'Lista padronizada.' })),
       el('section', { class: 'secao-form' }, el('h3', { class: 'secao-titulo', text: 'Endereço' }), pessoa.endereco),
       novo ? caixaInfo(TEXTO_HERANCA) : null);
     return {
@@ -106,12 +106,12 @@ if (pagina) {
     if (admin) {
       const ativo = botao(f.ativo ? 'Inativar' : 'Reativar', { variante: f.ativo ? 'perigo-contorno' : 'contorno', icone: f.ativo ? 'ban' : 'refresh-cw' });
       ativo.addEventListener('click', async () => {
-        if (f.ativo && !(await confirmar(`Inativar ${f.nome}? Fornecedor inativo não recebe tinta nova; as tintas já cadastradas continuam (RN-FOR-03).`, { titulo: 'Inativar fornecedor', textoConfirmar: 'Inativar', perigo: true }))) return;
+        if (f.ativo && !(await confirmar(`Inativar ${f.nome}? Fornecedor inativo não recebe tinta nova; as tintas já cadastradas continuam.`, { titulo: 'Inativar fornecedor', textoConfirmar: 'Inativar', perigo: true }))) return;
         await acao(ativo, () => post(`/fornecedores/${f.codigo}/${f.ativo ? 'inativar' : 'reativar'}`), f.ativo ? 'Fornecedor inativado.' : 'Fornecedor reativado.');
       });
       const excluir = botao('Excluir', { variante: 'perigo-contorno', icone: 'trash-2' });
       excluir.addEventListener('click', async () => {
-        if (!(await confirmar(`Excluir ${f.nome}? Fornecedor com tintas não é excluído: inative-o (RN-SIS-12).`, { titulo: 'Excluir fornecedor', textoConfirmar: 'Excluir', perigo: true }))) return;
+        if (!(await confirmar(`Excluir ${f.nome}? Fornecedor com tintas não é excluído: inative-o.`, { titulo: 'Excluir fornecedor', textoConfirmar: 'Excluir', perigo: true }))) return;
         await acao(excluir, () => del(`/fornecedores/${f.codigo}`), 'Fornecedor excluído.');
       });
       esquerda.append(ativo, excluir);

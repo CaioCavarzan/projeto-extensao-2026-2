@@ -91,14 +91,14 @@ if (pagina) {
     const valor = entrada({ inputmode: 'decimal', value: t ? decimalParaCampo(t.valorUnitario) : '', placeholder: '0,00' });
 
     const partes = [el('div', { class: 'form-grade' },
-      campo('Fornecedor', fornecedor, { largura: 'c6', obrigatorio: true, dica: 'Só fornecedores ativos recebem tinta nova (RN-FOR-03).' }),
+      campo('Fornecedor', fornecedor, { largura: 'c6', obrigatorio: true, dica: 'Só fornecedores ativos recebem tinta nova.' }),
       campo('Descrição da tinta', descricao, { largura: 'c6', obrigatorio: true }),
       campo('Cor', cor, { largura: 'c3', obrigatorio: true, dica: novo ? undefined : 'Tinta já usada em itens não muda de cor.' }),
       campo('Referência do fornecedor', referencia, { largura: 'c3' }),
-      campo('Tipo', tipo, { largura: 'c2', dica: 'Lista do estoque da Fênix (RN-TIN-08).' }),
-      campo('Acabamento', acabamento, { largura: 'c2', dica: 'Lista do estoque da Fênix (RN-TIN-10).' }),
+      campo('Tipo', tipo, { largura: 'c2', dica: 'Lista do estoque da Fênix.' }),
+      campo('Acabamento', acabamento, { largura: 'c2', dica: 'Lista do estoque da Fênix.' }),
       campo('Valor por kg (R$)', valor, { largura: 'c2', obrigatorio: true, dica: '0 = preço a confirmar.' }))];
-    if (novo) partes.push(caixaInfo('O estoque começa em 0 kg e muda só por ajuste (entrada de compra ou baixa), na tela da tinta (RN-TIN-14).'));
+    if (novo) partes.push(caixaInfo('O estoque começa em 0 kg e muda só por ajuste (entrada de compra ou baixa), na tela da tinta.'));
 
     // Ajuste de estoque (só na tinta já cadastrada)
     if (!novo) {

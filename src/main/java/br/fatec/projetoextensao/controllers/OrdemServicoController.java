@@ -20,6 +20,7 @@ import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.OsResponse;
 import br.fatec.projetoextensao.dtos.PainelOsResponse;
 import br.fatec.projetoextensao.dtos.PrioridadeRequest;
+import br.fatec.projetoextensao.dtos.ProximaOsResponse;
 import br.fatec.projetoextensao.services.ItemService;
 import br.fatec.projetoextensao.services.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,12 @@ public class OrdemServicoController {
     @GetMapping("/painel")
     public List<PainelOsResponse> painel() {
         return ordemServicoService.painel();
+    }
+
+    /** INCLUÍDO (19/11/2026): número previsto e data de entrada da próxima OS (tela Nova OS, antes de salvar). */
+    @GetMapping("/proxima")
+    public ProximaOsResponse proxima() {
+        return ordemServicoService.proxima();
     }
 
     @GetMapping("/{numero}")

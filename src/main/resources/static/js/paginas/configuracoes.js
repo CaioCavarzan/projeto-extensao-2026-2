@@ -64,7 +64,7 @@ if (pagina) {
     }
 
     function excluir(b, i) {
-      confirmar(`Excluir "${i.nome}"? Registro em uso não é excluído (RN-SIS-12).`, { titulo: 'Excluir', textoConfirmar: 'Excluir', perigo: true }).then((ok) => {
+      confirmar(`Excluir "${i.nome}"? Registro em uso não é excluído.`, { titulo: 'Excluir', textoConfirmar: 'Excluir', perigo: true }).then((ok) => {
         if (!ok) return;
         ocupado(b, async () => {
           try {
@@ -105,7 +105,7 @@ if (pagina) {
   const abaListas = () => el('div', { class: 'grade lg-3' },
     cardLista({
       titulo: 'Cores', descricao: 'Cor pedida no item e cor da tinta.', caminho: '/cores', chaveCache: 'cores', nomeIcone: 'palette',
-      placeholder: 'Ex.: Vermelho RAL 3020', dica: 'Padronize o nome, com o código RAL quando houver, para não repetir a mesma cor com grafias diferentes (RN-COR-04).',
+      placeholder: 'Ex.: Vermelho RAL 3020', dica: 'Padronize o nome, com o código RAL quando houver, para não repetir a mesma cor com grafias diferentes.',
     }),
     cardLista({
       titulo: 'Fontes de aquisição', descricao: 'Como o cliente conheceu a Fênix.', caminho: '/fontes', chaveCache: 'fontes', nomeIcone: 'sparkles',
@@ -120,26 +120,26 @@ if (pagina) {
     const area = el('div', {}, esqueleto(5));
     ref.parametros().then((p) => {
       const linhas = [
-        ['Escala de prioridade (cliente e OS)', `${p.prioridadeMinima} a ${p.prioridadeMaxima}`, 'fenix.prioridade.minima / maxima', 'RN-CLI-09 — definida em 22/10'],
+        ['Escala de prioridade (cliente e OS)', `${p.prioridadeMinima} a ${p.prioridadeMaxima}`, 'fenix.prioridade.minima / maxima'],
         // ALTERADO (18/11/2026) [E3-38]: o cálculo passou para a função do banco dbo.fn_prioridade_clientes (Etapa 3).
-        ['Prioridade do cliente', 'Calculada: faturamento do cliente ÷ maior faturamento × 100 (OS canceladas não contam)', 'função dbo.fn_prioridade_clientes (PrioridadeClienteService)', 'RN-CLI-09'],
+        ['Prioridade do cliente', 'Calculada: faturamento do cliente ÷ maior faturamento × 100 (OS canceladas não contam)', 'Cálculo do sistema'],
         // INCLUÍDO (18/11/2026) [E3-38]: regras que passaram a ser cumpridas pelos objetos da Etapa 3.
-        ['Valor da OS', 'Soma dos itens não cancelados, gravada pelo banco a cada mudança de item', 'triggers + dbo.fn_valor_os (triggers.sql)', 'RN-OS-14 e RN-OS-15'],
-        ['Itens atrasados', 'Prazo de entrega antes de hoje e item não executado nem cancelado', 'função dbo.fn_itens_atrasados', 'RN-ITE-22'],
-        ['Unidades do item', p.unidades.join(', '), 'fenix.itens.unidades', 'RN-ITE-17 — definida em 22/10'],
-        ['Fotos por item', String(p.maxFotosPorItem), 'fenix.fotos.max-por-item', 'decisão de 20/10'],
-        ['Tamanho máximo da foto', `${p.tamanhoMaximoFotoMb} MB`, 'fenix.fotos.tamanho-maximo-mb', 'RN-FOT'],
-        ['Unidade do estoque de tinta', p.unidadeEstoqueTinta, 'TintaService.UNIDADE_ESTOQUE', 'RN-TIN-15'],
-        ['Tamanho da senha', `${p.senhaMinimo} a ${p.senhaMaximo} caracteres`, 'UsuarioService.SENHA_MINIMO / MAXIMO', 'RN-USU-15'],
-        ['Cargos', p.cargos.join(', '), 'FuncionarioService.CARGOS', 'RN-FUN-07'],
-        ['Prazos de pagamento', p.prazosPagamento.join(', '), 'FornecedorService.PRAZOS_PAGAMENTO', 'RN-FOR-09'],
+        ['Valor da OS', 'Soma dos itens não cancelados, atualizada a cada mudança de item', 'Cálculo do sistema'],
+        ['Itens atrasados', 'Prazo de entrega antes de hoje e item não executado nem cancelado', 'Cálculo do sistema'],
+        ['Unidades do item', p.unidades.join(', '), 'fenix.itens.unidades'],
+        ['Fotos por item', String(p.maxFotosPorItem), 'fenix.fotos.max-por-item'],
+        ['Tamanho máximo da foto', `${p.tamanhoMaximoFotoMb} MB`, 'fenix.fotos.tamanho-maximo-mb'],
+        ['Unidade do estoque de tinta', p.unidadeEstoqueTinta, 'TintaService.UNIDADE_ESTOQUE'],
+        ['Tamanho da senha', `${p.senhaMinimo} a ${p.senhaMaximo} caracteres`, 'UsuarioService.SENHA_MINIMO / MAXIMO'],
+        ['Cargos', p.cargos.join(', '), 'FuncionarioService.CARGOS'],
+        ['Prazos de pagamento', p.prazosPagamento.join(', '), 'FornecedorService.PRAZOS_PAGAMENTO'],
       ];
       trocar(area, el('div', { class: 'pilha-4' },
         caixaInfo('Parâmetros só de leitura nesta tela: mudam no application.properties (fenix.*) ou nas listas fixas dos Services, e a tela acompanha sem ser editada.'),
         el('div', { class: 'card card-tabela' }, tabela({
-          colunas: [{ titulo: 'Parâmetro' }, { titulo: 'Valor atual' }, { titulo: 'Onde muda' }, { titulo: 'Regra' }],
+          colunas: [{ titulo: 'Parâmetro' }, { titulo: 'Valor atual' }, { titulo: 'Onde muda' }],
           linhas,
-          montar: (l) => [el('span', { class: 'medio', text: l[0] }), l[1], el('span', { class: 'mono texto-xs texto-mudo', text: l[2] }), el('span', { class: 'texto-xs texto-mudo', text: l[3] })],
+          montar: (l) => [el('span', { class: 'medio', text: l[0] }), l[1], el('span', { class: 'mono texto-xs texto-mudo', text: l[2] })],
         }))));
     }).catch((e) => { trocar(area); mostrarErro(e); });
     return area;

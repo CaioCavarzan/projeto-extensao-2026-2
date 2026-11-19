@@ -68,7 +68,7 @@ if (pagina) {
     if (os.status === 'Em produção') {
       lista.push(b('Pausar', 'pause', 'pausar', `${nOs(numero)} pausada.`));
       lista.push(b('Concluir', 'circle-check', 'concluir', `${nOs(numero)} concluída.`, {
-        titulo: 'Concluir a OS', texto: 'A OS só é concluída quando todos os itens estão executados ou cancelados, e depois não reabre (RN-OS-03).', botao: 'Concluir',
+        titulo: 'Concluir a OS', texto: 'A OS só é concluída quando todos os itens estão executados ou cancelados, e depois não reabre.', botao: 'Concluir',
       }));
     }
     if (os.status === 'Pausada') lista.push(b('Retomar', 'play', 'retomar', `${nOs(numero)} retomada.`));
@@ -76,7 +76,7 @@ if (pagina) {
       lista.push(b('Cancelar OS', 'ban', 'cancelar', `${nOs(numero)} cancelada.`, {
         // ALTERADO (18/11/2026) [E3-33]: o texto passou a avisar que as etapas pendentes saem dos cronogramas futuros
         // (o que a procedure sp_cancelar_ordem_servico faz).
-        titulo: 'Cancelar a OS', texto: 'Os itens ainda não executados também serão cancelados e as etapas pendentes deles saem dos cronogramas de hoje em diante; os executados ficam como estão (RN-OS-05). Esta ação não pode ser desfeita.', botao: 'Cancelar OS', perigo: true,
+        titulo: 'Cancelar a OS', texto: 'Os itens ainda não executados também serão cancelados e as etapas pendentes deles saem dos cronogramas de hoje em diante; os executados ficam como estão. Esta ação não pode ser desfeita.', botao: 'Cancelar OS', perigo: true,
       }, 'perigo-contorno'));
     }
     return lista;
@@ -128,7 +128,7 @@ if (pagina) {
         info('user', 'Registrada por', os.registradaPor || '—'),
         info('calendar', 'Abertura', dataHora(os.dataEntrada)),
         // ALTERADO (18/11/2026) [E3-33]: a nota explica que a soma é feita pelo banco (triggers da Etapa 3).
-        info('dollar-sign', 'Valor total', valor, os.valorIncompleto ? 'Há itens sem valor (RN-OS-15)' : 'Soma dos itens não cancelados, calculada pelo banco'),
+        info('dollar-sign', 'Valor total', valor, os.valorIncompleto ? 'Há itens sem valor' : 'Soma dos itens não cancelados'),
         el('div', { class: 'linha sm-span-2 lg-span-4' }, status(os.status), osAtrasada(os) && !encerrada ? status('Atrasada') : null, prioridade(os.prioridade))),
     });
     const barra = el('div', { class: 'barra-preenchida' });
@@ -181,7 +181,7 @@ if (pagina) {
         })),
         el('div', { class: 'card card-p5 linha-entre' },
           el('div', {}, el('p', { class: 'texto-xs texto-mudo maiusculas', text: 'Valor da OS' }),
-            el('p', { class: 'texto-xs texto-mudo', text: `${validos.length} item(ns) não cancelado(s); itens sem valor ficam fora da soma (RN-OS-15).` })),
+            el('p', { class: 'texto-xs texto-mudo', text: `${validos.length} item(ns) não cancelado(s); itens sem valor ficam fora da soma.` })),
           el('span', { class: 'texto-lg negrito texto-primario', text: moeda(os.valorOs) })));
     };
 
@@ -205,7 +205,7 @@ if (pagina) {
         mostrarErro(e);
       });
       return el('div', { class: 'pilha-4' },
-        caixaInfo('Rastreabilidade da OS (função dbo.fn_auditoria_timeline_os): status da OS, status das peças e início/conclusão das etapas, com o tempo de cada etapa. Nos status, o nome é de quem abriu a OS: o banco guarda a data da mudança, mas não quem mudou.'),
+        caixaInfo('Rastreabilidade da OS: status da OS, status das peças e início/conclusão das etapas, com o tempo de cada etapa. Nos status, o nome é de quem abriu a OS: o sistema registra a data da mudança, mas não quem mudou.'),
         area);
     };
 
@@ -217,7 +217,7 @@ if (pagina) {
     ]);
 
     const avisos = [];
-    if (encerrada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: os.status === 'Concluída' ? 'OS concluída: não aceita alterações e não reabre (RN-OS-03). Ainda é possível registrar a entrega e anexar fotos nos itens.' : 'OS cancelada: não aceita alterações.' })));
+    if (encerrada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: os.status === 'Concluída' ? 'OS concluída: não aceita alterações e não reabre. Ainda é possível registrar a entrega e anexar fotos nos itens.' : 'OS cancelada: não aceita alterações.' })));
 
     trocar(area,
       voltar('Voltar', 'ordens.html'),

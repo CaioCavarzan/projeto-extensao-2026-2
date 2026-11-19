@@ -56,7 +56,7 @@ export async function dialogoNovoItem({ numeroFixo, ordensAbertas, aoSalvar }) {
   const conteudo = [];
   if (!numeroFixo) {
     escolhaOs = selecao(ordensAbertas.map((o) => ({ valor: o.numero, rotulo: `${nOs(o.numero)} · ${o.clienteNome} · ${o.status}` })), { vazio: 'Selecione a OS' });
-    conteudo.push(el('div', { class: 'mb-4' }, campo('OS vinculada', escolhaOs, { obrigatorio: true, dica: 'Só OS que não estão concluídas nem canceladas (RN-OS-07).' })));
+    conteudo.push(el('div', { class: 'mb-4' }, campo('OS vinculada', escolhaOs, { obrigatorio: true, dica: 'Só OS que não estão concluídas nem canceladas.' })));
   }
   conteudo.push(form.elemento);
   const salvar = botao(numeroFixo ? 'Adicionar item' : 'Cadastrar', { variante: 'primario', icone: 'package-plus' });

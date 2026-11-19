@@ -91,7 +91,7 @@ export async function montarPagina({ pagina, titulo, somenteAdmin = false }) {
     conteudo.append(cartao({
       classe: 'max-w-md',
       corpo: el('div', { class: 'vazio' }, icone('lock'), el('p', { class: 'seminegrito', text: 'Acesso restrito ao Administrador' }),
-        el('p', { class: 'texto-xs', text: 'Esta tela altera as listas de apoio e os parâmetros do sistema (RN-SIS-03).' }),
+        el('p', { class: 'texto-xs', text: 'Esta tela altera as listas de apoio e os parâmetros do sistema.' }),
         el('a', { class: 'btn btn-contorno btn-sm mt-2', href: 'index.html', text: 'Voltar ao início' })),
     }));
     return null;

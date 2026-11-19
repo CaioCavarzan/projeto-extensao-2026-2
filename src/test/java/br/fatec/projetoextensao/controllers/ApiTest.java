@@ -222,6 +222,25 @@ class ApiTest {
                 .andExpect(jsonPath("$[*].status", hasItem("Concluída")));
     }
 
+    /** INCLUÍDO (19/11/2026): a tela Nova OS mostra o número e a data de entrada antes de salvar; a OS recebe esse número. */
+    @Test
+    void proximaOsPelaApi() throws Exception {
+        MvcResult cliente = mvc.perform(json(post("/api/clientes/pf"), "{\"pessoa\":{\"nome\":\"Cliente Próxima OS\",\"endereco\":" + ENDERECO + "},"
+                + "\"cpf\":\"" + cpf() + "\"}")).andExpect(status().isCreated()).andReturn();
+        MvcResult proxima = mvc.perform(comoAdmin(get("/api/ordens/proxima")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dataEntrada", startsWith(LocalDate.now().toString())))
+                .andReturn();
+        int previsto = ler(proxima, "$.numero");
+
+        MvcResult os = mvc.perform(json(post("/api/ordens"), "{\"clienteCodigo\":" + ler(cliente, "$.codigo") + ",\"itens\":[{\"descricao\":\"Item previsto\","
+                        + "\"qtdTotal\":1,\"unidade\":\"PEÇA\",\"etapas\":[" + idDaEtapa("Jateamento") + "]}]}"))
+                .andExpect(status().isCreated()).andReturn();
+        int numero = ler(os, "$.numero");
+        assertThat(numero).isEqualTo(previsto);
+        mvc.perform(comoAdmin(get("/api/ordens/proxima"))).andExpect(jsonPath("$.numero").value(previsto + 1));
+    }
+
     /** Fotos pelo HTTP (multipart): envio, leitura do arquivo e exclusão. */
     @Test
     void fotoPelaApi() throws Exception {

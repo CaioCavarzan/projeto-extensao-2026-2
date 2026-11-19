@@ -114,7 +114,7 @@ if (pagina) {
         campoDoc.append(botao(`Corrigir ${rotuloDoc}`, { tamanho: 'sm', variante: 'fantasma', icone: 'pencil', onclick: () => corrigirDocumento(c) }));
       }
       trocar(camposTipo, pessoa.nome, campoDoc,
-        pf ? campo('Nome social', nomeSocial, { largura: 'c3', dica: 'Se houver, aparece no lugar do nome (RN-PF-06).' }) : campo('Nome fantasia', nomeFantasia, { largura: 'c3' }),
+        pf ? campo('Nome social', nomeSocial, { largura: 'c3', dica: 'Se houver, aparece no lugar do nome.' }) : campo('Nome fantasia', nomeFantasia, { largura: 'c3' }),
         pf ? campo('Fonte de aquisição', fonte, { largura: 'c3' }) : campo('Inscrição estadual', ie, { largura: 'c3' }),
         pessoa.email, pessoa.telefone,
         pf ? null : campo('Fonte de aquisição', fonte, { largura: 'c6' }));
@@ -146,7 +146,7 @@ if (pagina) {
         camposTipo),
       el('section', { class: 'secao-form' }, el('h3', { class: 'secao-titulo', text: 'Endereço' }), pessoa.endereco),
       el('section', { class: 'secao-form' }, el('h3', { class: 'secao-titulo', text: 'Informações adicionais' }),
-        el('div', { class: 'form-grade' }, campo('Prioridade', prio, { largura: 'c2', dica: 'De 0 a 100, pelo faturamento do cliente (RN-CLI-09).' }), campo('Observações', obs, { largura: 'c6' }))),
+        el('div', { class: 'form-grade' }, campo('Prioridade', prio, { largura: 'c2', dica: 'De 0 a 100, pelo faturamento do cliente.' }), campo('Observações', obs, { largura: 'c6' }))),
       novo ? caixaInfo(TEXTO_HERANCA) : null);
 
     return {
@@ -206,7 +206,7 @@ if (pagina) {
     if (admin) {
       const excluir = botao('Excluir', { variante: 'perigo-contorno', icone: 'trash-2' });
       excluir.addEventListener('click', async () => {
-        if (!(await confirmar(`Excluir o cliente ${c.nomeExibicao}? Cliente com OS não é excluído (RN-CLI-02). Se a pessoa não tiver outro papel, ela e o endereço também são apagados.`, { titulo: 'Excluir cliente', textoConfirmar: 'Excluir', perigo: true }))) return;
+        if (!(await confirmar(`Excluir o cliente ${c.nomeExibicao}? Cliente com OS não é excluído. Se a pessoa não tiver outro papel, ela e o endereço também são apagados.`, { titulo: 'Excluir cliente', textoConfirmar: 'Excluir', perigo: true }))) return;
         await ocupado(excluir, async () => {
           try {
             await del(`/clientes/${c.codigo}`);

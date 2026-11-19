@@ -23,6 +23,7 @@ import br.fatec.projetoextensao.dtos.ItemRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.OsResponse;
 import br.fatec.projetoextensao.dtos.PainelOsResponse;
+import br.fatec.projetoextensao.dtos.ProximaOsResponse;
 import br.fatec.projetoextensao.entities.ClienteEntity;
 import br.fatec.projetoextensao.entities.OrdemServicoEntity;
 import br.fatec.projetoextensao.entities.UsuarioEntity;
@@ -32,6 +33,7 @@ import br.fatec.projetoextensao.exceptions.RecursoNaoEncontradoException;
 import br.fatec.projetoextensao.exceptions.RegraNegocioException;
 import br.fatec.projetoextensao.repositories.HistoricoStatusOsRepository;
 import br.fatec.projetoextensao.repositories.ItemRepository;
+import br.fatec.projetoextensao.repositories.NumeracaoOs;
 import br.fatec.projetoextensao.repositories.OrdemServicoRepository;
 import br.fatec.projetoextensao.repositories.ProcedimentosBanco;
 import br.fatec.projetoextensao.repositories.RotinasBancoRepository;
@@ -93,6 +95,8 @@ public class OrdemServicoService {
     private final ProcedimentosBanco procedimentosBanco;
     private final RotinasBancoRepository rotinasBanco;
     private final EntityManager entityManager;
+    // INCLUÍDO (19/11/2026): número previsto da próxima OS (tela Nova OS).
+    private final NumeracaoOs numeracaoOs;
 
     /** INCLUÍDO (18/11/2026) [E3-12]: datas nos avisos do cancelamento (dd/MM/aaaa, como na tela). */
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -138,6 +142,16 @@ public class OrdemServicoService {
         // trg_itens_sincronizar_valor_os, que gravou valor_os; sincronizar relê a OS para a resposta trazer o valor.
         valorOsService.sincronizar(os); // RN-OS-14
         return paraResponse(os, avisos);
+    }
+
+    /**
+     * INCLUÍDO (19/11/2026): número previsto e data de entrada da OS que vai ser aberta, para a tela Nova OS mostrar
+     * antes de salvar. Não reserva o número: quem grava continua sendo abrir().
+     */
+    @PreAuthorize(Perfis.QUALQUER)
+    @Transactional(readOnly = true)
+    public ProximaOsResponse proxima() {
+        return new ProximaOsResponse(numeracaoOs.proximoNumero(), LocalDateTime.now());
     }
 
     /** RN-OS-17: o usuário pode mudar a prioridade sugerida. OS encerrada não muda (RN-OS-07). */

@@ -53,7 +53,7 @@ if (pagina) {
       },
     },
     {
-      titulo: 'Itens atrasados', desc: 'Peças com prazo vencido e não executadas (RN-ITE-22), com a próxima etapa', icone: 'triangle-alert',
+      titulo: 'Itens atrasados', desc: 'Peças com prazo vencido e não executadas, com a próxima etapa', icone: 'triangle-alert',
       async gerar() {
         // ALTERADO (18/11/2026) [E3-36]: a função fn_itens_atrasados não devolve o valor do item (a coluna saiu) e passou a
         // trazer cliente, dias de atraso, próxima etapa pendente e operador; a lista já vem do mais atrasado ao menos.

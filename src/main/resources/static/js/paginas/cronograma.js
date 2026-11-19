@@ -139,7 +139,7 @@ if (pagina) {
     // INCLUÍDO (18/11/2026) [E3-37]: cronograma sem etapas (ficou vazio depois do cancelamento de uma OS pela procedure).
     const semEtapas = c.fila.length ? null : caixaInfo(passado
       ? 'Este cronograma ficou sem etapas (as etapas eram de uma OS cancelada).'
-      : 'Este cronograma ficou sem etapas, provavelmente porque a OS delas foi cancelada. Inclua outras etapas ou exclua o cronograma (RN-CRO-01: cronograma precisa de pelo menos uma etapa).', { tipo: 'alerta', nomeIcone: 'triangle-alert' });
+      : 'Este cronograma ficou sem etapas, provavelmente porque a OS delas foi cancelada. Inclua outras etapas ou exclua o cronograma: ele precisa de pelo menos uma etapa.', { tipo: 'alerta', nomeIcone: 'triangle-alert' });
     trocar(areaDia, cartao({
       titulo, descricao: `Registrado por ${c.registradoPor || '—'}${c.observacao ? ` · ${c.observacao}` : ''}${passado ? ' · dia encerrado: só consulta' : ''}`,
       acoes: acoes.length ? acoes : null,
@@ -292,7 +292,7 @@ if (pagina) {
         el('div', { class: 'form-grade' },
           campo('Dia de origem', origem, { largura: 'c3', obrigatorio: true }),
           campo('Dia de destino', destino, { largura: 'c3', obrigatorio: true, dica: 'Depois da origem e não antes de hoje.' })),
-        caixaInfo('Feito pela procedure do banco sp_replanejar_cronograma. Se o destino não tiver cronograma, ele é criado. O dia de origem continua com as etapas, como registro do que estava planejado.')),
+        caixaInfo('Se o destino não tiver cronograma, ele é criado. O dia de origem continua com as etapas, como registro do que estava planejado.')),
       botoes: [botao('Cancelar', { onclick: () => dlg.fechar() }), confirmarBotao],
     });
     confirmarBotao.addEventListener('click', () => ocupado(confirmarBotao, async () => {
