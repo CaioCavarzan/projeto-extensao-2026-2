@@ -25,8 +25,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Leitura das 4 functions e das 3 views da Etapa 3 (scripts functions.sql e
- * views.sql). É o único lugar do Java que escreve SQL para esses objetos.
+ * Leitura das 4 functions e das 3 views da Etapa 3 (partes 1 e 2 do script
+ * objetos_banco.sql). É o único lugar do Java que escreve SQL para esses objetos.
  */
 
 @Repository
@@ -177,23 +177,25 @@ public class RotinasBancoRepository {
                 .list();
     }
 
-    // ------------------------------------------------------------------ apoio às procedures
+    // ------------------------------------------------------------------ apoio às
+    // procedures
 
     public List<CronogramaAfetado> cronogramasFuturosComEtapasDaOs(int numeroOs, LocalDate hoje) {
         descarregarJpa();
-        return jdbc.sql("""
-                select c.codigo, c.data_planejada, count(*) as etapas_da_os,
-                       (select count(*) from CronogramasItens t where t.cronograma_codigo = c.codigo) as etapas_no_cronograma
-                from CronogramasItens ci
-                inner join Cronogramas c on c.codigo = ci.cronograma_codigo
-                inner join ItensRotasProcessos irp on irp.codigo = ci.item_rota_processo_codigo
-                inner join Itens i on i.codigo = irp.item_codigo
-                where i.os_codigo = :nrOs
-                  and irp.data_conclusao is null
-                  and c.data_planejada >= :hoje
-                group by c.codigo, c.data_planejada
-                order by c.data_planejada
-                """)
+        return jdbc
+                .sql("""
+                        select c.codigo, c.data_planejada, count(*) as etapas_da_os,
+                               (select count(*) from CronogramasItens t where t.cronograma_codigo = c.codigo) as etapas_no_cronograma
+                        from CronogramasItens ci
+                        inner join Cronogramas c on c.codigo = ci.cronograma_codigo
+                        inner join ItensRotasProcessos irp on irp.codigo = ci.item_rota_processo_codigo
+                        inner join Itens i on i.codigo = irp.item_codigo
+                        where i.os_codigo = :nrOs
+                          and irp.data_conclusao is null
+                          and c.data_planejada >= :hoje
+                        group by c.codigo, c.data_planejada
+                        order by c.data_planejada
+                        """)
                 .param("nrOs", numeroOs)
                 .param("hoje", Date.valueOf(hoje))
                 .query((rs, n) -> new CronogramaAfetado(rs.getInt("codigo"), data(rs, "data_planejada"),

@@ -185,7 +185,7 @@ if (pagina) {
   /**
    * INCLUÍDO (18/11/2026) [E3-38]: aba Banco de dados.
    * GET /api/banco/situacao: os 13 objetos da Etapa 3 (sys.objects) e o último backup (msdb). Ações:
-   *  - "Instalar ou atualizar objetos": POST /api/banco/objetos/instalar (roda functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem; CREATE OR ALTER);
+   *  - "Instalar ou atualizar objetos": POST /api/banco/objetos/instalar (roda objetos_banco.sql: functions, views, procedures e triggers, nessa ordem; CREATE OR ALTER);
    *  - "Fazer backup agora": POST /api/banco/backup (rotina 1 do backup_restore.sql);
    *  - "Restaurar último backup": POST /api/banco/restauracao com o texto de confirmação (rotina 2 do script).
    * As mensagens do SQL Server (andamento do backup, "The backup set on file 1 is valid."...) aparecem num diálogo.
@@ -212,7 +212,7 @@ if (pagina) {
       } catch (e) {
         if (e?.status === 401) return;
         trocar(area, caixaErro(e?.mensagens || [e?.message || 'Não foi possível consultar o banco.']),
-          caixaInfo('Os objetos também podem ser instalados pelo SSMS: rode docs/database/functions.sql, views.sql, procedures.sql e triggers.sql, nessa ordem.'));
+          caixaInfo('Os objetos também podem ser instalados pelo SSMS: rode o script docs/database/objetos_banco.sql.'));
       }
     }
 
@@ -227,7 +227,7 @@ if (pagina) {
       const completo = s.objetosInstalados === s.objetosEsperados;
       const instalar = botao('Instalar ou atualizar objetos', { icone: 'database' });
       instalar.addEventListener('click', async () => {
-        if (!(await confirmar('Roda no SQL Server os 4 scripts da Etapa 3 (functions, views, procedures e triggers, nessa ordem). Os scripts usam CREATE OR ALTER: objetos que já existem são atualizados para a versão dos arquivos do sistema.', { titulo: 'Instalar objetos da Etapa 3', textoConfirmar: 'Instalar' }))) return;
+        if (!(await confirmar('Roda no SQL Server o script objetos_banco.sql, com os 13 objetos (functions, views, procedures e triggers, nessa ordem). O script usa CREATE OR ALTER: objetos que já existem são atualizados para a versão do arquivo do sistema.', { titulo: 'Instalar objetos da Etapa 3', textoConfirmar: 'Instalar' }))) return;
         await ocupado(instalar, async () => {
           try {
             const r = await post('/banco/objetos/instalar');
@@ -277,12 +277,16 @@ if (pagina) {
       trocar(area,
         el('div', { class: 'grade sm-3' },
           cartao({ titulo: 'Objetos da Etapa 3', corpo: el('div', { class: `numero-grande ${completo ? 'texto-sucesso' : 'texto-perigo'}`, text: `${s.objetosInstalados} de ${s.objetosEsperados}` }) }),
-          cartao({ titulo: 'Último backup completo', corpo: el('div', { class: 'pilha-2' },
-            el('div', { class: 'texto-lg negrito', text: ultimo ? dataHora(ultimo.concluidoEm) : 'nenhum' }),
-            ultimo ? el('p', { class: 'texto-xs texto-mudo mono quebra', text: `${ultimo.arquivo || ''} · ${tamanho(ultimo.tamanhoBytes)}` }) : null) }),
-          cartao({ titulo: 'Banco', corpo: el('div', { class: 'pilha-2' },
-            el('div', { class: 'texto-lg negrito mono', text: s.banco }),
-            el('p', { class: 'texto-xs texto-mudo', text: s.versaoSqlServer || '' })) })),
+          cartao({
+            titulo: 'Último backup completo', corpo: el('div', { class: 'pilha-2' },
+              el('div', { class: 'texto-lg negrito', text: ultimo ? dataHora(ultimo.concluidoEm) : 'nenhum' }),
+              ultimo ? el('p', { class: 'texto-xs texto-mudo mono quebra', text: `${ultimo.arquivo || ''} · ${tamanho(ultimo.tamanhoBytes)}` }) : null)
+          }),
+          cartao({
+            titulo: 'Banco', corpo: el('div', { class: 'pilha-2' },
+              el('div', { class: 'texto-lg negrito mono', text: s.banco }),
+              el('p', { class: 'texto-xs texto-mudo', text: s.versaoSqlServer || '' }))
+          })),
         completo ? null : caixaInfo('Faltam objetos da Etapa 3: sem eles, telas como OS, dashboard, cronograma e estoque respondem "objeto não instalado". Use "Instalar ou atualizar objetos" ou rode os scripts no SSMS.', { tipo: 'alerta', nomeIcone: 'triangle-alert' }),
         cartao({
           titulo: 'Objetos de banco da Etapa 3', descricao: 'Scripts do grupo em docs/database. O sistema chama estes objetos pelo nome; a coluna "Onde o sistema usa" aponta o código Java.',
@@ -291,8 +295,8 @@ if (pagina) {
             colunas: [{ titulo: 'Objeto' }, { titulo: 'Tipo' }, { titulo: 'Script' }, { titulo: 'Situação' }, { titulo: 'Para que serve' }, { titulo: 'Onde o sistema usa' }, { titulo: 'Alterado em' }],
             linhas: s.objetos,
             montar: (o) => [el('span', { class: 'mono texto-xs seminegrito', text: o.nome }), o.tipo, el('span', { class: 'mono texto-xs texto-mudo', text: o.script }),
-              situacaoDe(o), el('span', { class: 'texto-xs', text: o.finalidade }), el('span', { class: 'texto-xs texto-mudo', text: o.usoNoSistema }),
-              el('span', { class: 'texto-xs texto-mudo', text: o.alteradoEm ? dataHora(o.alteradoEm) : '—' })],
+            situacaoDe(o), el('span', { class: 'texto-xs', text: o.finalidade }), el('span', { class: 'texto-xs texto-mudo', text: o.usoNoSistema }),
+            el('span', { class: 'texto-xs texto-mudo', text: o.alteradoEm ? dataHora(o.alteradoEm) : '—' })],
           }),
         }),
         caixaInfo('Backup e restore rodam o docs/database/backup_restore.sql do grupo numa conexão separada, no banco master. O arquivo .bak fica no servidor do SQL Server. O login do sistema precisa de permissão de backup/restore (hoje "sa").'));

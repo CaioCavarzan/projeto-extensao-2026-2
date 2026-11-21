@@ -187,14 +187,11 @@ O banco se chama `banco_fenix`, no SQL Server, e tem 22 tabelas. Os scripts fica
 |:-:|---|---|
 | 1 | `schema.sql` | cria o banco `banco_fenix` e as 22 tabelas, com chaves e restrições |
 | 2 | `data.sql` | carga de demonstração: 15 clientes, 8 funcionários com acesso, 4 fornecedores, 21 tintas e 12 OS com 20 peças, além de etapas, cronogramas e históricos |
-| 3 | `functions.sql` | 4 functions |
-| 4 | `views.sql` | 3 views |
-| 5 | `procedures.sql` | 3 procedures |
-| 6 | `triggers.sql` | 3 triggers |
+| 3 | `objetos_banco.sql` | os 13 objetos programáveis em um só script, nesta ordem: 4 functions, 3 views, 3 procedures e 3 triggers |
 | — | `backup_restore.sql` | backup completo com verificação do arquivo e restore; também é usado pela tela Configurações > Banco de dados |
 
-A ordem de 3 a 6 importa, porque views, procedures e triggers usam a função `dbo.fn_valor_os`. Esses quatro scripts
-usam `create or alter`: rodar de novo atualiza os objetos sem apagar dados.
+A ordem dentro do `objetos_banco.sql` importa, porque views, procedures e triggers usam a função `dbo.fn_valor_os`.
+O script usa `create or alter`: rodar de novo atualiza os objetos sem apagar dados.
 
 ### Os 13 objetos da Etapa 3
 
@@ -279,11 +276,11 @@ No SSMS, abra e execute os scripts de `docs/database`, nesta ordem:
 
 1. `schema.sql`
 2. `data.sql`
-3. `functions.sql`, `views.sql`, `procedures.sql` e `triggers.sql`
+3. `objetos_banco.sql`
 
 O `schema.sql` cria o banco do zero. Se já existir um `banco_fenix`, apague-o antes (os dados dele serão perdidos).
 
-Os quatro scripts do passo 3 também podem ser instalados pela própria aplicação, com o perfil Administrador, em
+O script do passo 3 também pode ser instalado pela própria aplicação, com o perfil Administrador, em
 **Configurações > Banco de dados > Instalar ou atualizar objetos**.
 
 ### 3. Configurar a conexão

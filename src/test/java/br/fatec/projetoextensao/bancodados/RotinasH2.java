@@ -16,19 +16,23 @@ import java.util.List;
 import org.h2.tools.SimpleResultSet;
 
 /**
- * INCLUÍDO (18/11/2026) [E3-52]: as 4 functions da Etapa 3 imitadas no H2 dos testes automáticos.
+ * INCLUÍDO (18/11/2026) [E3-52]: as 4 functions da Etapa 3 imitadas no H2 dos
+ * testes automáticos.
  *
  * Por que existe: os testes rodam no H2 (banco em memória), que não executa T-SQL (OUTER APPLY, TOP, variável
  * tabela...). Para o Java ser testado chamando "dbo.fn_..." exatamente como no SQL Server, o arquivo
  * src/test/resources/etapa3-h2.sql registra estes métodos como funções do H2 (CREATE ALIAS). Cada método devolve as
- * MESMAS colunas, com os mesmos nomes, e aplica as MESMAS regras do script functions.sql (os comentários
+ * MESMAS colunas, com os mesmos nomes, e aplica as MESMAS regras do script objetos_banco.sql (os comentários
  * apontam o trecho equivalente). O primeiro parâmetro (Connection) é preenchido pelo próprio H2.
  *
- * Funções de tabela: o H2 chama o método duas vezes; na primeira (URL "jdbc:columnlist:connection") só quer saber
+ * Funções de tabela: o H2 chama o método duas vezes; na primeira (URL
+ * "jdbc:columnlist:connection") só quer saber
  * as colunas, por isso o método devolve o SimpleResultSet sem linhas.
  *
- * ATENÇÃO: isto NÃO substitui o teste no SQL Server de verdade (Etapa3SqlServerIT). É uma imitação para conferir
- * a integração do Java; se o script do grupo mudar, esta classe precisa acompanhar.
+ * ATENÇÃO: isto NÃO substitui o teste no SQL Server de verdade
+ * (Etapa3SqlServerIT). É uma imitação para conferir
+ * a integração do Java; se o script do grupo mudar, esta classe precisa
+ * acompanhar.
  */
 public final class RotinasH2 {
 
@@ -39,7 +43,10 @@ public final class RotinasH2 {
         return "jdbc:columnlist:connection".equals(c.getMetaData().getURL());
     }
 
-    /** dbo.fn_valor_os(@nr_os): soma de valor_total_item dos itens cujo status atual não é 'Cancelada' (null = 0). */
+    /**
+     * dbo.fn_valor_os(@nr_os): soma de valor_total_item dos itens cujo status atual
+     * não é 'Cancelada' (null = 0).
+     */
     public static BigDecimal valorOs(Connection c, Integer nrOs) throws SQLException {
         try (PreparedStatement p = c.prepareStatement("""
                 select coalesce(sum(i.valor_total_item), 0)
@@ -55,7 +62,10 @@ public final class RotinasH2 {
         }
     }
 
-    /** dbo.fn_itens_atrasados(@data_referencia): prazo antes da data e status atual fora de 'Executada'/'Cancelada'. */
+    /**
+     * dbo.fn_itens_atrasados(@data_referencia): prazo antes da data e status atual
+     * fora de 'Executada'/'Cancelada'.
+     */
     public static ResultSet itensAtrasados(Connection c, Date referencia) throws SQLException {
         SimpleResultSet r = new SimpleResultSet();
         r.addColumn("item_codigo", Types.INTEGER, 10, 0);
@@ -72,7 +82,8 @@ public final class RotinasH2 {
         if (soColunas(c)) {
             return r;
         }
-        // cross apply do status (item sem histórico não entra) + outer apply da próxima etapa não concluída (top 1
+        // cross apply do status (item sem histórico não entra) + outer apply da próxima
+        // etapa não concluída (top 1
         // por ordem), como no script.
         try (PreparedStatement p = c.prepareStatement("""
                 select i.codigo, i.os_codigo, p.nome, i.descricao, i.qtd_total, i.unidade, i.prazo_entrega,
@@ -105,9 +116,12 @@ public final class RotinasH2 {
     }
 
     /**
-     * dbo.fn_prioridade_clientes(@prioridade_minima, @prioridade_maxima): 1ª passada = faturamento de cada cliente
-     * (soma de valor_os das OS cujo status atual não é 'Cancelada'); 2ª passada = mínimo + ROUND(faturamento ×
-     * amplitude ÷ maior faturamento, 0) quando os dois são maiores que zero, senão o mínimo.
+     * dbo.fn_prioridade_clientes(@prioridade_minima, @prioridade_maxima): 1ª
+     * passada = faturamento de cada cliente
+     * (soma de valor_os das OS cujo status atual não é 'Cancelada'); 2ª passada =
+     * mínimo + ROUND(faturamento ×
+     * amplitude ÷ maior faturamento, 0) quando os dois são maiores que zero, senão
+     * o mínimo.
      */
     public static ResultSet prioridadeClientes(Connection c, Integer minima, Integer maxima) throws SQLException {
         SimpleResultSet r = new SimpleResultSet();
@@ -121,24 +135,28 @@ public final class RotinasH2 {
         record Faturamento(int cliente, String nome, BigDecimal total) {
         }
         List<Faturamento> lista = new ArrayList<>();
-        try (PreparedStatement p = c.prepareStatement("""
-                select cl.pessoa_codigo, pe.nome,
-                       coalesce((select sum(os.valor_os) from OrdensDeServico os
-                                 left join dbo.h2_status_os_atual st on st.os_codigo = os.nr_os
-                                 where os.cliente_codigo = cl.pessoa_codigo and coalesce(st.status, '') <> 'Cancelada'), 0)
-                from Clientes cl
-                inner join Pessoas pe on pe.codigo = cl.pessoa_codigo
-                """); ResultSet rs = p.executeQuery()) {
+        try (PreparedStatement p = c.prepareStatement(
+                """
+                        select cl.pessoa_codigo, pe.nome,
+                               coalesce((select sum(os.valor_os) from OrdensDeServico os
+                                         left join dbo.h2_status_os_atual st on st.os_codigo = os.nr_os
+                                         where os.cliente_codigo = cl.pessoa_codigo and coalesce(st.status, '') <> 'Cancelada'), 0)
+                        from Clientes cl
+                        inner join Pessoas pe on pe.codigo = cl.pessoa_codigo
+                        """);
+                ResultSet rs = p.executeQuery()) {
             while (rs.next()) {
                 lista.add(new Faturamento(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3)));
             }
         }
-        BigDecimal maior = lista.stream().map(Faturamento::total).max(Comparator.naturalOrder()).orElse(BigDecimal.ZERO);
+        BigDecimal maior = lista.stream().map(Faturamento::total).max(Comparator.naturalOrder())
+                .orElse(BigDecimal.ZERO);
         BigDecimal amplitude = BigDecimal.valueOf((long) maxima - minima);
         for (Faturamento f : lista) {
             int prioridade = minima;
             if (maior.signum() > 0 && f.total().signum() > 0) {
-                // ROUND(x, 0) do SQL Server = metade para longe do zero (HALF_UP para positivos)
+                // ROUND(x, 0) do SQL Server = metade para longe do zero (HALF_UP para
+                // positivos)
                 prioridade = minima + f.total().multiply(amplitude).divide(maior, 0, RoundingMode.HALF_UP).intValue();
             }
             r.addRow(f.cliente(), f.nome(), f.total().setScale(2, RoundingMode.HALF_UP), prioridade);
@@ -147,8 +165,10 @@ public final class RotinasH2 {
     }
 
     /**
-     * dbo.fn_auditoria_timeline_os(@nr_os): união dos 4 tipos de evento (status da OS, status do item, início e
-     * conclusão de etapa), numerada por data_hora, tipo e item, com os mesmos textos do concat() do script.
+     * dbo.fn_auditoria_timeline_os(@nr_os): união dos 4 tipos de evento (status da
+     * OS, status do item, início e
+     * conclusão de etapa), numerada por data_hora, tipo e item, com os mesmos
+     * textos do concat() do script.
      */
     public static ResultSet auditoriaTimelineOs(Connection c, Integer nrOs) throws SQLException {
         SimpleResultSet r = new SimpleResultSet();
@@ -163,8 +183,9 @@ public final class RotinasH2 {
         if (soColunas(c)) {
             return r;
         }
-        record Evento(Timestamp dataHora, int ordemTipo, String categoria, Integer item, String referencia, String evento,
-                      String responsavel) {
+        record Evento(Timestamp dataHora, int ordemTipo, String categoria, Integer item, String referencia,
+                String evento,
+                String responsavel) {
         }
         List<Evento> eventos = new ArrayList<>();
         // 1. status da OS (responsável = login de quem abriu a OS, como no script)
@@ -198,7 +219,8 @@ public final class RotinasH2 {
             try (ResultSet rs = p.executeQuery()) {
                 while (rs.next()) {
                     eventos.add(new Evento(rs.getTimestamp(1), 2, "Peça (Item)", rs.getInt(2),
-                            "Item #" + rs.getInt(2) + " (" + rs.getString(3) + ")", "Status do Item: " + rs.getString(4),
+                            "Item #" + rs.getInt(2) + " (" + rs.getString(3) + ")",
+                            "Status do Item: " + rs.getString(4),
                             rs.getString(5)));
                 }
             }
@@ -228,12 +250,14 @@ public final class RotinasH2 {
                 }
             }
         }
-        // row_number() over (order by data_hora asc, ordem_tipo asc, isnull(item_codigo, 0) asc)
+        // row_number() over (order by data_hora asc, ordem_tipo asc,
+        // isnull(item_codigo, 0) asc)
         eventos.sort(Comparator.comparing(Evento::dataHora).thenComparingInt(Evento::ordemTipo)
                 .thenComparingInt(e -> e.item() == null ? 0 : e.item()));
         long sequencia = 0;
         for (Evento e : eventos) {
-            r.addRow(++sequencia, nrOs, e.dataHora(), e.categoria(), e.item(), e.referencia(), e.evento(), e.responsavel());
+            r.addRow(++sequencia, nrOs, e.dataHora(), e.categoria(), e.item(), e.referencia(), e.evento(),
+                    e.responsavel());
         }
         return r;
     }

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.5.16</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.fatec</groupId>
 	<artifactId>projetoextensao</artifactId>
@@ -29,20 +30,25 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- INCLUÍDO (20/10/2026): Spring Security, usado pelas regras de acesso da planilha FENIX_REGRAS_DE_NEGOCIO:
-		     RN-SIS-01 (toda rota exige login, exceto ativação de conta e redefinição de senha), RN-SIS-02 e RN-SIS-03
-		     (perfis ADMIN e OPERADOR, com @PreAuthorize em cada método dos Services), RN-USU-04, RN-USU-07 e RN-USU-08
-		     (login só de usuário ativo, mensagem única de erro, limite de tentativas) e RN-USU-14/17 (senha e resposta
-		     de segurança gravadas em BCrypt). A versão do Spring Security é gerenciada pelo spring-boot-starter-parent. -->
+		<!-- INCLUÍDO (20/10/2026): Spring Security, usado pelas regras de acesso da planilha
+		FENIX_REGRAS_DE_NEGOCIO:
+		     RN-SIS-01 (toda rota exige login, exceto ativação de conta e redefinição de senha), RN-SIS-02 e
+		RN-SIS-03
+		     (perfis ADMIN e OPERADOR, com @PreAuthorize em cada método dos Services), RN-USU-04, RN-USU-07 e
+		RN-USU-08
+		     (login só de usuário ativo, mensagem única de erro, limite de tentativas) e RN-USU-14/17 (senha e
+		resposta
+		     de segurança gravadas em BCrypt). A versão do Spring Security é gerenciada pelo
+		spring-boot-starter-parent. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
 		<dependency>
-    		<groupId>com.microsoft.sqlserver</groupId>
-    		<artifactId>mssql-jdbc</artifactId>
-    		<scope>runtime</scope>
+			<groupId>com.microsoft.sqlserver</groupId>
+			<artifactId>mssql-jdbc</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -62,7 +68,8 @@
 
 		<!-- INCLUÍDO (20/10/2026): só para os testes (scope test, não vai para o WAR).
 		     spring-security-test: @WithMockUser, para testar os Services com o perfil ADMIN ou OPERADOR.
-		     h2: banco em memória criado a partir do script do grupo (src/test/resources/schema-h2.sql), para os testes
+		     h2: banco em memória criado a partir do script do grupo (src/test/resources/schema-h2.sql), para os
+		testes
 		     das regras rodarem sem o SQL Server ligado (perfil "test", application-test.properties). -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -77,16 +84,22 @@
 	</dependencies>
 
 	<build>
-		<!-- INCLUÍDO (18/11/2026) [E3-01]: copia para dentro do WAR (pasta bancodados/ do classpath) os scripts da
-		     Etapa 3 que ficam em docs/database: functions.sql, views.sql, procedures.sql,
-		     triggers.sql e backup_restore.sql.
-		     Por quê: a aba Configurações > Banco de dados (BancoDadosService) instala os objetos e faz o backup e o
-		     restore executando ESTES MESMOS arquivos do grupo, e não uma cópia colada dentro do código Java. Assim só
-		     existe uma fonte (docs/database): se o grupo corrigir um script, o sistema passa a usar a correção na
+		<!-- INCLUÍDO (18/11/2026) [E3-01]: copia para dentro do WAR (pasta bancodados/ do
+		classpath) os scripts de
+		     banco que ficam em docs/database: objetos_banco.sql (functions, views, procedures e triggers num só
+		     arquivo) e backup_restore.sql.
+		     Por quê: a aba Configurações > Banco de dados (BancoDadosService) instala os objetos e faz o backup
+		e o
+		     restore executando ESTES MESMOS arquivos do grupo, e não uma cópia colada dentro do código Java.
+		Assim só
+		     existe uma fonte (docs/database): se o grupo corrigir um script, o sistema passa a usar a correção
+		na
 		     próxima compilação.
-		     Atenção: declarar <resources> aqui substitui a lista herdada do spring-boot-starter-parent. Por isso as duas
+		     Atenção: declarar <resources> aqui substitui a lista herdada do spring-boot-starter-parent. Por
+		isso as duas
 		     primeiras entradas abaixo repetem, sem nenhuma mudança, a configuração do parent 3.5.16 para
-		     src/main/resources (filtragem só dos application*.properties/yml/yaml); só a terceira entrada é nova. -->
+		     src/main/resources (filtragem só dos application*.properties/yml/yaml); só a terceira entrada é
+		nova. -->
 		<resources>
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
@@ -109,12 +122,10 @@
 				<directory>${basedir}/docs/database</directory>
 				<targetPath>bancodados</targetPath>
 				<includes>
-					<!-- ALTERADO (19/11/2026): nomes curtos (antes etapa3_01_functions.sql a etapa3_04_triggers.sql).
-					     A ordem de execução não vem do nome do arquivo: fica em ObjetoBancoEnum.Scripts. -->
-					<include>functions.sql</include>
-					<include>views.sql</include>
-					<include>procedures.sql</include>
-					<include>triggers.sql</include>
+					<!-- ALTERADO (20/11/2026): os 4 scripts de objetos (functions, views,
+					procedures e triggers) foram
+					     unidos em objetos_banco.sql, já na ordem de execução (ver ObjetoBancoEnum.Scripts). -->
+					<include>objetos_banco.sql</include>
 					<include>backup_restore.sql</include>
 				</includes>
 			</resource>

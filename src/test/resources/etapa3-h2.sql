@@ -14,13 +14,13 @@ from HistoricosStatusOs h
 inner join StatusOs s on s.codigo = h.status_codigo
 where not exists (select 1 from HistoricosStatusOs h2 where h2.os_codigo = h.os_codigo and h2.data_hora > h.data_hora);
 
--- ---------------------------------------------------------------- functions (functions.sql)
+-- ---------------------------------------------------------------- functions (objetos_banco.sql, parte 1)
 create alias dbo.fn_valor_os for 'br.fatec.projetoextensao.bancodados.RotinasH2.valorOs';
 create alias dbo.fn_itens_atrasados for 'br.fatec.projetoextensao.bancodados.RotinasH2.itensAtrasados';
 create alias dbo.fn_prioridade_clientes for 'br.fatec.projetoextensao.bancodados.RotinasH2.prioridadeClientes';
 create alias dbo.fn_auditoria_timeline_os for 'br.fatec.projetoextensao.bancodados.RotinasH2.auditoriaTimelineOs';
 
--- ---------------------------------------------------------------- views (views.sql)
+-- ---------------------------------------------------------------- views (objetos_banco.sql, parte 2)
 create view dbo.vw_painel_ordens_servico as
 select
     os.nr_os,
@@ -117,7 +117,7 @@ from (
 ) x
 group by x.mes_referencia;
 
--- ---------------------------------------------------------------- triggers (triggers.sql)
+-- ---------------------------------------------------------------- triggers (objetos_banco.sql, parte 4)
 create trigger trg_itens_sincronizar_valor_os after insert, update, delete on Itens
 for each row call 'br.fatec.projetoextensao.bancodados.TriggersH2$ItensSincronizarValorOs';
 

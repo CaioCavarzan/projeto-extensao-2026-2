@@ -14,7 +14,8 @@ import br.fatec.projetoextensao.repositories.CatalogoBancoRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Ao iniciar, confere no SQL Server se os 13 objetos da Etapa 3 estão instalados e
+ * Ao iniciar, confere no SQL Server se os 13 objetos da Etapa 3 estão
+ * instalados e
  * escreve o resultado no log (no mesmo estilo de VerificacaoListasFixas).
  */
 
@@ -42,13 +43,14 @@ public class VerificacaoObjetosBanco {
                 log.info("Objetos da Etapa 3 no banco: {} de {} instalados.", objetos.size(), objetos.size());
             } else {
                 log.error("Objetos da Etapa 3 FALTANDO no banco ({} de {}): {}. Instale em Configurações > Banco de dados "
-                        + "ou rode no SSMS docs/database/functions.sql, views.sql, procedures.sql e triggers.sql, "
-                        + "nessa ordem.", faltando.size(),
+                        + "ou rode no SSMS o script docs/database/objetos_banco.sql.", faltando.size(),
                         objetos.size(), String.join(", ", faltando));
             }
             if (!desabilitados.isEmpty()) {
-                log.error("Triggers da Etapa 3 DESABILITADOS: {}. Sem eles o valor da OS e a data de finalização não são "
-                        + "atualizados. Habilite com: enable trigger <nome> on <tabela>.", String.join(", ", desabilitados));
+                log.error(
+                        "Triggers da Etapa 3 DESABILITADOS: {}. Sem eles o valor da OS e a data de finalização não são "
+                                + "atualizados. Habilite com: enable trigger <nome> on <tabela>.",
+                        String.join(", ", desabilitados));
             }
         } catch (DataAccessException e) {
             log.warn("Não foi possível conferir os objetos da Etapa 3: {}", e.getMostSpecificCause().getMessage());
