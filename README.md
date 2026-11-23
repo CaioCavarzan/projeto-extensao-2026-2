@@ -10,6 +10,13 @@
 </p>
 
 <p align="center">
+  <img alt="Java 25 (JDK 25)" src="https://img.shields.io/badge/Java-25%20(JDK%2025)-E76F00?logo=openjdk&logoColor=white">
+  <img alt="Spring Boot 3.5.16" src="https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white">
+  <img alt="SQL Server 2016 SP1 ou mais recente" src="https://img.shields.io/badge/SQL%20Server-2016%20SP1%2B-CC2927">
+  <img alt="Maven Wrapper 3.9.16" src="https://img.shields.io/badge/Maven%20Wrapper-3.9.16-C71A36?logo=apachemaven&logoColor=white">
+</p>
+
+<p align="center">
   <a href="#como-executar">Como executar</a> ·
   <a href="#funcionalidades">Funcionalidades</a> ·
   <a href="#perfis-de-acesso">Perfis de acesso</a> ·
@@ -17,6 +24,11 @@
   <a href="#testes">Testes</a> ·
   <a href="#equipe">Equipe</a>
 </p>
+
+> [!IMPORTANT]
+> **Este projeto usa o Java 25 (JDK 25).** A versão está fixada no `pom.xml` (`<java.version>25</java.version>`), e
+> um JDK mais antigo, como o 17 ou o 21, não compila o projeto. Antes de rodar, confira com `java -version` e
+> `.\mvnw.cmd -v`; o passo a passo está em [Java 25: instalação e conferência](#java-25-instalação-e-conferência).
 
 ---
 
@@ -120,7 +132,7 @@ O salário do funcionário nem sai da API quando quem pede é um operador.
 
 | Camada | Tecnologia |
 |---|---|
-| Back-end | Java 25, Spring Boot 3.5.16 (Web, Data JPA e Security), Lombok |
+| Back-end | **Java 25 (JDK 25, versão LTS)**, Spring Boot 3.5.16 (Web, Data JPA e Security), Lombok |
 | Banco de dados | Microsoft SQL Server (driver `mssql-jdbc`); H2 em memória nos testes |
 | Front-end | HTML, CSS e JavaScript em módulos ES, sem etapa de build; Chart.js 4.5.1, fonte Inter e ícones Lucide, servidos pela própria aplicação |
 | Testes | JUnit 5, Spring Boot Test e Spring Security Test |
@@ -156,10 +168,9 @@ flowchart LR
 ```text
 projeto-extensao-2026-2/
 ├── docs/
-│   ├── database/             scripts do SQL Server (tabelas, carga, Etapa 3, backup) e LEIA_ME_BD.md
+│   ├── database/             os 4 scripts do SQL Server: tabelas, carga, objetos da Etapa 3 e backup
 │   ├── telas/                capturas das telas feitas na Etapa 2
-│   ├── front-end.md          guia do front-end: telas, rotas da API e perfis
-│   └── regras_negocio_services_controllers.md
+│   └── front-end.md          guia do front-end: telas, rotas da API e perfis
 ├── src/main/java/br/fatec/projetoextensao/
 │   ├── config/               parâmetros do sistema (chaves fenix.* do application.properties)
 │   ├── controllers/          API REST (/api/...)
@@ -175,7 +186,7 @@ projeto-extensao-2026-2/
 │   ├── static/               front-end (páginas HTML, css/, js/, img/ e vendor/)
 │   └── application.properties
 ├── src/test/                 testes JUnit e scripts do banco H2 de teste
-├── pom.xml
+├── pom.xml                   build Maven: Java 25 (java.version) e Spring Boot 3.5.16
 └── mvnw, mvnw.cmd            Maven Wrapper
 ```
 
@@ -211,8 +222,37 @@ O script usa `create or alter`: rodar de novo atualiza os objetos sem apagar dad
 | `trg_historicos_status_os_proteger`<br><sub>trigger</sub> | o histórico de status da OS só recebe inclusões, e OS encerrada não recebe novo status | automático ao gravar status da OS |
 | `trg_historicos_status_itens_sincronizar_item_e_os`<br><sub>trigger</sub> | o histórico da peça só recebe inclusões; preenche a data de finalização e recalcula o valor da OS | automático ao gravar status da peça |
 
-A explicação completa de cada objeto, a integração com o Java, um roteiro de demonstração no SSMS e a rotina de
-backup e restore estão em [`docs/database/LEIA_ME_BD.md`](docs/database/LEIA_ME_BD.md).
+### Conferir os objetos no SSMS
+
+Depois de rodar o `objetos_banco.sql`, esta consulta deve listar os 13 objetos: 4 functions, 3 views, 3 procedures e
+3 triggers. A aplicação faz a mesma conferência ao iniciar e mostra o resultado no log e em **Configurações > Banco
+de dados**.
+
+```sql
+use banco_fenix;
+
+select o.type_desc as tipo, o.name as objeto
+from sys.objects as o
+where o.name in ('fn_valor_os', 'fn_itens_atrasados', 'fn_prioridade_clientes', 'fn_auditoria_timeline_os',
+                 'vw_painel_ordens_servico', 'vw_produtividade_funcionario', 'vw_retrabalho_mensal',
+                 'sp_ajustar_estoque_tinta', 'sp_cancelar_ordem_servico', 'sp_replanejar_cronograma',
+                 'trg_itens_sincronizar_valor_os', 'trg_historicos_status_os_proteger',
+                 'trg_historicos_status_itens_sincronizar_item_e_os')
+order by o.type_desc, o.name;
+```
+
+### Backup e restore
+
+O `backup_restore.sql` tem duas rotinas, separadas por `go`:
+
+1. **Backup completo:** grava `banco_fenix_full.bak` na pasta de backup padrão da instância (`BackupDirectory`) e
+   confere o arquivo com `restore verifyonly`.
+2. **Restore completo:** coloca o banco em modo de usuário único, restaura a partir desse arquivo (`with replace`) e
+   devolve o banco ao modo multiusuário.
+
+No SSMS, selecione e rode só a rotina que quiser: o arquivo inteiro faz o backup e, logo em seguida, o restore. Pela
+aplicação, o administrador faz as duas em **Configurações > Banco de dados**, e o restore só roda depois de digitar
+`RESTAURAR banco_fenix`.
 
 <details>
 <summary><strong>Diagrama das tabelas</strong></summary>
@@ -257,11 +297,42 @@ funcionário e fornecedor). O cliente é pessoa física ou jurídica, nunca as d
 
 ### Pré-requisitos
 
-- **JDK 25** (o `pom.xml` usa `java.version` 25).
+- **JDK 25 (Java 25).** É obrigatório: veja [Java 25: instalação e conferência](#java-25-instalação-e-conferência),
+  logo abaixo.
 - **SQL Server 2016 SP1 ou mais recente** (a edição Express ou Developer serve), com autenticação SQL Server
   habilitada e TCP/IP na porta 1433.
 - **SQL Server Management Studio (SSMS)** ou outro cliente para rodar os scripts.
 - **Git.** O Maven não precisa ser instalado: o projeto usa o Maven Wrapper.
+
+### Java 25: instalação e conferência
+
+O Sistema Fênix é compilado e executado com o **Java 25 (JDK 25)**, a versão LTS que o grupo usa. Ela está fixada no
+`pom.xml` (`<java.version>25</java.version>`), então um JDK mais antigo, como o 17 ou o 21, não compila o projeto.
+
+1. Instale um JDK 25, por exemplo o [Eclipse Temurin 25](https://adoptium.net/temurin/releases/?version=25) ou o
+   Oracle JDK 25.
+2. Confira a versão no terminal. As duas saídas precisam mostrar a versão 25:
+
+   ```powershell
+   java -version
+   .\mvnw.cmd -v
+   ```
+
+   No `mvnw -v`, a linha que importa é `Java version: 25...`. O Maven Wrapper usa o JDK do `JAVA_HOME` e, sem ele, o
+   `java` do `PATH`.
+3. Se aparecer outra versão, aponte o `JAVA_HOME` para o JDK 25. No PowerShell, para a janela atual:
+
+   ```powershell
+   $env:JAVA_HOME = "C:\Program Files\Java\jdk-25"   # ajuste para a pasta onde o JDK 25 foi instalado
+   $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+   ```
+
+4. Na IDE, selecione o JDK 25 para o projeto (IntelliJ: **File > Project Structure > SDK**; VS Code: comando
+   **Java: Configure Java Runtime**).
+
+Com um JDK anterior, a compilação para com o erro `release version 25 not supported`. A partir do JDK 23, o compilador
+só roda processadores de anotação com configuração explícita; por isso o `pom.xml` liga `<proc>full</proc>` no
+`maven-compiler-plugin`, que é o que faz o Lombok gerar getters, setters e construtores.
 
 ### 1. Clonar o repositório
 
@@ -310,7 +381,8 @@ As variáveis valem só para aquela janela do terminal. Se a instância do SQL S
 .\mvnw.cmd spring-boot:run
 ```
 
-No Linux ou macOS, use `./mvnw spring-boot:run`. Também dá para rodar a classe `ProjetoextensaoApplication` pela IDE.
+No Linux ou macOS, use `./mvnw spring-boot:run`. Também dá para rodar a classe `ProjetoextensaoApplication` pela IDE,
+com o JDK 25 selecionado.
 
 Abra **http://localhost:8080/**. Sem login, qualquer tela leva para a página de login. Com o banco completo, o log da
 inicialização mostra `Objetos da Etapa 3 no banco: 13 de 13 instalados.`
@@ -341,8 +413,9 @@ direto no banco, ativa a conta em **Cadastre-se** e é promovido a administrador
 
 O pacote sai em `target/projetoextensao-0.0.1-SNAPSHOT.war`. Ele roda com
 `java -jar target/projetoextensao-0.0.1-SNAPSHOT.war` ou pode ser publicado num Tomcat externo, e nesse caso o
-endereço passa a ter o nome do contexto (por exemplo `http://localhost:8080/projetoextensao/`). O `package` também
-roda os testes; para pular, acrescente `"-DskipTests"`.
+endereço passa a ter o nome do contexto (por exemplo `http://localhost:8080/projetoextensao/`). Nos dois casos, o
+Java que executa o pacote também precisa ser o 25: as classes compiladas não rodam em versões anteriores. O `package`
+também roda os testes; para pular, acrescente `"-DskipTests"`.
 
 ### Parâmetros
 
@@ -385,10 +458,7 @@ No PowerShell, as aspas evitam que os parâmetros `-D` com ponto sejam quebrados
 ## Documentação complementar
 
 - [`docs/front-end.md`](docs/front-end.md): telas, rotas da API, perfis e segurança no navegador.
-- [`docs/regras_negocio_services_controllers.md`](docs/regras_negocio_services_controllers.md): levantamento das regras
-  de negócio para os Services e Controllers.
-- [`docs/database/LEIA_ME_BD.md`](docs/database/LEIA_ME_BD.md): os 13 objetos da Etapa 3, a integração com o Java, o
-  roteiro de demonstração no SSMS e o backup e restore.
+- [`docs/database`](docs/database): os 4 scripts do banco, descritos em [Banco de dados](#banco-de-dados).
 - [`docs/telas`](docs/telas): capturas das telas feitas na Etapa 2 (22/10/2026), antes da integração da Etapa 3.
 
 <!-- VÍDEO: quando o link estiver pronto, cole-o na linha "Vídeo:" e apague esta linha e a linha final do bloco.
