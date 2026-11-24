@@ -21,18 +21,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * INCLUÍDO (20/10/2026): respostas de erro de acesso no mesmo formato JSON do GlobalExceptionHandler (RN-SIS-07).
+ * INCLUÍDO (20/10/2026): respostas de erro de acesso no mesmo formato JSON do GlobalExceptionHandler.
  * <ul>
- *   <li>401 sem login ou com sessão inválida: "Sessão expirada ou acesso não autorizado. Entre novamente." (RN-SIS-01);</li>
- *   <li>401 com login e senha errados: "Login ou senha inválidos." (RN-USU-07);</li>
- *   <li>401 com usuário bloqueado: "Acesso bloqueado. Procure o administrador." (RN-USU-04);</li>
- *   <li>401 depois de muitas tentativas: "Muitas tentativas. Tente de novo em alguns minutos." (RN-USU-08);</li>
- *   <li>403 sem o perfil exigido: "Ação permitida só para administradores." (RN-SIS-02 e RN-SIS-03; ALTERADO em
- *       21/10/2026 para o texto da planilha, que antes era "Você não tem permissão para esta ação.").</li>
+ *   <li>401 sem login ou com sessão inválida: "Sessão expirada ou acesso não autorizado. Entre novamente.";</li>
+ *   <li>401 com login e senha errados: "Login ou senha inválidos.";</li>
+ *   <li>401 com usuário bloqueado: "Acesso bloqueado. Procure o administrador.";</li>
+ *   <li>401 depois de muitas tentativas: "Muitas tentativas. Tente de novo em alguns minutos.";</li>
+ *   <li>403 sem o perfil exigido: "Ação permitida só para administradores.".</li>
  * </ul>
  * Não envia o cabeçalho WWW-Authenticate: assim o navegador não abre a janela própria de login nem guarda a senha
  * (quem pede o login é a tela do front).
  */
+
 @Component
 public class RespostasSeguranca implements AuthenticationEntryPoint, AccessDeniedHandler {
 

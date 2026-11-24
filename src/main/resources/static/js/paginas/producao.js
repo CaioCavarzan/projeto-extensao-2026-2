@@ -3,6 +3,8 @@
 // é a execução das etapas da rota de cada item (tabela ItensRotasProcessos): iniciar (com operador) e concluir, e o
 // retrabalho é uma nova etapa igual (RN-ITE-06). Por isso a tela mostra a fila de etapas e o indicador de retrabalho
 // do PDCA (% de itens executados com alguma etapa repetida).
+// ALTERADO (18/11/2026) [E3-40]: nova aba "Produtividade", com as etapas concluídas por funcionário e processo no
+// período, lidas da view dbo.vw_produtividade_funcionario da Etapa 3 (GET /api/indicadores/produtividade).
 
 import { get, post } from '../api.js';
 import { data, dataHora, hojeISO, hora, nItem, nOs, normalizar, percentualRetrabalho } from '../formato.js';
@@ -177,10 +179,60 @@ if (pagina) {
     }));
   }
 
+  // ---------------------------------------------------------------- aba Produtividade (INCLUÍDO 18/11/2026 [E3-40])
+  // A view entrega uma linha por dia, funcionário e processo; aqui as linhas do período são somadas por funcionário e
+  // processo. Minutos médios = minutos trabalhados ÷ etapas concluídas (início até conclusão de cada etapa).
+  const pInicio = entrada({ type: 'date', value: hojeISO().slice(0, 8) + '01' });
+  const pFim = entrada({ type: 'date', value: hojeISO() });
+  const areaProdutividade = el('div', { class: 'pilha-4' });
+  const atualizarProdutividade = botao('Atualizar', { icone: 'refresh-cw' });
+  atualizarProdutividade.addEventListener('click', () => ocupado(atualizarProdutividade, carregarProdutividade));
+  const abaProdutividade = el('div', { class: 'pilha-4' },
+    el('div', { class: 'card card-p4' }, el('div', { class: 'linha' }, campo('De', pInicio), campo('Até', pFim),
+      el('div', { class: 'campo' }, el('span', { class: 'rotulo', text: ' ' }), atualizarProdutividade))),
+    areaProdutividade);
+
+  async function carregarProdutividade() {
+    trocar(areaProdutividade, esqueleto(3));
+    try {
+      const linhas = await get(`/indicadores/produtividade?inicio=${pInicio.value}&fim=${pFim.value}`);
+      const grupos = new Map();
+      linhas.forEach((p) => {
+        const chave = `${p.funcionarioCodigo}|${p.processo}`;
+        const g = grupos.get(chave) || { nome: p.funcionarioNome, cargo: p.cargo, processo: p.processo, etapas: 0, retrabalho: 0, minutos: 0 };
+        g.etapas += p.etapasConcluidas;
+        g.retrabalho += p.etapasRetrabalho;
+        g.minutos += p.minutosTrabalhados;
+        grupos.set(chave, g);
+      });
+      const lista = [...grupos.values()].sort((a, b) => b.etapas - a.etapas || a.nome.localeCompare(b.nome));
+      const total = lista.reduce((t, g) => t + g.etapas, 0);
+      const retrabalho = lista.reduce((t, g) => t + g.retrabalho, 0);
+      trocar(areaProdutividade,
+        el('div', { class: 'grade sm-3' },
+          cartao({ titulo: 'Etapas concluídas', corpo: el('div', { class: 'numero-grande', text: String(total) }) }),
+          cartao({ titulo: 'Etapas de retrabalho', corpo: el('div', { class: 'numero-grande texto-alerta', text: String(retrabalho) }) }),
+          cartao({ titulo: 'Funcionários com produção', corpo: el('div', { class: 'numero-grande texto-info', text: String(new Set(linhas.map((p) => p.funcionarioCodigo)).size) }) })),
+        el('div', { class: 'card card-tabela' }, tabela({
+          colunas: [{ titulo: 'Funcionário' }, { titulo: 'Cargo' }, { titulo: 'Processo' }, { titulo: 'Etapas', classe: 'direita' },
+            { titulo: 'Retrabalho', classe: 'direita' }, { titulo: 'Minutos', classe: 'direita' }, { titulo: 'Média por etapa', classe: 'direita' }],
+          linhas: lista,
+          textoVazio: 'Nenhuma etapa concluída no período.',
+          montar: (g) => [el('span', { class: 'medio', text: g.nome }), el('span', { class: 'texto-mudo', text: g.cargo }), g.processo,
+            String(g.etapas), String(g.retrabalho), String(g.minutos), `${(g.etapas ? g.minutos / g.etapas : 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} min`],
+        })));
+    } catch (e) {
+      trocar(areaProdutividade);
+      mostrarErro(e);
+    }
+  }
+
   // ---------------------------------------------------------------- montagem e carga
   const controle = abas([
     { id: 'fila', rotulo: 'Fila de produção', icone: 'list-ordered', conteudo: abaFila },
     { id: 'retrabalho', rotulo: 'Retrabalhos', icone: 'rotate-ccw', conteudo: () => { carregarRetrabalho(); return abaRetrabalho; } },
+    // INCLUÍDO (18/11/2026) [E3-40]
+    { id: 'produtividade', rotulo: 'Produtividade', icone: 'hard-hat', conteudo: () => { carregarProdutividade(); return abaProdutividade; } },
   ]);
   const botaoRetrabalho = botao('Registrar retrabalho', { variante: 'primario', icone: 'plus', onclick: () => dialogoRetrabalho().catch(mostrarErro) });
   conteudo.append(el('div', { class: 'pilha' },

@@ -1,11 +1,16 @@
 // Ordens de Serviço — lista (INCLUÍDO em 21/10/2026), no layout do ordens.tsx do protótipo.
 // Dados: GET /api/ordens. Filtros na tela: busca (nº ou cliente), status, cliente e "só com itens atrasados".
+// ALTERADO (18/11/2026) [E3-32]: os dados passaram a vir de GET /api/ordens/painel, a view dbo.vw_painel_ordens_servico
+// da Etapa 3: uma linha por OS, com status atual e as contagens de itens já feitas no banco (antes a tela recebia
+// cada OS com todos os itens, rotas e fotos só para contar). A coluna "Prazo" (calculada em JS a partir dos itens)
+// virou "Peças": executadas/total, mais as atrasadas, que é o que a view entrega.
 
 import { get } from '../api.js';
 import { data, moeda, nOs, normalizar } from '../formato.js';
 import { montarPagina } from '../layout.js';
 import * as ref from '../referencias.js';
-import { osAtrasada, prazoDaOs } from '../componentes/os.js';
+// ALTERADO (18/11/2026) [E3-32]: prazoDaOs saiu do import (precisava da lista de itens, que o painel não traz).
+import { osAtrasada } from '../componentes/os.js';
 import {
   badge, cabecalho, campoBusca, el, esqueleto, icone, interruptor, mostrarErro, parametroUrl, preencherSelecao,
   prioridade, selecao, status, tabela, trocar,
@@ -58,14 +63,18 @@ if (pagina) {
     trocar(areaTabela, tabela({
       colunas: [
         { titulo: 'Nº OS' }, { titulo: 'Cliente' }, { titulo: 'Status' }, { titulo: 'Prioridade' }, { titulo: 'Criado por' },
-        { titulo: 'Abertura' }, { titulo: 'Prazo' }, { titulo: 'Valor total', classe: 'direita' }, { titulo: 'Ações', classe: 'direita' },
+        { titulo: 'Abertura' }, { titulo: 'Peças' }, { titulo: 'Valor total', classe: 'direita' }, { titulo: 'Ações', classe: 'direita' },
       ],
       linhas: lista,
       textoVazio: ordens.length ? 'Nenhuma OS com esses filtros.' : 'Nenhuma OS cadastrada. Use "Nova OS" para abrir a primeira.',
       aoClicar: (o) => { location.href = `ordem.html?numero=${o.numero}`; },
       classeLinha: (o) => (osAtrasada(o) && o.status !== 'Concluída' && o.status !== 'Cancelada' ? 'linha-atrasada' : ''),
       montar: (o) => {
-        const prazo = prazoDaOs(o);
+        // INCLUÍDO (18/11/2026) [E3-32]: contagens da view (itens cancelados ficam fora do total, como no progresso da OS).
+        const validos = o.qtdItens - o.qtdItensCancelados;
+        const pecas = el('div', { class: 'coluna' },
+          el('span', { class: 'texto-mudo', text: `${o.qtdItensExecutados}/${validos} executada(s)` }),
+          o.qtdItensAtrasados ? el('span', { class: 'texto-xs texto-perigo seminegrito', text: `${o.qtdItensAtrasados} atrasada(s)` }) : null);
         return [
           el('span', { class: 'mono seminegrito texto-primario', text: nOs(o.numero) }),
           o.clienteNome,
@@ -73,7 +82,7 @@ if (pagina) {
           prioridade(o.prioridade),
           el('span', { class: 'texto-mudo', text: o.registradaPor || '—' }),
           el('span', { class: 'texto-mudo', text: data(o.dataEntrada) }),
-          el('span', { class: 'texto-mudo', text: prazo ? data(prazo) : '—' }),
+          pecas,
           { conteudo: el('div', { class: 'coluna' }, el('span', { class: 'seminegrito', text: moeda(o.valorOs) }),
             o.valorIncompleto ? el('span', { class: 'ml-auto' }, badge('valor incompleto', 'alerta')) : null) },
           { conteudo: el('div', { class: 'acoes' }, el('a', { class: 'btn btn-fantasma btn-icone-sm', href: `ordem.html?numero=${o.numero}`, title: 'Ver OS', 'aria-label': `Ver ${nOs(o.numero)}` }, icone('eye'))) },
@@ -83,7 +92,8 @@ if (pagina) {
   }
 
   try {
-    const [lista, statusOs] = await Promise.all([get('/ordens'), ref.statusOs()]);
+    // ALTERADO (18/11/2026) [E3-32]: era get('/ordens').
+    const [lista, statusOs] = await Promise.all([get('/ordens/painel'), ref.statusOs()]);
     ordens = lista.sort((a, b) => b.numero - a.numero);
     preencherSelecao(filtroStatus, statusOs.map((s) => s.nome), { vazio: 'Todos os status', valor: filtros.status });
     const clientes = [...new Map(ordens.map((o) => [o.clienteCodigo, o.clienteNome])).entries()].sort((a, b) => a[1].localeCompare(b[1]));

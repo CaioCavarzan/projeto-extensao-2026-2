@@ -6,8 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * INCLUÍDO (20/10/2026). Item devolvido pela API. atrasado = prazo vencido e item não encerrado (RN-ITE-22); entregue = tem nr_ose (RN-ITE-28).
+ * Item devolvido pela API. atrasado = prazo vencido e item não encerrado; entregue = tem nr_ose.
  */
+
 public record ItemResponse(
         int codigo,
         int osNumero,

@@ -2,15 +2,21 @@
 // Ações conforme o fluxo de status (StatusOsEnum): Criada -> Em produção (automático ao iniciar a 1ª etapa,
 // RN-OS-06) -> Pausada / Concluída (todos os itens executados ou cancelados, RN-OS-04); Cancelar é só do ADMIN e
 // cancela os itens não executados (RN-OS-05). OS concluída não reabre (RN-OS-03).
+// ALTERADO (18/11/2026) [E3-33]: integração com a Etapa 3 do banco:
+//  - nova aba "Auditoria", com a linha do tempo da função dbo.fn_auditoria_timeline_os (GET /api/ordens/{n}/auditoria);
+//  - o cancelamento agora é feito pela procedure dbo.sp_cancelar_ordem_servico, que também tira as etapas pendentes
+//    dos cronogramas futuros; a resposta traz avisos (itens cancelados, cronogramas afetados ou vazios), mostrados
+//    depois da mensagem de sucesso.
 
 import { get, post, put } from '../api.js';
 import { dialogoNovoItem, etapaAtual, osAtrasada, osEncerrada, progressoDaOs } from '../componentes/os.js';
 import { data, dataHora, lerPrioridade, moeda, nItem, nOs, quantidade } from '../formato.js';
 import { montarPagina } from '../layout.js';
 import * as ref from '../referencias.js';
+// ALTERADO (18/11/2026) [E3-33]: + caixaInfo (explicação da aba Auditoria).
 import {
-  abas, badge, botao, cabecalho, campo, cartao, confirmar, dialogo, el, entrada, esqueleto, icone, info, mostrarErro, ocupado,
-  parametroUrl, prioridade, status, sucesso, tabela, trocar, vazio, voltar,
+  abas, badge, botao, cabecalho, caixaInfo, campo, cartao, confirmar, dialogo, el, entrada, esqueleto, icone, info,
+  mostrarErro, ocupado, parametroUrl, prioridade, status, sucesso, tabela, trocar, vazio, voltar,
 } from '../ui.js';
 
 const pagina = await montarPagina({ pagina: 'ordens', titulo: 'Ordem de Serviço' });
@@ -37,8 +43,13 @@ if (pagina) {
     if (pergunta && !(await confirmar(pergunta.texto, { titulo: pergunta.titulo, textoConfirmar: pergunta.botao, perigo: pergunta.perigo }))) return;
     await ocupado(botaoEl, async () => {
       try {
-        await post(`/ordens/${numero}/${caminho}`);
-        sucesso(mensagem);
+        // ALTERADO (18/11/2026) [E3-33]: era "await post(...); sucesso(mensagem)" sem ler a resposta. A resposta do
+        // cancelamento traz os avisos da procedure (itens cancelados, etapas tiradas de cronogramas, cronograma vazio),
+        // mostrados como lista dentro do aviso de sucesso.
+        const resposta = await post(`/ordens/${numero}/${caminho}`);
+        // um aviso só, com a lista (a pilha de avisos mostra no máximo 3 ao mesmo tempo)
+        if (resposta?.avisos?.length) sucesso(mensagem, { lista: resposta.avisos, duracao: 9000 });
+        else sucesso(mensagem);
         ref.esquecer('ordens');
         await carregar();
       } catch (e) {
@@ -57,13 +68,15 @@ if (pagina) {
     if (os.status === 'Em produção') {
       lista.push(b('Pausar', 'pause', 'pausar', `${nOs(numero)} pausada.`));
       lista.push(b('Concluir', 'circle-check', 'concluir', `${nOs(numero)} concluída.`, {
-        titulo: 'Concluir a OS', texto: 'A OS só é concluída quando todos os itens estão executados ou cancelados, e depois não reabre (RN-OS-03).', botao: 'Concluir',
+        titulo: 'Concluir a OS', texto: 'A OS só é concluída quando todos os itens estão executados ou cancelados, e depois não reabre.', botao: 'Concluir',
       }));
     }
     if (os.status === 'Pausada') lista.push(b('Retomar', 'play', 'retomar', `${nOs(numero)} retomada.`));
     if (!osEncerrada(os) && admin) {
       lista.push(b('Cancelar OS', 'ban', 'cancelar', `${nOs(numero)} cancelada.`, {
-        titulo: 'Cancelar a OS', texto: 'Os itens ainda não executados também serão cancelados; os executados ficam como estão (RN-OS-05). Esta ação não pode ser desfeita.', botao: 'Cancelar OS', perigo: true,
+        // ALTERADO (18/11/2026) [E3-33]: o texto passou a avisar que as etapas pendentes saem dos cronogramas futuros
+        // (o que a procedure sp_cancelar_ordem_servico faz).
+        titulo: 'Cancelar a OS', texto: 'Os itens ainda não executados também serão cancelados e as etapas pendentes deles saem dos cronogramas de hoje em diante; os executados ficam como estão. Esta ação não pode ser desfeita.', botao: 'Cancelar OS', perigo: true,
       }, 'perigo-contorno'));
     }
     return lista;
@@ -114,7 +127,8 @@ if (pagina) {
         info('building-2', 'Cliente', os.clienteNome),
         info('user', 'Registrada por', os.registradaPor || '—'),
         info('calendar', 'Abertura', dataHora(os.dataEntrada)),
-        info('dollar-sign', 'Valor total', valor, os.valorIncompleto ? 'Há itens sem valor (RN-OS-15)' : 'Soma dos itens não cancelados'),
+        // ALTERADO (18/11/2026) [E3-33]: a nota explica que a soma é feita pelo banco (triggers da Etapa 3).
+        info('dollar-sign', 'Valor total', valor, os.valorIncompleto ? 'Há itens sem valor' : 'Soma dos itens não cancelados'),
         el('div', { class: 'linha sm-span-2 lg-span-4' }, status(os.status), osAtrasada(os) && !encerrada ? status('Atrasada') : null, prioridade(os.prioridade))),
     });
     const barra = el('div', { class: 'barra-preenchida' });
@@ -167,18 +181,43 @@ if (pagina) {
         })),
         el('div', { class: 'card card-p5 linha-entre' },
           el('div', {}, el('p', { class: 'texto-xs texto-mudo maiusculas', text: 'Valor da OS' }),
-            el('p', { class: 'texto-xs texto-mudo', text: `${validos.length} item(ns) não cancelado(s); itens sem valor ficam fora da soma (RN-OS-15).` })),
+            el('p', { class: 'texto-xs texto-mudo', text: `${validos.length} item(ns) não cancelado(s); itens sem valor ficam fora da soma.` })),
           el('span', { class: 'texto-lg negrito texto-primario', text: moeda(os.valorOs) })));
+    };
+
+    // INCLUÍDO (18/11/2026) [E3-33]: aba Auditoria. A linha do tempo junta, em ordem, os status da OS, os status de
+    // cada peça e o início/conclusão de cada etapa, lidos da função dbo.fn_auditoria_timeline_os quando a aba abre.
+    // O nome ao lado do evento é o que a função devolve: nas etapas, o operador; nos status, quem abriu a OS (o banco
+    // não registra quem mudou o status), por isso o texto diz qual dos dois é.
+    const CATEGORIA = { 'Ordem de Serviço': 'primario', 'Peça (Item)': 'info', 'Etapa de Produção': 'sucesso' };
+    const tabAuditoria = () => {
+      const area = el('div', { class: 'card card-p6' }, esqueleto(5));
+      get(`/ordens/${numero}/auditoria`).then((eventos) => {
+        trocar(area, eventos.length ? el('div', { class: 'linha-tempo' },
+          eventos.map((ev, i) => el('div', { class: 'linha-tempo-item' },
+            el('div', { class: 'linha-tempo-marca' }, el('div', { class: 'linha-tempo-ponto' }), i < eventos.length - 1 ? el('div', { class: 'linha-tempo-fio' }) : null),
+            el('div', { class: 'linha-tempo-texto' },
+              el('p', { class: 'linha' }, badge(ev.categoria, CATEGORIA[ev.categoria] || 'contorno'), el('span', { class: 'medio', text: ev.evento })),
+              el('p', { class: 'texto-xs texto-mudo', text: `${ev.referencia} · ${dataHora(ev.dataHora)} · ${ev.papelResponsavel === 'operador da etapa' ? 'operador' : 'OS aberta por'}: ${ev.responsavel || '—'}` })))))
+          : vazio('Sem eventos.', 'history'));
+      }).catch((e) => {
+        trocar(area, vazio('Não foi possível carregar a auditoria.', 'circle-alert'));
+        mostrarErro(e);
+      });
+      return el('div', { class: 'pilha-4' },
+        caixaInfo('Rastreabilidade da OS: status da OS, status das peças e início/conclusão das etapas, com o tempo de cada etapa. Nos status, o nome é de quem abriu a OS: o sistema registra a data da mudança, mas não quem mudou.'),
+        area);
     };
 
     const controle = abas([
       { id: 'itens', rotulo: `Peças (${os.itens.length})`, conteudo: tabItens },
       { id: 'historico', rotulo: 'Histórico', conteudo: tabHistorico },
       { id: 'financeiro', rotulo: 'Financeiro', conteudo: tabFinanceiro },
+      { id: 'auditoria', rotulo: 'Auditoria', conteudo: tabAuditoria }, // INCLUÍDO (18/11/2026) [E3-33]
     ]);
 
     const avisos = [];
-    if (encerrada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: os.status === 'Concluída' ? 'OS concluída: não aceita alterações e não reabre (RN-OS-03). Ainda é possível registrar a entrega e anexar fotos nos itens.' : 'OS cancelada: não aceita alterações.' })));
+    if (encerrada) avisos.push(el('div', { class: 'alerta alerta-info' }, icone('info'), el('div', { text: os.status === 'Concluída' ? 'OS concluída: não aceita alterações e não reabre. Ainda é possível registrar a entrega e anexar fotos nos itens.' : 'OS cancelada: não aceita alterações.' })));
 
     trocar(area,
       voltar('Voltar', 'ordens.html'),

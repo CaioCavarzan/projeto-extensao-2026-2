@@ -11,19 +11,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.fatec.projetoextensao.dtos.IndicadorRetrabalhoResponse;
 import br.fatec.projetoextensao.dtos.ItemRetrabalhoResponse;
+import br.fatec.projetoextensao.dtos.ProdutividadeResponse;
+import br.fatec.projetoextensao.dtos.RetrabalhoMensalResponse;
+import br.fatec.projetoextensao.services.IndicadorService;
 import br.fatec.projetoextensao.services.ItemRotaProcessoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): indicador do PDCA de GQA (RN-IRP-09): % de retrabalho = itens com alguma etapa repetida
+ * Indicador do PDCA de GQA: % de retrabalho = itens com alguma etapa repetida
  * ÷ itens executados no período × 100. Datas no formato AAAA-MM-DD; o período inclui as duas datas.
+ * Novos /produtividade (view vw_produtividade_funcionario) e /retrabalho/mensal
+ * (view vw_retrabalho_mensal), atendidos pelo IndicadorService.
  */
+
 @RestController
 @RequestMapping("/api/indicadores")
 @RequiredArgsConstructor
 public class IndicadorController {
 
     private final ItemRotaProcessoService itemRotaProcessoService;
+    // INCLUÍDO (18/11/2026) [E3-18]: indicadores lidos das views da Etapa 3.
+    private final IndicadorService indicadorService;
 
     @GetMapping("/retrabalho")
     public IndicadorRetrabalhoResponse retrabalho(
@@ -37,5 +45,18 @@ public class IndicadorController {
             @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
         return itemRotaProcessoService.itensComRetrabalho(inicio, fim);
+    }
+
+    @GetMapping("/produtividade")
+    public List<ProdutividadeResponse> produtividade(
+            @RequestParam("inicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam("fim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
+        return indicadorService.produtividade(inicio, fim);
+    }
+
+    @GetMapping("/retrabalho/mensal")
+    public List<RetrabalhoMensalResponse> retrabalhoMensal(
+            @RequestParam(name = "meses", defaultValue = "12") int meses) {
+        return indicadorService.retrabalhoMensal(meses);
     }
 }

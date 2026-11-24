@@ -19,10 +19,11 @@ import br.fatec.projetoextensao.services.CorService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): cores pedidas pelos clientes (RN-COR-01 a RN-COR-03).
+ * Cores pedidas pelos clientes.
  * Listar: ADMIN e OPERADOR (as telas usam a lista nas caixas de seleção). Cadastrar, renomear e excluir: só ADMIN
- * (RN-SIS-03: alterar as listas de apoio). Registro em uso não é excluído (RN-SIS-12).
+ * Registro em uso não é excluído.
  */
+
 @RestController
 @RequestMapping("/api/cores")
 @RequiredArgsConstructor

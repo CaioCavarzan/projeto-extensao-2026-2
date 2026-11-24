@@ -13,21 +13,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.fatec.projetoextensao.dtos.AbrirOsRequest;
+import br.fatec.projetoextensao.dtos.EventoAuditoriaResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
 import br.fatec.projetoextensao.dtos.ItemRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.OsResponse;
+import br.fatec.projetoextensao.dtos.PainelOsResponse;
 import br.fatec.projetoextensao.dtos.PrioridadeRequest;
+import br.fatec.projetoextensao.dtos.ProximaOsResponse;
 import br.fatec.projetoextensao.services.ItemService;
 import br.fatec.projetoextensao.services.OrdemServicoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): ordens de serviço. POST abre a OS com os itens na mesma transação (RN-OS-01 e RN-SIS-04);
- * número, usuário, data de entrada e valor não vêm no corpo (RN-SIS-05). Mudanças de status pelas ações
- * pausar, retomar, concluir (RN-OS-04) e cancelar (só ADMIN, RN-OS-05), conforme o fluxo de status (RN-HOS-02).
- * POST /{numero}/itens inclui um item numa OS aberta (RN-OS-07).
+ * Ordens de serviço. POST abre a OS com os itens na mesma transação;
+ * número, usuário, data de entrada e valor não vêm no corpo. Mudanças de status pelas ações
+ * pausar, retomar, concluir e cancelar (só ADMIN), conforme o fluxo de status.
+ * POST /{numero}/itens inclui um item numa OS aberta.
  */
+
 @RestController
 @RequestMapping("/api/ordens")
 @RequiredArgsConstructor
@@ -39,6 +43,16 @@ public class OrdemServicoController {
     @GetMapping
     public List<OsResponse> listar() {
         return ordemServicoService.listar();
+    }
+
+    @GetMapping("/painel")
+    public List<PainelOsResponse> painel() {
+        return ordemServicoService.painel();
+    }
+
+    @GetMapping("/proxima")
+    public ProximaOsResponse proxima() {
+        return ordemServicoService.proxima();
     }
 
     @GetMapping("/{numero}")
@@ -79,6 +93,11 @@ public class OrdemServicoController {
     @GetMapping("/{numero}/historico")
     public List<HistoricoStatusResponse> historico(@PathVariable("numero") int numero) {
         return ordemServicoService.historico(numero);
+    }
+
+    @GetMapping("/{numero}/auditoria")
+    public List<EventoAuditoriaResponse> auditoria(@PathVariable("numero") int numero) {
+        return ordemServicoService.auditoria(numero);
     }
 
     @PostMapping("/{numero}/itens")

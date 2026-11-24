@@ -17,8 +17,13 @@ export function prazoDaOs(os) {
   return prazos[0] || null;
 }
 
-/** A OS tem algum item atrasado (RN-ITE-22)? */
-export const osAtrasada = (os) => (os.itens || []).some((i) => i.atrasado);
+/**
+ * A OS tem algum item atrasado (RN-ITE-22)?
+ * ALTERADO (18/11/2026) [E3-31]: além da OS completa (com a lista de itens, GET /api/ordens/{n}), aceita a linha do
+ * painel (GET /api/ordens/painel), que já traz a contagem qtdItensAtrasados calculada pela view
+ * vw_painel_ordens_servico; antes só sabia olhar os.itens.
+ */
+export const osAtrasada = (os) => (os.qtdItensAtrasados ?? 0) > 0 || (os.itens || []).some((i) => i.atrasado);
 
 /** Progresso: itens executados entre os não cancelados. */
 export function progressoDaOs(os) {
@@ -51,7 +56,7 @@ export async function dialogoNovoItem({ numeroFixo, ordensAbertas, aoSalvar }) {
   const conteudo = [];
   if (!numeroFixo) {
     escolhaOs = selecao(ordensAbertas.map((o) => ({ valor: o.numero, rotulo: `${nOs(o.numero)} · ${o.clienteNome} · ${o.status}` })), { vazio: 'Selecione a OS' });
-    conteudo.push(el('div', { class: 'mb-4' }, campo('OS vinculada', escolhaOs, { obrigatorio: true, dica: 'Só OS que não estão concluídas nem canceladas (RN-OS-07).' })));
+    conteudo.push(el('div', { class: 'mb-4' }, campo('OS vinculada', escolhaOs, { obrigatorio: true, dica: 'Só OS que não estão concluídas nem canceladas.' })));
   }
   conteudo.push(form.elemento);
   const salvar = botao(numeroFixo ? 'Adicionar item' : 'Cadastrar', { variante: 'primario', icone: 'package-plus' });

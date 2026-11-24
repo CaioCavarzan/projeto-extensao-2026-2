@@ -47,7 +47,7 @@ public class TintaEntity{
     @Column(name = "ref_fornecedor")
     private String referenciaFornecedor;
     
-    @Column(name = "estoque_atual")
+    @Column(name = "estoque_atual", insertable = false, updatable = false)
     private BigDecimal estoque = BigDecimal.ZERO;
     
     @Column(name = "valor_unit")

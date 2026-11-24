@@ -17,12 +17,12 @@ import br.fatec.projetoextensao.services.UsuarioService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): acesso ao sistema.
- * Rotas públicas (RN-SIS-01): POST /ativar-conta (cadastre-se, RN-USU-02), GET /pergunta-seguranca e
- * POST /redefinir-senha (lembrete de senha, RN-USU-05).
+ * Rotas públicas: POST /ativar-conta (cadastre-se), GET /pergunta-seguranca e
+ * POST /redefinir-senha (lembrete de senha).
  * GET /me é o "entrar" do front: com o cabeçalho Authorization (HTTP Basic), devolve o usuário logado e o perfil;
- * login ou senha errados recebem 401 (RN-USU-07); usuário bloqueado, 401 com outra mensagem (RN-USU-04).
+ * login ou senha errados recebem 401; usuário bloqueado, 401 com outra mensagem.
  */
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor

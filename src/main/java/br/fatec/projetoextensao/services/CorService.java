@@ -19,13 +19,9 @@ import br.fatec.projetoextensao.validacao.Validacao;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): cores (tabela Cores).
- * Regras: RN-COR-01 (cor em uso não é excluída), RN-COR-02 e RN-COR-03 (nome obrigatório, até 50 caracteres e
- * único), RN-SIS-03 (alterar listas de apoio: só ADMIN).
- *
- * RN-COR-04 (nome padronizado, ex.: com o código RAL) não tem um formato definido na planilha; a unicidade sem
- * diferenciar maiúsculas já evita 'Azul' e 'azul' como cores diferentes.
+ * Cores (tabela Cores).
  */
+
 @Service
 @RequiredArgsConstructor
 public class CorService {
@@ -42,7 +38,6 @@ public class CorService {
                 .toList();
     }
 
-    /** RN-COR-03: nome obrigatório, até 50 caracteres e único. RN-SIS-03: só ADMIN. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public ItemListaResponse cadastrar(NomeRequest dto) {
@@ -68,7 +63,6 @@ public class CorService {
         return new ItemListaResponse(cor.getCodigo(), corRepository.save(cor).getNome());
     }
 
-    /** RN-COR-01: cor usada em tinta ou em item não é excluída. RN-SIS-03: só ADMIN. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public void excluir(int codigo) {
@@ -81,7 +75,7 @@ public class CorService {
 
     CorEntity buscarEntidade(int codigo) {
         return corRepository.findById(codigo)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Cor não encontrada.")); // RN-TIN-05, RN-ITE-13
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cor não encontrada.")); 
     }
 
     private String validarNome(NomeRequest dto) {

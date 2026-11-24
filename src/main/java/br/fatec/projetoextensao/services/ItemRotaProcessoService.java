@@ -43,17 +43,9 @@ import br.fatec.projetoextensao.security.Perfis;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): rota do item e execução das etapas (tabela ItensRotasProcessos).
- * Regras: RN-IRP-01 a RN-IRP-16, RN-ITE-03 (pelo menos uma etapa), RN-ITE-05 (Pintura exige cor), RN-ITE-06
- * (retrabalho não muda o status do item), RN-OS-06 (1ª etapa iniciada leva a OS a 'Em produção') e RN-OS-07.
- *
- * Decisões de implementação (não estão escritas na planilha, mas decorrem dos status do item e da OS):
- * <ul>
- *   <li>etapa só é iniciada quando o item está 'Aguardando execução' (pronto) ou 'Executada' (retrabalho);
- *       item 'Pendente' ainda não está pronto, e item ou OS 'Pausada' não recebe início nem conclusão de etapa;</li>
- *   <li>a Pintura só é iniciada com a tinta definida (sem tinta não há o que aplicar).</li>
- * </ul>
+ * Rota do item e execução das etapas (tabela ItensRotasProcessos).
  */
+
 @Service
 @RequiredArgsConstructor
 public class ItemRotaProcessoService {
@@ -68,7 +60,6 @@ public class ItemRotaProcessoService {
 
     // ------------------------------------------------------------------ montagem da rota
 
-    /** RN-ITE-03 e RN-IRP-01: etapas iniciais do item, com ordem 1, 2, 3... (chamado ao incluir o item). */
     void criarEtapasIniciais(ItemEntity item, List<RotaProcessoEntity> rotas) {
         int ordem = itemRotaProcessoRepository.maiorOrdem(item);
         for (RotaProcessoEntity rota : rotas) {
@@ -76,31 +67,23 @@ public class ItemRotaProcessoService {
         }
     }
 
-    /**
-     * Acrescenta uma etapa planejada no fim da rota (ordem = maior ordem + 1, RN-IRP-01).
-     * RN-ITE-07: item encerrado não muda; RN-OS-07: OS encerrada não muda; RN-ITE-05: Pintura exige cor pedida.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public List<EtapaResponse> adicionarEtapa(int itemCodigo, int rotaCodigo) {
         ItemEntity item = travarItem(itemCodigo);
         garantirOsAberta(item.getOs());
         if (statusService.statusAtual(item).isEncerrado()) {
-            throw new RegraNegocioException("Item encerrado não pode ser alterado."); // RN-ITE-07
+            throw new RegraNegocioException("Item encerrado não pode ser alterado."); 
         }
-        RotaProcessoEntity rota = rotaProcessoService.buscarEntidade(rotaCodigo); // RN-IRP-11
+        RotaProcessoEntity rota = rotaProcessoService.buscarEntidade(rotaCodigo); 
         if (RotaProcessoService.ehPintura(rota) && item.getCor() == null) {
-            throw new RegraNegocioException("Informe a cor: o item tem pintura."); // RN-ITE-05
+            throw new RegraNegocioException("Informe a cor: o item tem pintura."); 
         }
         novaEtapa(item, rota, itemRotaProcessoRepository.maiorOrdem(item) + 1);
         statusService.avaliarProntidao(item);
         return etapas(item);
     }
 
-    /**
-     * RN-IRP-02 e RN-ITE-06: retrabalho = nova linha com a mesma etapa e a próxima ordem; a etapa concluída nunca é
-     * reaberta e o status do item não muda. Reclamação depois da OS encerrada vira OS nova (RN-OS-03, RN-OS-07).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public List<EtapaResponse> registrarRetrabalho(int etapaCodigo) {
@@ -113,16 +96,12 @@ public class ItemRotaProcessoService {
         if (etapa.getDataConclusao() == null) {
             throw new RegraNegocioException("Só etapa concluída tem retrabalho: esta etapa ainda não foi concluída.");
         }
-        novaEtapa(item, etapa.getRotaProcesso(), itemRotaProcessoRepository.maiorOrdem(item) + 1); // RN-IRP-01
+        novaEtapa(item, etapa.getRotaProcesso(), itemRotaProcessoRepository.maiorOrdem(item) + 1);
         return etapas(item);
     }
 
     // ------------------------------------------------------------------ execução
 
-    /**
-     * Início da etapa: RN-IRP-03 (operador obrigatório), RN-IRP-05 (etapas anteriores concluídas), RN-IRP-07 (hora do
-     * servidor), RN-IRP-02 (etapa concluída não reabre) e RN-OS-06 (a OS passa de 'Criada' para 'Em produção').
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public EtapaResponse iniciarEtapa(int etapaCodigo, IniciarEtapaRequest dto) {
@@ -132,38 +111,34 @@ public class ItemRotaProcessoService {
         StatusOsEnum statusOs = garantirOsEmAndamento(os);
         garantirItemEmExecucao(item, true);
         if (etapa.getDataConclusao() != null) {
-            throw new RegraNegocioException("Etapa concluída não pode ser reaberta; registre retrabalho."); // RN-IRP-02
+            throw new RegraNegocioException("Etapa concluída não pode ser reaberta; registre retrabalho."); 
         }
         if (etapa.getDataInicio() != null) {
             throw new RegraNegocioException("Etapa já iniciada.");
         }
         if (dto == null || dto.funcionarioCodigo() == null) {
-            throw new RegraNegocioException("Informe o operador da etapa."); // RN-IRP-03 e CHECK do banco
+            throw new RegraNegocioException("Informe o operador da etapa."); 
         }
         FuncionarioEntity operador = funcionarioRepository.findById(dto.funcionarioCodigo())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Funcionário não encontrado.")); // RN-IRP-16
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Funcionário não encontrado.")); 
         boolean anterioresConcluidas = etapasDoItem(item).stream()
                 .filter(e -> e.getOrdem() < etapa.getOrdem())
                 .allMatch(e -> e.getDataConclusao() != null);
         if (!anterioresConcluidas) {
-            throw new RegraNegocioException("Conclua a etapa anterior antes."); // RN-IRP-05
+            throw new RegraNegocioException("Conclua a etapa anterior antes."); 
         }
         if (RotaProcessoService.ehPintura(etapa.getRotaProcesso()) && item.getTinta() == null) {
             throw new RegraNegocioException("Defina a tinta do item antes de iniciar a pintura.");
         }
         etapa.setFuncionario(operador);
-        etapa.setDataInicio(LocalDateTime.now()); // RN-IRP-07 e RN-IRP-14 (com início, operador já conferido)
+        etapa.setDataInicio(LocalDateTime.now()); 
         itemRotaProcessoRepository.save(etapa);
         if (statusOs == StatusOsEnum.CRIADA) {
-            statusService.mudarStatus(os, StatusOsEnum.EM_PRODUCAO); // RN-OS-06
+            statusService.mudarStatus(os, StatusOsEnum.EM_PRODUCAO); 
         }
         return paraResponse(etapa, etapasDoItem(item));
     }
 
-    /**
-     * Conclusão da etapa: RN-IRP-04 (precisa estar iniciada; conclusão não antes do início), RN-IRP-07 (hora do
-     * servidor) e RN-IRP-06 (concluída a última etapa, o item passa a 'Executada' e recebe data_finalizacao).
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public EtapaResponse concluirEtapa(int etapaCodigo) {
@@ -172,28 +147,23 @@ public class ItemRotaProcessoService {
         garantirOsEmAndamento(travarOs(item.getOs()));
         garantirItemEmExecucao(item, false);
         if (etapa.getDataInicio() == null) {
-            throw new RegraNegocioException("A etapa precisa ter sido iniciada."); // RN-IRP-04
+            throw new RegraNegocioException("A etapa precisa ter sido iniciada."); 
         }
         if (etapa.getDataConclusao() != null) {
             throw new RegraNegocioException("Etapa já concluída.");
         }
         LocalDateTime agora = LocalDateTime.now();
-        etapa.setDataConclusao(agora.isBefore(etapa.getDataInicio()) ? etapa.getDataInicio() : agora); // RN-IRP-04
+        etapa.setDataConclusao(agora.isBefore(etapa.getDataInicio()) ? etapa.getDataInicio() : agora); 
         itemRotaProcessoRepository.save(etapa);
 
         List<ItemRotaProcessoEntity> etapas = etapasDoItem(item);
         boolean todasConcluidas = etapas.stream().allMatch(e -> e.getDataConclusao() != null);
         if (todasConcluidas && statusService.statusAtual(item) == StatusItemEnum.AGUARDANDO_EXECUCAO) {
-            statusService.mudarStatus(item, StatusItemEnum.EXECUTADA); // RN-IRP-06 e RN-ITE-26
+            statusService.mudarStatus(item, StatusItemEnum.EXECUTADA); 
         }
         return paraResponse(etapa, etapas);
     }
 
-    /**
-     * RN-IRP-07: correção manual de datas, só por ADMIN. Corrige horários e operador de etapa já iniciada; não
-     * inicia, não conclui e não reabre etapa (para isso existem iniciar e concluir; RN-IRP-02).
-     * Mantém os CHECK do banco: conclusão só com início e não antes dele; início exige operador.
-     */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public EtapaResponse corrigirDatas(int etapaCodigo, CorrecaoEtapaRequest dto) {
@@ -209,7 +179,7 @@ public class ItemRotaProcessoService {
         }
         boolean concluida = etapa.getDataConclusao() != null;
         if (concluida && dto.dataConclusao() == null) {
-            throw new RegraNegocioException("Etapa concluída não pode ser reaberta; registre retrabalho."); // RN-IRP-02
+            throw new RegraNegocioException("Etapa concluída não pode ser reaberta; registre retrabalho."); 
         }
         if (!concluida && dto.dataConclusao() != null) {
             throw new RegraNegocioException("Para concluir a etapa, use a opção de concluir.");
@@ -219,7 +189,7 @@ public class ItemRotaProcessoService {
             throw new RegraNegocioException("As datas da etapa não podem estar no futuro.");
         }
         if (dto.dataConclusao() != null && dto.dataConclusao().isBefore(dto.dataInicio())) {
-            throw new RegraNegocioException("A conclusão não pode ser antes do início."); // RN-IRP-04, RN-IRP-15
+            throw new RegraNegocioException("A conclusão não pode ser antes do início."); 
         }
         if (dto.funcionarioCodigo() != null) {
             etapa.setFuncionario(funcionarioRepository.findById(dto.funcionarioCodigo())
@@ -231,11 +201,6 @@ public class ItemRotaProcessoService {
         return paraResponse(etapa, etapasDoItem(etapa.getItem()));
     }
 
-    /**
-     * RN-IRP-08: só etapa planejada (sem início) sai da rota. RN-ITE-03: o item fica com pelo menos uma etapa.
-     * Etapa que está num cronograma precisa sair do cronograma antes (a FK de CronogramasItens impediria).
-     * RN-ITE-05: se a rota ficar sem Pintura, o item fica sem cor e sem tinta.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional
     public List<EtapaResponse> removerEtapa(int etapaCodigo) {
@@ -243,13 +208,13 @@ public class ItemRotaProcessoService {
         ItemEntity item = travarItem(etapa.getItem().getCodigo());
         garantirOsAberta(item.getOs());
         if (etapa.getDataInicio() != null) {
-            throw new RegraNegocioException("Etapa já iniciada não pode ser removida."); // RN-IRP-08
+            throw new RegraNegocioException("Etapa já iniciada não pode ser removida."); 
         }
         if (cronogramaItemRepository.existsByItemRotaProcesso(etapa)) {
             throw RegraNegocioException.conflito("Etapa planejada em cronograma: retire-a do cronograma antes.");
         }
         if (etapasDoItem(item).size() <= 1) {
-            throw new RegraNegocioException("Informe pelo menos uma etapa do processo."); // RN-ITE-03
+            throw new RegraNegocioException("Informe pelo menos uma etapa do processo."); 
         }
         itemRotaProcessoRepository.delete(etapa);
         itemRotaProcessoRepository.flush();
@@ -273,10 +238,6 @@ public class ItemRotaProcessoService {
 
     // ------------------------------------------------------------------ indicador
 
-    /**
-     * RN-IRP-09: % de retrabalho = itens com alguma etapa repetida ÷ itens executados no período × 100
-     * (indicador do PDCA). Conta os itens finalizados entre {@code inicio} e {@code fim}, inclusive.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public IndicadorRetrabalhoResponse percentualRetrabalho(LocalDate inicio, LocalDate fim) {
@@ -301,10 +262,6 @@ public class ItemRotaProcessoService {
         return new IndicadorRetrabalhoResponse(inicio, fim, executados.size(), comRetrabalho, percentual);
     }
 
-    /**
-     * INCLUÍDO (21/10/2026): itens executados no período que tiveram alguma etapa repetida, com o nome das etapas
-     * repetidas. São os itens contados no numerador do % de retrabalho (RN-IRP-09); a tela Produção mostra a lista.
-     */
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<ItemRetrabalhoResponse> itensComRetrabalho(LocalDate inicio, LocalDate fim) {
@@ -345,14 +302,7 @@ public class ItemRotaProcessoService {
 
     // ------------------------------------------------------------------ fila de produção
 
-    /**
-     * INCLUÍDO (21/10/2026): fila de produção, usada pela tela Produção e na montagem do cronograma.
-     * São as etapas ainda não concluídas de itens que não foram cancelados, em OS que não está encerrada; entram
-     * também as etapas de retrabalho de itens já executados (RN-IRP-02 e RN-ITE-06). Ordem: prazo de entrega mais
-     * próximo primeiro (sem prazo no fim), depois OS, item e ordem da etapa.
-     * podeIniciar e motivo repetem, só como orientação para a tela, as conferências de iniciarEtapa (OS ou item
-     * pausados, item pendente, RN-IRP-05 e Pintura sem tinta); quem decide continua sendo iniciarEtapa.
-     */
+    
     @PreAuthorize(Perfis.QUALQUER)
     @Transactional(readOnly = true)
     public List<EtapaFilaResponse> listarFila() {
@@ -415,7 +365,6 @@ public class ItemRotaProcessoService {
 
     // ------------------------------------------------------------------ apoio
 
-    /** Etapas do item na ordem, com a marca de retrabalho (a mesma etapa já apareceu antes). */
     List<EtapaResponse> etapas(ItemEntity item) {
         List<ItemRotaProcessoEntity> lista = etapasDoItem(item);
         List<EtapaResponse> resposta = new ArrayList<>();
@@ -436,10 +385,10 @@ public class ItemRotaProcessoService {
 
     private void novaEtapa(ItemEntity item, RotaProcessoEntity rota, int ordem) {
         ItemRotaProcessoEntity etapa = new ItemRotaProcessoEntity();
-        etapa.setItem(item); // RN-IRP-12: item obrigatório; item + ordem não se repetem (o item está travado)
+        etapa.setItem(item); 
         etapa.setRotaProcesso(rota);
-        etapa.setOrdem(ordem); // RN-IRP-13: calculada pelo Service, nunca enviada pelo front
-        itemRotaProcessoRepository.save(etapa); // RN-IRP-10: código gerado pelo banco
+        etapa.setOrdem(ordem); 
+        itemRotaProcessoRepository.save(etapa); 
     }
 
     private ItemEntity travarItem(int codigo) {
@@ -452,14 +401,12 @@ public class ItemRotaProcessoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("OS não encontrada."));
     }
 
-    /** RN-OS-07: OS 'Concluída' ou 'Cancelada' não aceita alterações. */
     private void garantirOsAberta(OrdemServicoEntity os) {
         if (statusService.statusAtual(os).isEncerrado()) {
             throw new RegraNegocioException("OS encerrada: não aceita alterações.");
         }
     }
 
-    /** RN-OS-07 e OS pausada: não se inicia nem se conclui etapa. */
     private StatusOsEnum garantirOsEmAndamento(OrdemServicoEntity os) {
         StatusOsEnum status = statusService.statusAtual(os);
         if (status.isEncerrado()) {
@@ -471,7 +418,6 @@ public class ItemRotaProcessoService {
         return status;
     }
 
-    /** Item cancelado ou pausado não executa etapas; item pendente ainda não está pronto para começar. */
     private void garantirItemEmExecucao(ItemEntity item, boolean iniciando) {
         StatusItemEnum status = statusService.statusAtual(item);
         if (status == StatusItemEnum.CANCELADA) {

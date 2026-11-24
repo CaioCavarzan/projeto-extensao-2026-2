@@ -20,19 +20,11 @@ import br.fatec.projetoextensao.repositories.StatusOsRepository;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): ao iniciar a aplicação, confere se as listas fixas que o Java usa pelo nome existem no
- * banco e cadastra o que faltar (com aviso no log):
- * <ul>
- *   <li>RN-SOS-01: os 5 status da OS (StatusOsEnum), com nomes únicos de até 50 caracteres (RN-SOS-03) e
- *       código gerado pelo banco (RN-SOS-02);</li>
- *   <li>RN-SIT-01: os 5 status do item (StatusItemEnum), com nomes únicos de até 50 caracteres (RN-SIT-03) e
- *       código gerado pelo banco (RN-SIT-02);</li>
- *   <li>RN-FON-01: a fonte 'Não informada';</li>
- *   <li>RN-ROT-01: as etapas Jateamento, Banho e Pintura.</li>
- * </ul>
+ * Ao iniciar a aplicação, confere se as listas fixas que o Java usa pelo nome existem no
  * Com a carga inicial de 14/10 já rodada, nada é inserido. Num banco vazio (ou no banco de teste), as listas
  * passam a existir e as regras de status funcionam desde o primeiro uso.
  */
+
 @Component
 @RequiredArgsConstructor
 public class VerificacaoListasFixas {

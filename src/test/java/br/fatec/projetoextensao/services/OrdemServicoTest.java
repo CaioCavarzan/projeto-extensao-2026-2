@@ -18,6 +18,7 @@ import br.fatec.projetoextensao.dtos.ClienteResponse;
 import br.fatec.projetoextensao.dtos.EtapaResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
 import br.fatec.projetoextensao.dtos.IniciarEtapaRequest;
+import br.fatec.projetoextensao.dtos.ItemAtrasadoResponse;
 import br.fatec.projetoextensao.dtos.ItemAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.ItemRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
@@ -259,7 +260,11 @@ class OrdemServicoTest extends TesteBase {
         item.setDataEntrada(LocalDateTime.now().minusDays(10)); // simula item que entrou há 10 dias
         item.setPrazoEntrega(LocalDate.now().minusDays(1));
         itemRepository.save(item);
-        assertThat(itemService.listarAtrasados()).extracting(ItemResponse::codigo).contains(item.getCodigo());
+        // ALTERADO (18/11/2026) [E3-53]: era extracting(ItemResponse::codigo). listarAtrasados passou a ler a função
+        // dbo.fn_itens_atrasados e devolve ItemAtrasadoResponse, que traz também os dias de atraso (1 dia aqui).
+        assertThat(itemService.listarAtrasados()).extracting(ItemAtrasadoResponse::codigo).contains(item.getCodigo());
+        assertThat(itemService.listarAtrasados()).filteredOn(a -> a.codigo() == item.getCodigo())
+                .extracting(ItemAtrasadoResponse::diasAtraso).containsExactly(1);
         assertThat(itemService.buscar(item.getCodigo()).atrasado()).isTrue();
     }
 

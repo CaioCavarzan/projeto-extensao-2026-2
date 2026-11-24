@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -40,9 +42,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import br.fatec.projetoextensao.dtos.ErroResponse;
 import br.fatec.projetoextensao.security.Perfis;
+import jakarta.persistence.PersistenceException;
 
 /**
- * INCLUÍDO (20/10/2026): RN-SIS-07. Toda regra violada vira uma resposta com mensagem clara (coluna K da planilha) e
+ * Toda regra violada vira uma resposta com mensagem clara e
  * erro do banco nunca chega cru à tela.
  * <ul>
  *   <li>RegraNegocioException: 400 (dado inválido) ou 409 (conflito: duplicidade, registro em uso);</li>
@@ -55,15 +58,14 @@ import br.fatec.projetoextensao.security.Perfis;
  * </ul>
  * Os erros padrão do Spring MVC (rota inexistente, JSON mal formado, método HTTP errado...) são tratados pela
  * classe-mãe ResponseEntityExceptionHandler, com o status correto.
- * ALTERADO (21/10/2026): esses erros padrão passaram a sair também no formato ErroResponse e em português
- * (handleExceptionInternal, no fim da classe); antes saíam no formato padrão do Spring, em inglês, que a tela não lê.
  */
+
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /** Nome da constraint do script -> mensagem da coluna K da planilha de regras. */
+    /** Nome da constraint do script. */
     private static final Map<String, String> MENSAGENS_DO_BANCO = new LinkedHashMap<>();
 
     static {
@@ -123,16 +125,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return resposta(HttpStatus.UNAUTHORIZED, "Não autorizado", List.of(SessaoInvalidaException.MENSAGEM), request);
     }
 
-    /** RN-SIS-02: método de Service com @PreAuthorize chamado por usuário sem o perfil exigido. */
+    /** Método de Service com @PreAuthorize chamado por usuário sem o perfil exigido. */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErroResponse> acessoNegado(AccessDeniedException ex, WebRequest request) {
-        // ALTERADO (21/10/2026): mensagem da RN-SIS-03 na planilha (era "Você não tem permissão para esta ação.").
         return resposta(HttpStatus.FORBIDDEN, "Acesso negado", List.of(Perfis.MSG_SO_ADMIN), request);
     }
 
-    /** RN-SIS-07: erro do banco traduzido pela constraint; RN-SIS-12: registro em uso (FK) não é excluído. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> integridade(DataIntegrityViolationException ex, WebRequest request) {
+        ResponseEntity<ErroResponse> daEtapa3 = respostaDoErroDoBanco(ex, request);
+        if (daEtapa3 != null) {
+            return daEtapa3;
+        }
         String detalhe = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase(Locale.ROOT);
         String mensagem = null;
         for (Map.Entry<String, String> e : MENSAGENS_DO_BANCO.entrySet()) {
@@ -151,7 +155,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return resposta(HttpStatus.CONFLICT, "Conflito", List.of(mensagem), request);
     }
 
-    /** RN-FOT-06: arquivo acima do limite de upload (spring.servlet.multipart.max-file-size). */
+    @ExceptionHandler({DataAccessException.class, PersistenceException.class, TransactionSystemException.class})
+    public ResponseEntity<ErroResponse> erroDoBanco(RuntimeException ex, WebRequest request) {
+        ResponseEntity<ErroResponse> daEtapa3 = respostaDoErroDoBanco(ex, request);
+        return daEtapa3 != null ? daEtapa3 : inesperado(ex, request);
+    }
+
+    @ExceptionHandler(ObjetoBancoAusenteException.class)
+    public ResponseEntity<ErroResponse> objetoAusente(ObjetoBancoAusenteException ex, WebRequest request) {
+        log.error("Objeto da Etapa 3 ausente no banco: {}", ex.getObjeto().getNome());
+        return resposta(HttpStatus.SERVICE_UNAVAILABLE, "Serviço indisponível", List.of(ex.getMessage()), request);
+    }
+
+    private ResponseEntity<ErroResponse> respostaDoErroDoBanco(Exception ex, WebRequest request) {
+        RuntimeException traduzida = ErrosBanco.traduzir(ex);
+        if (traduzida == null) {
+            return null;
+        }
+        log.debug("Erro do banco traduzido ({}): {}", traduzida.getClass().getSimpleName(), traduzida.getMessage());
+        if (traduzida instanceof RegraNegocioException r) {
+            return regraNegocio(r, request);
+        }
+        if (traduzida instanceof RecursoNaoEncontradoException n) {
+            return naoEncontrado(n, request);
+        }
+        return objetoAusente((ObjetoBancoAusenteException) traduzida, request);
+    }
+
     @Override
     protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
@@ -159,11 +189,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "Arquivo grande demais", List.of("Envie uma imagem JPG ou PNG de até 10 MB."), request));
     }
 
-    /** Qualquer outro erro: mensagem genérica para o usuário; o detalhe fica só no log. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResponse> inesperado(Exception ex, WebRequest request) {
-        // INCLUÍDO (21/10/2026): o navegador fechou a conexão antes do fim da resposta (ex.: o usuário trocou de tela
-        // enquanto uma foto carregava). Não é erro do sistema e não há a quem responder.
         if (clienteDesconectou(ex)) {
             log.debug("Cliente desconectou antes do fim da resposta: {}", ex.getMessage());
             return null;
@@ -173,20 +200,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 List.of("Não foi possível concluir a operação. Tente de novo; se continuar, avise o administrador."), request);
     }
 
-    /**
-     * INCLUÍDO (21/10/2026): RN-SIS-07 para os erros padrão do Spring MVC. O status continua o que o Spring escolheu
-     * (404 rota inexistente, 405 método não aceito, 400 dado em formato errado...); só o corpo muda para o
-     * ErroResponse, com mensagem em português, igual aos demais erros da API.
-     */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers,
             HttpStatusCode statusCode, WebRequest request) {
-        // Tela inexistente pedida pelo navegador (fora da API): devolve a página 404 do front, e não o JSON.
         if (ex instanceof NoResourceFoundException && pedeTelaForaDaApi(request)) {
             String pagina = pagina404();
             if (pagina != null) {
-                // <base>: os links da página (css/app.css, index.html) valem a partir da raiz do sistema, mesmo que o
-                // endereço pedido esteja numa "subpasta" que não existe.
                 String raiz = ((ServletWebRequest) request).getRequest().getContextPath() + "/";
                 pagina = pagina.replace("<head>", "<head>\n  <base href=\"" + raiz + "\">");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -207,7 +226,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(status).headers(headers).body(corpo);
     }
 
-    /** INCLUÍDO (21/10/2026): conexão encerrada pelo navegador (ClientAbortException do Tomcat, "Broken pipe"). */
     private static boolean clienteDesconectou(Throwable ex) {
         for (Throwable t = ex; t != null; t = t.getCause()) {
             String nome = t.getClass().getSimpleName();
@@ -218,7 +236,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return false;
     }
 
-    /** INCLUÍDO (21/10/2026): a requisição é de uma tela (navegador pedindo HTML) e não da API? */
     private static boolean pedeTelaForaDaApi(WebRequest request) {
         if (!(request instanceof ServletWebRequest swr)) {
             return false;
@@ -229,7 +246,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return !caminho.startsWith("/api/") && aceita != null && aceita.contains(MediaType.TEXT_HTML_VALUE);
     }
 
-    /** INCLUÍDO (21/10/2026): conteúdo de static/404.html, lido uma vez (null se o arquivo não existir). */
     private String pagina404() {
         if (pagina404 == null) {
             try (InputStream in = new ClassPathResource("static/404.html").getInputStream()) {
@@ -276,7 +292,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             return "Valor inválido no campo " + nome + ".";
         }
         if (ex instanceof HttpMessageNotReadableException leitura) {
-            // Ex.: data em formato errado, texto num campo numérico. O nome do campo ajuda a achar o erro na tela.
             if (leitura.getCause() instanceof JsonMappingException mapeamento && !mapeamento.getPath().isEmpty()) {
                 String campo = mapeamento.getPath().get(mapeamento.getPath().size() - 1).getFieldName();
                 if (campo != null) {

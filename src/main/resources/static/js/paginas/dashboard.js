@@ -1,6 +1,9 @@
 // Dashboard (tela inicial) — INCLUÍDO em 21/10/2026, no layout do index.tsx do protótipo.
 // Indicadores do topo: GET /api/dashboard/resumo (dados reais). Gráficos: GET /api/dashboard/graficos/{nome}
 // (programados; os dados serão desenvolvidos depois — ver graficos.js). Alertas e próximas etapas: dados reais.
+// ALTERADO (18/11/2026) [E3-34]: os 4 gráficos passaram a ter dados (views vw_produtividade_funcionario,
+// vw_retrabalho_mensal e vw_painel_ordens_servico da Etapa 3); o desenho não mudou. Os alertas de itens atrasados
+// vêm da função dbo.fn_itens_atrasados e passaram a mostrar os dias de atraso, o cliente e a próxima etapa.
 
 import { get } from '../api.js';
 import { GRAFICOS_PAINEL } from '../config.js';
@@ -56,11 +59,13 @@ if (pagina) {
     k.cronograma.definir(resumo.etapasNoCronogramaHoje, 'etapas hoje');
 
     // Alertas críticos: itens atrasados (RN-ITE-22), OS pausadas e tintas sem estoque.
+    // ALTERADO (18/11/2026) [E3-34]: a lista já vem do banco ordenada por dias de atraso (mais atrasado primeiro);
+    // as linhas ganharam o cliente, os dias de atraso e a próxima etapa pendente (campos da fn_itens_atrasados).
     const alertas = atrasados.slice(0, 4).map((i) => el('a', { class: 'item-lista', href: `peca.html?codigo=${i.codigo}` },
       el('div', { class: 'flex-1' },
         el('p', { class: 'texto-sm seminegrito', text: `${nOs(i.osNumero)} · item ${nItem(i.codigo)}` }),
-        el('p', { class: 'texto-xs texto-mudo truncar', text: i.descricao }),
-        el('p', { class: 'texto-xs mt-1', text: `Prazo ${data(i.prazoEntrega)}` })),
+        el('p', { class: 'texto-xs texto-mudo truncar', text: `${i.descricao}${i.clienteNome ? ` · ${i.clienteNome}` : ''}` }),
+        el('p', { class: 'texto-xs mt-1', text: `Prazo ${data(i.prazoEntrega)} · ${i.diasAtraso} dia(s) de atraso${i.etapaPendente ? ` · próxima: ${i.etapaPendente}` : ''}` })),
       status('Atrasada')));
     if (atrasados.length > 4) alertas.push(el('a', { class: 'btn btn-fantasma btn-sm', href: 'pecas.html?atrasadas=1', text: `Ver os ${atrasados.length} itens atrasados` }));
     const pausadas = resumo.osPorStatus?.['Pausada'] || 0;

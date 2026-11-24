@@ -19,17 +19,10 @@ import br.fatec.projetoextensao.services.ControleTentativasLogin;
 import br.fatec.projetoextensao.validacao.Textos;
 
 /**
- * INCLUÍDO (20/10/2026): confere login e senha (o "login" do sistema), com as regras de acesso:
- * <ul>
- *   <li>RN-USU-04: só usuário ativo entra; bloqueado não entra nem com a senha certa ("Acesso bloqueado").
- *       A conferência de ativo é feita DEPOIS da senha, para não revelar a quem erra a senha que o login existe;</li>
- *   <li>RN-USU-07: login inexistente e senha errada recebem a mesma mensagem ("Login ou senha inválidos.");</li>
- *   <li>RN-USU-08: depois de N senhas erradas seguidas, o login fica bloqueado por alguns minutos;</li>
- *   <li>RN-USU-12: o login é comparado sem diferenciar maiúsculas;</li>
- *   <li>RN-SIS-02: o perfil vem de is_admin (ROLE_ADMIN ou ROLE_OPERADOR).</li>
- * </ul>
+ * Confere login e senha (o "login" do sistema), com as regras de acesso:
  * É o único AuthenticationProvider do sistema: o Spring Security o usa para o login por HTTP Basic.
  */
+
 @Component
 public class ProvedorAutenticacaoComLimite implements AuthenticationProvider {
 
@@ -46,14 +39,13 @@ public class ProvedorAutenticacaoComLimite implements AuthenticationProvider {
         UserDetailsService usuarios = login -> usuarioRepository.findByLoginIgnoreCase(login)
                 .map(u -> User.withUsername(u.getLogin())
                         .password(u.getSenhaHash())
-                        .roles(u.isAdmin() ? Perfis.PAPEL_ADMIN : Perfis.PAPEL_OPERADOR) // RN-SIS-02
-                        .disabled(!u.isAtivo()) // RN-USU-04
+                        .roles(u.isAdmin() ? Perfis.PAPEL_ADMIN : Perfis.PAPEL_OPERADOR) 
+                        .disabled(!u.isAtivo()) 
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException(MSG_INVALIDO));
         this.dao = new DaoAuthenticationProvider();
         this.dao.setUserDetailsService(usuarios);
         this.dao.setPasswordEncoder(passwordEncoder);
-        // RN-USU-04 e RN-USU-07: nada é conferido antes da senha; "ativo" é conferido depois dela.
         this.dao.setPreAuthenticationChecks(usuario -> { });
         this.dao.setPostAuthenticationChecks(usuario -> {
             if (!usuario.isEnabled()) {
@@ -69,7 +61,7 @@ public class ProvedorAutenticacaoComLimite implements AuthenticationProvider {
             throw new BadCredentialsException(MSG_INVALIDO);
         }
         if (tentativas.bloqueado(login)) {
-            throw new LockedException(MSG_TENTATIVAS); // RN-USU-08
+            throw new LockedException(MSG_TENTATIVAS); 
         }
         try {
             Authentication resultado = dao.authenticate(
@@ -77,8 +69,8 @@ public class ProvedorAutenticacaoComLimite implements AuthenticationProvider {
             tentativas.limpar(login);
             return resultado;
         } catch (BadCredentialsException e) {
-            tentativas.registrarFalha(login); // RN-USU-08 (vale também para login que não existe)
-            throw new BadCredentialsException(MSG_INVALIDO); // RN-USU-07
+            tentativas.registrarFalha(login); 
+            throw new BadCredentialsException(MSG_INVALIDO); 
         }
     }
 

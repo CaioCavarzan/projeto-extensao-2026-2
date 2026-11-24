@@ -99,7 +99,7 @@ mostra o resultado e os avisos (`MensagensResponse`). O texto de ajuda está em 
 | `login.html` | Entrar, Cadastre-se e lembrete de senha (abas) | `/api/auth/*` |
 | `index.html` | Dashboard: indicadores, gráficos, alertas e próximas etapas | `/api/dashboard/*`, `/api/itens/atrasados`, `/api/etapas-item/fila` |
 | `ordens.html` | Lista de OS com busca e filtros | `/api/ordens` |
-| `ordem-nova.html` | Abertura da OS **com os itens** (RN-OS-01) | `POST /api/ordens` |
+| `ordem-nova.html` | Abertura da OS **com os itens** (RN-OS-01); mostra o número previsto e a data de entrada antes de salvar | `GET /api/ordens/proxima`, `POST /api/ordens` |
 | `ordem.html` | Detalhe da OS: itens, valor, histórico e ações | `/api/ordens/{n}` |
 | `pecas.html` | Peças (itens) em cartões com foto | `/api/itens` |
 | `peca.html` | Detalhe da peça: rota de produção, fotos (até 10), entrega e histórico | `/api/itens/{c}`, `/api/etapas-item/*`, `/api/fotos/*` |
@@ -191,6 +191,7 @@ Todas ficam em `/api`. Erros voltam sempre no formato `ErroResponse`
 | Status | `GET /api/status/os` | Admin e Operador |
 |  | `GET /api/status/itens` | Admin e Operador |
 | Ordens de serviço | `GET /api/ordens` | Admin e Operador |
+|  | `GET /api/ordens/proxima` (número previsto e data de entrada da próxima OS) | Admin e Operador |
 |  | `GET /api/ordens/{numero}` | Admin e Operador |
 |  | `POST /api/ordens` | Admin e Operador |
 |  | `PUT /api/ordens/{numero}/prioridade` | Admin e Operador |

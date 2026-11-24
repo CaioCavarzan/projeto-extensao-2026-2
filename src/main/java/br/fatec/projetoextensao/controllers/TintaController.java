@@ -20,10 +20,11 @@ import br.fatec.projetoextensao.services.TintaService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): tintas e estoque. Cadastrar, alterar e ajustar o estoque: ADMIN e OPERADOR (RN-TIN-14).
+ * Tintas e estoque. Cadastrar, alterar e ajustar o estoque: ADMIN e OPERADOR.
  * Excluir: só ADMIN. POST /{codigo}/estoque recebe a quantidade do ajuste em kg: positiva para entrada de compra,
- * negativa para baixa; o saldo nunca fica negativo (RN-TIN-14, RN-TIN-15).
+ * negativa para baixa; o saldo nunca fica negativo.
  */
+
 @RestController
 @RequestMapping("/api/tintas")
 @RequiredArgsConstructor

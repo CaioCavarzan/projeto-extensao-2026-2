@@ -222,6 +222,25 @@ class ApiTest {
                 .andExpect(jsonPath("$[*].status", hasItem("Concluída")));
     }
 
+    /** INCLUÍDO (19/11/2026): a tela Nova OS mostra o número e a data de entrada antes de salvar; a OS recebe esse número. */
+    @Test
+    void proximaOsPelaApi() throws Exception {
+        MvcResult cliente = mvc.perform(json(post("/api/clientes/pf"), "{\"pessoa\":{\"nome\":\"Cliente Próxima OS\",\"endereco\":" + ENDERECO + "},"
+                + "\"cpf\":\"" + cpf() + "\"}")).andExpect(status().isCreated()).andReturn();
+        MvcResult proxima = mvc.perform(comoAdmin(get("/api/ordens/proxima")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dataEntrada", startsWith(LocalDate.now().toString())))
+                .andReturn();
+        int previsto = ler(proxima, "$.numero");
+
+        MvcResult os = mvc.perform(json(post("/api/ordens"), "{\"clienteCodigo\":" + ler(cliente, "$.codigo") + ",\"itens\":[{\"descricao\":\"Item previsto\","
+                        + "\"qtdTotal\":1,\"unidade\":\"PEÇA\",\"etapas\":[" + idDaEtapa("Jateamento") + "]}]}"))
+                .andExpect(status().isCreated()).andReturn();
+        int numero = ler(os, "$.numero");
+        assertThat(numero).isEqualTo(previsto);
+        mvc.perform(comoAdmin(get("/api/ordens/proxima"))).andExpect(jsonPath("$.numero").value(previsto + 1));
+    }
+
     /** Fotos pelo HTTP (multipart): envio, leitura do arquivo e exclusão. */
     @Test
     void fotoPelaApi() throws Exception {
@@ -256,11 +275,18 @@ class ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.osPorStatus.Criada").exists())
                 .andExpect(jsonPath("$.retrabalhoMes.percentual").exists());
-        for (String nome : new String[] {"producao-diaria", "retrabalho-mensal", "os-por-status", "etapas-por-funcionario"}) {
-            mvc.perform(comoAdmin(get("/api/dashboard/graficos/" + nome)))
+        // ALTERADO (18/11/2026) [E3-53]: os gráficos esperavam disponivel = false e a mensagem "Em desenvolvimento".
+        // Agora são alimentados pelas views da Etapa 3: respondem disponivel = true, com o tipo de gráfico certo e,
+        // quando há dados, um valor por rótulo em cada série.
+        String[][] graficos = {{"producao-diaria", "barra"}, {"retrabalho-mensal", "linha"}, {"os-por-status", "rosca"},
+            {"etapas-por-funcionario", "barra-horizontal"}};
+        for (String[] g : graficos) {
+            mvc.perform(comoAdmin(get("/api/dashboard/graficos/" + g[0])))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.disponivel").value(false))
-                    .andExpect(jsonPath("$.mensagem", startsWith("Em desenvolvimento")));
+                    .andExpect(jsonPath("$.disponivel").value(true))
+                    .andExpect(jsonPath("$.tipo").value(g[1]))
+                    .andExpect(jsonPath("$.rotulos").isArray())
+                    .andExpect(jsonPath("$.series").isArray());
         }
         mvc.perform(comoAdmin(get("/api/dashboard/graficos/nao-existe")))
                 .andExpect(status().isNotFound())
@@ -285,6 +311,71 @@ class ApiTest {
         mvc.perform(json(put("/api/perfil/senha"), "{\"senhaAtual\":\"errada000\",\"novaSenha\":\"outraSenha1\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.mensagens[0]").value("Senha atual incorreta."));
+    }
+
+    /**
+     * INCLUÍDO (18/11/2026) [E3-53]: os endereços novos da integração com a Etapa 3, pelo HTTP: painel e auditoria da
+     * OS (view e função), itens atrasados (função), produtividade e retrabalho mensal (views), replanejamento
+     * (procedure), cancelamento (procedure) e a aba Banco de dados (no H2 dos testes responde que é só SQL Server).
+     */
+    @Test
+    void etapa3PelaApi() throws Exception {
+        MvcResult cliente = mvc.perform(json(post("/api/clientes/pj"), "{\"pessoa\":{\"nome\":\"Cliente Etapa 3 Ltda\",\"endereco\":"
+                        + ENDERECO + "},\"cnpj\":\"" + cnpj() + "\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        int jateamento = idDaEtapa("Jateamento");
+        MvcResult os = mvc.perform(json(post("/api/ordens"), "{\"clienteCodigo\":" + ler(cliente, "$.codigo")
+                        + ",\"itens\":[{\"descricao\":\"Item E3\",\"qtdTotal\":2,\"unidade\":\"PEÇA\",\"valorTotalItem\":30,\"etapas\":[" + jateamento + "]}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.valorOs").value(30.0)) // somado pelo trigger e relido pelo Java
+                .andReturn();
+        int numero = ler(os, "$.numero");
+
+        mvc.perform(comoAdmin(get("/api/ordens/painel")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.numero == " + numero + ")].qtdItens", hasItem(1)))
+                .andExpect(jsonPath("$[?(@.numero == " + numero + ")].tipoCliente", hasItem("PJ")))
+                .andExpect(jsonPath("$[?(@.numero == " + numero + ")].status", hasItem("Criada")));
+        mvc.perform(comoAdmin(get("/api/ordens/" + numero + "/auditoria")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].evento").value("Status da OS: Criada"))
+                .andExpect(jsonPath("$[0].papelResponsavel").value("abriu a OS"));
+        mvc.perform(comoAdmin(get("/api/ordens/999999/auditoria")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagens[0]").value("OS não encontrada."));
+        mvc.perform(comoAdmin(get("/api/itens/atrasados"))).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+
+        String hoje = LocalDate.now().toString();
+        mvc.perform(comoAdmin(get("/api/indicadores/produtividade?inicio=" + hoje + "&fim=" + hoje)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mvc.perform(comoAdmin(get("/api/indicadores/produtividade?inicio=" + hoje + "&fim=" + LocalDate.now().minusDays(1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens[0]").value("Informe o período: data inicial e data final."));
+        mvc.perform(comoAdmin(get("/api/indicadores/retrabalho/mensal"))).andExpect(status().isOk());
+        mvc.perform(comoAdmin(get("/api/indicadores/retrabalho/mensal?meses=0")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.mensagens[0]").value("Informe de 1 a 36 meses."));
+
+        mvc.perform(json(post("/api/cronogramas/replanejar"), "{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens[0]").value("Informe o dia de origem e o dia de destino."));
+        LocalDate longe = LocalDate.now().plusDays(5000);
+        mvc.perform(json(post("/api/cronogramas/replanejar"), "{\"dataOrigem\":\"" + longe + "\",\"dataDestino\":\"" + longe.plusDays(1) + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.etapasMovidas").value(0))
+                .andExpect(jsonPath("$.cronogramaDestino").doesNotExist());
+
+        mvc.perform(comoAdmin(post("/api/ordens/" + numero + "/cancelar")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Cancelada"))
+                .andExpect(jsonPath("$.valorOs").value(0.0))
+                .andExpect(jsonPath("$.avisos[0]").value("1 item(ns) não executado(s) cancelado(s) junto com a OS (RN-OS-05)."));
+
+        mvc.perform(comoAdmin(get("/api/banco/situacao")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens[0]", startsWith("Disponível só com o SQL Server")));
+        mvc.perform(json(post("/api/banco/restauracao"), "{\"confirmacao\":\"sim\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagens[0]").value("Para restaurar, digite exatamente: RESTAURAR banco_fenix"));
     }
 
     /** Erros padrão do Spring MVC saem no formato ErroResponse e em português (RN-SIS-07). */

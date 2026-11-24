@@ -20,10 +20,11 @@ import br.fatec.projetoextensao.services.FuncionarioService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): funcionários. Cadastrar, alterar, desligar e excluir: só ADMIN (o cadastro tem o salário,
- * RN-FUN-09). Listar e buscar: ADMIN e OPERADOR, mas o salário só vai para o ADMIN. Funcionário nunca é fornecedor
- * (RN-PES-05); se o CPF já é de um cliente PF, a mesma pessoa ganha o papel de funcionário (RN-PES-02).
+ * Funcionários. Cadastrar, alterar, desligar e excluir: só ADMIN (o cadastro tem o salário. 
+ * Listar e buscar: ADMIN e OPERADOR, mas o salário só vai para o ADMIN. Funcionário nunca é fornecedor
+ * se o CPF já é de um cliente PF, a mesma pessoa ganha o papel de funcionário.
  */
+
 @RestController
 @RequestMapping("/api/funcionarios")
 @RequiredArgsConstructor

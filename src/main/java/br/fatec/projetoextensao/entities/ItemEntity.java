@@ -64,7 +64,7 @@ public class ItemEntity{
     @Column(name = "valor_total_item")
     private BigDecimal valorTotalPeca;
 
-    @Column(name = "data_finalizacao")
+    @Column(name = "data_finalizacao", insertable = false, updatable = false)
     private LocalDateTime dataFinalizacao;
     
     @Column(name = "nr_ose")

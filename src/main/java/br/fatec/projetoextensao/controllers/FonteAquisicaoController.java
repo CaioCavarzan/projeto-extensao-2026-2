@@ -19,11 +19,11 @@ import br.fatec.projetoextensao.services.FonteAquisicaoService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): fontes de aquisição de clientes (RN-FON-01 a RN-FON-04; a fonte 'Não informada'
- * não é excluída nem renomeada).
+ * Fontes de aquisição de clientes (a fonte 'Não informada' não é excluída nem renomeada).
  * Listar: ADMIN e OPERADOR (as telas usam a lista nas caixas de seleção). Cadastrar, renomear e excluir: só ADMIN
- * (RN-SIS-03: alterar as listas de apoio). Registro em uso não é excluído (RN-SIS-12).
+ * Registro em uso não é excluído.
  */
+
 @RestController
 @RequestMapping("/api/fontes")
 @RequiredArgsConstructor

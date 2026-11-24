@@ -5,6 +5,9 @@
 //     series: [{ nome, valores: [...] }], disponivel, mensagem }
 // Enquanto o back-end responder disponivel = false (dados a desenvolver, ver DashboardService), aparece o quadro
 // "Em desenvolvimento" com a mensagem da API. Quando a consulta for programada, o gráfico aparece sozinho.
+// ALTERADO (18/11/2026) [E3-34]: com as views da Etapa 3 os gráficos respondem disponivel = true. Quando não há dado
+// no período, a API manda rótulos vazios e, em "mensagem", o motivo (ex.: "Nenhuma etapa concluída nos últimos 30
+// dias."), que agora aparece no quadro "Sem dados" no lugar do texto fixo.
 // As cores são as do tema (chart-1 a chart-5) convertidas de oklch para hexadecimal, porque o Chart.js mexe nas
 // cores (hover) com uma biblioteca que não entende oklch.
 
@@ -64,7 +67,8 @@ async function carregarGrafico(caixa, def) {
       return;
     }
     if (!dados.rotulos?.length) {
-      trocar(caixa, quadroEspera('Ainda não há dados no período.', 'Sem dados'));
+      // ALTERADO (18/11/2026) [E3-34]: era sempre 'Ainda não há dados no período.'; agora usa o motivo da API, se houver.
+      trocar(caixa, quadroEspera(dados.mensagem || 'Ainda não há dados no período.', 'Sem dados'));
       return;
     }
     const canvas = el('canvas', { role: 'img', 'aria-label': dados.titulo || def.titulo });

@@ -1,15 +1,3 @@
--- INCLUÍDO (20/10/2026): banco dos TESTES automáticos (perfil "test"), em memória (H2 em modo SQL Server).
--- É o docs/database/script_banco.sql do grupo convertido para o H2, com as MESMAS tabelas, colunas, tipos, chaves,
--- UNIQUE, FK, CHECK e DEFAULT. O que muda é só o que o H2 não entende:
---   * sem "create database" / "use" / "sp_help" / "go" (o "go" virou ";");
---   * SYSDATETIME() virou CURRENT_TIMESTAMP; varchar(max) virou varchar; o COLLATE dos CHECK de CNPJ saiu;
---   * o índice único filtrado de e-mail (WHERE email IS NOT NULL) virou "unique nulls distinct", que no H2 tem o
---     mesmo efeito: várias pessoas sem e-mail e e-mail repetido recusado.
--- Atenção: os CHECK com LIKE '%[^0-9]%' não são conferidos pelo H2 (ele não tem o padrão [^...]); o Service confere
--- o formato antes de gravar. Se o script do banco mudar, este arquivo precisa ser gerado de novo.
--- Criar e usar banco 
-
--- 1. Tabelas independentes (sem chaves estrangeiras)
 
 create table Enderecos 
 (

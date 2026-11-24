@@ -20,6 +20,7 @@ import br.fatec.projetoextensao.dtos.EntregaRequest;
 import br.fatec.projetoextensao.dtos.EtapaResponse;
 import br.fatec.projetoextensao.dtos.FotoResponse;
 import br.fatec.projetoextensao.dtos.HistoricoStatusResponse;
+import br.fatec.projetoextensao.dtos.ItemAtrasadoResponse;
 import br.fatec.projetoextensao.dtos.ItemAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.ItemResponse;
 import br.fatec.projetoextensao.dtos.NovaEtapaRequest;
@@ -30,12 +31,12 @@ import br.fatec.projetoextensao.services.ItemService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): itens da OS (na tela: "Peças"), com a rota de etapas e as fotos.
- * Item encerrado não é alterado, exceto a entrega (nr_ose) e as fotos (RN-ITE-07 e RN-OS-07).
+ * Itens da OS (na tela: "Peças"), com a rota de etapas e as fotos.
+ * Item encerrado não é alterado, exceto a entrega (nr_ose) e as fotos.
  * Fotos: POST /{codigo}/fotos com o arquivo no campo "arquivo" (multipart); só JPG ou PNG de até 10 MB, conferidos
- * pelo conteúdo, e no máximo 10 por item (RN-FOT-02, RN-FOT-06 e RN-FOT-07). O nome do arquivo enviado não é usado
- * (RN-FOT-08).
+ * pelo conteúdo, e no máximo 10 por item. O nome do arquivo enviado não é usado.
  */
+
 @RestController
 @RequestMapping("/api/itens")
 @RequiredArgsConstructor
@@ -50,7 +51,7 @@ public class ItemController {
     }
 
     @GetMapping("/atrasados")
-    public List<ItemResponse> atrasados() {
+    public List<ItemAtrasadoResponse> atrasados() {
         return itemService.listarAtrasados();
     }
 

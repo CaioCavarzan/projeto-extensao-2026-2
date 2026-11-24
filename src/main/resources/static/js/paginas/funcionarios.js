@@ -57,8 +57,8 @@ if (pagina) {
     const elemento = el('div', { class: 'pilha' },
       el('div', { class: 'form-grade' },
         pessoa.nome, campoCpf, pessoa.email, pessoa.telefone,
-        campo('Cargo', cargo, { largura: 'c2', obrigatorio: !somenteLeitura, dica: somenteLeitura ? undefined : 'Lista padronizada (RN-FUN-07).' }),
-        admin ? campo('Salário (R$)', salario, { largura: 'c2', obrigatorio: true, dica: 'Confidencial: só o Administrador vê (RN-FUN-09).' }) : null,
+        campo('Cargo', cargo, { largura: 'c2', obrigatorio: !somenteLeitura, dica: somenteLeitura ? undefined : 'Lista padronizada.' }),
+        admin ? campo('Salário (R$)', salario, { largura: 'c2', obrigatorio: true, dica: 'Confidencial: só o Administrador vê.' }) : null,
         campo('Data de admissão', admissao, { largura: 'c2', obrigatorio: !somenteLeitura })),
       el('section', { class: 'secao-form' }, el('h3', { class: 'secao-titulo', text: 'Endereço' }), pessoa.endereco),
       novo ? caixaInfo(TEXTO_HERANCA) : null);
@@ -101,7 +101,7 @@ if (pagina) {
       if (f.temAcesso && f.acessoAtivo && f.codigo !== usuario.funcionarioCodigo) {
         const desligar = botao('Desligar', { variante: 'perigo-contorno', icone: 'user-x' });
         desligar.addEventListener('click', async () => {
-          if (!(await confirmar(`Desligar ${f.nome}? O acesso ao sistema é bloqueado e o cadastro fica para o histórico (RN-FUN-02).`, { titulo: 'Desligar funcionário', textoConfirmar: 'Desligar', perigo: true }))) return;
+          if (!(await confirmar(`Desligar ${f.nome}? O acesso ao sistema é bloqueado e o cadastro fica para o histórico.`, { titulo: 'Desligar funcionário', textoConfirmar: 'Desligar', perigo: true }))) return;
           await acaoDialogo(desligar, () => post(`/funcionarios/${f.codigo}/desligar`), 'Funcionário desligado: acesso bloqueado.');
         });
         esquerda.append(desligar);
@@ -176,7 +176,7 @@ if (pagina) {
     try {
       const usuarios = await get('/usuarios');
       trocar(areaUsuarios, el('div', { class: 'pilha-4' },
-        caixaInfo('Novos acessos: o funcionário cria o próprio login em "Cadastre-se", na tela de login, com o CPF cadastrado na aba Funcionários. O acesso nasce com o perfil Operador (RN-USU-02 e RN-USU-03). Sempre fica pelo menos um Administrador ativo (RN-USU-06).'),
+        caixaInfo('Novos acessos: o funcionário cria o próprio login em "Cadastre-se", na tela de login, com o CPF cadastrado na aba Funcionários. O acesso nasce com o perfil Operador. Sempre fica pelo menos um Administrador ativo.'),
         el('div', { class: 'card card-tabela' }, tabela({
           colunas: [{ titulo: 'Funcionário' }, { titulo: 'Login' }, { titulo: 'Nível de acesso' }, { titulo: 'Status' }, { titulo: 'Ações', classe: 'direita' }],
           linhas: usuarios,
@@ -190,7 +190,7 @@ if (pagina) {
             });
             const bloqueio = botao(u.ativo ? 'Bloquear' : 'Desbloquear', { tamanho: 'sm', variante: u.ativo ? 'perigo-contorno' : 'contorno', icone: u.ativo ? 'lock' : 'user-check' });
             bloqueio.addEventListener('click', async () => {
-              if (u.ativo && !(await confirmar(`Bloquear o acesso de ${u.nome}? Ele não entra no sistema nem com a senha certa (RN-USU-04).`, { titulo: 'Bloquear acesso', textoConfirmar: 'Bloquear', perigo: true }))) return;
+              if (u.ativo && !(await confirmar(`Bloquear o acesso de ${u.nome}? Ele não entra no sistema nem com a senha certa.`, { titulo: 'Bloquear acesso', textoConfirmar: 'Bloquear', perigo: true }))) return;
               await acaoUsuario(bloqueio, () => post(`/usuarios/${u.funcionarioCodigo}/${u.ativo ? 'bloquear' : 'desbloquear'}`), u.ativo ? 'Acesso bloqueado.' : 'Acesso desbloqueado.');
             });
             const proprio = u.funcionarioCodigo === usuario.funcionarioCodigo;

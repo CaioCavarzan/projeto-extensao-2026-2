@@ -45,7 +45,7 @@ public class OrdemServicoEntity{
          dataEntrada = LocalDateTime.now();}
      }
 
-    @Column(name = "valor_os")
+    @Column(name = "valor_os", insertable = false, updatable = false)
     private BigDecimal valorOS = BigDecimal.ZERO;
 
     @Column(name = "prioridade")

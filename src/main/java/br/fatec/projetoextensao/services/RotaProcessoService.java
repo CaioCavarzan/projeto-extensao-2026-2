@@ -18,26 +18,20 @@ import br.fatec.projetoextensao.validacao.Validacao;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (20/10/2026): etapas do processo (tabela RotasProcessos).
- * Regras: RN-ROT-01 (etapas cadastradas; etapa em uso não é excluída), RN-ROT-03 e RN-ROT-04 (nome único, até
- * 25 caracteres), RN-SIS-03 (alterar listas de apoio: só ADMIN).
- *
- * RN-ROT-02 (rotas padrão sugeridas na abertura do item) fica no front, como diz a planilha.
+ * Etapas do processo (tabela RotasProcessos).
  */
+
 @Service
 @RequiredArgsConstructor
 public class RotaProcessoService {
 
-    /** RN-ROT-01: etapas cadastradas na carga inicial. */
     public static final String JATEAMENTO = "Jateamento";
     public static final String BANHO = "Banho";
-    /** RN-ITE-05 usa esta etapa pelo nome: item com Pintura na rota tem cor pedida. */
     public static final String PINTURA = "Pintura";
 
     private final RotaProcessoRepository rotaProcessoRepository;
     private final ItemRotaProcessoRepository itemRotaProcessoRepository;
 
-    /** true quando a etapa é a Pintura (RN-ITE-05). */
     public static boolean ehPintura(RotaProcessoEntity rota) {
         return rota != null && PINTURA.equalsIgnoreCase(rota.getNome());
     }
@@ -50,7 +44,6 @@ public class RotaProcessoService {
                 .toList();
     }
 
-    /** RN-ROT-04: nome obrigatório, até 25 caracteres e único. RN-SIS-03: só ADMIN altera a lista. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public ItemListaResponse cadastrar(NomeRequest dto) {
@@ -64,9 +57,6 @@ public class RotaProcessoService {
         return new ItemListaResponse(rota.getCodigo(), rota.getNome());
     }
 
-    /**
-     * RN-ROT-04 e RN-SIS-03. A Pintura não é renomeada: as regras do item (RN-ITE-05) a reconhecem pelo nome.
-     */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public ItemListaResponse renomear(int codigo, NomeRequest dto) {
@@ -80,7 +70,6 @@ public class RotaProcessoService {
         return new ItemListaResponse(rota.getCodigo(), rotaProcessoRepository.save(rota).getNome());
     }
 
-    /** RN-ROT-01: etapa usada em algum item não é excluída. RN-SIS-03: só ADMIN. */
     @PreAuthorize(Perfis.ADMIN)
     @Transactional
     public void excluir(int codigo) {
@@ -94,7 +83,7 @@ public class RotaProcessoService {
 
     RotaProcessoEntity buscarEntidade(int codigo) {
         return rotaProcessoRepository.findById(codigo)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Etapa não encontrada.")); // RN-IRP-11
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Etapa não encontrada.")); 
     }
 
     private void protegerPintura(RotaProcessoEntity rota) {

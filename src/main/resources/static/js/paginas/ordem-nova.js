@@ -2,11 +2,12 @@
 // OS só é gravada com pelo menos um item, na mesma transação (POST /api/ordens com os itens). Por isso a abertura
 // virou uma tela com os dados da OS e os itens juntos. Número, data de entrada e usuário que registrou não são
 // digitados: vêm do banco e do servidor (RN-OS-08, RN-OS-11, RN-OS-12).
+// ALTERADO (19/11/2026): o número previsto e a data de entrada já aparecem antes de salvar (GET /api/ordens/proxima).
 
-import { post } from '../api.js';
+import { get, post } from '../api.js';
 import { formularioItem } from '../componentes/item.js';
 import { referenciasDoItem } from '../componentes/os.js';
-import { documento, lerPrioridade, moeda, nOs, normalizar } from '../formato.js';
+import { data, documento, lerPrioridade, moeda, nOs, normalizar } from '../formato.js';
 import { montarPagina } from '../layout.js';
 import * as ref from '../referencias.js';
 import {
@@ -20,10 +21,20 @@ if (pagina) {
   const { conteudo } = pagina;
   const areaErro = el('div', { hidden: true });
   try {
-    const [clientes, escala, referencias] = await Promise.all([ref.clientes(), ref.escalaPrioridade(), referenciasDoItem()]);
+    const buscarProxima = () => get('/ordens/proxima').catch(() => null);
+    const [clientes, escala, referencias, proxima] = await Promise.all([ref.clientes(), ref.escalaPrioridade(), referenciasDoItem(), buscarProxima()]);
     const ordenados = [...clientes].sort((a, b) => a.nomeExibicao.localeCompare(b.nomeExibicao));
 
     // ------------------------------------------------------------ dados da OS
+    // Número previsto: se outra OS for aberta antes, esta recebe o seguinte. Sem resposta, ficam os textos padrão.
+    const numeroOs = entrada({ value: 'Gerado ao salvar', readOnly: true });
+    const dataEntrada = entrada({ value: 'Hoje', readOnly: true });
+    const mostrarProxima = (p) => {
+      if (!p) return;
+      numeroOs.value = nOs(p.numero);
+      dataEntrada.value = data(p.dataEntrada);
+    };
+    mostrarProxima(proxima);
     const filtroCliente = entrada({ type: 'search', placeholder: 'Filtrar clientes pelo nome ou documento...', class: 'input fundo-mudo' });
     const cliente = selecao([], { vazio: 'Selecione o cliente' });
     const prio = entrada({ type: 'number', min: String(escala.minimo), max: String(escala.maximo), step: '1', inputmode: 'numeric', placeholder: `${escala.minimo} a ${escala.maximo}` });
@@ -53,8 +64,8 @@ if (pagina) {
     const cardOs = cartao({
       titulo: 'Dados da OS',
       corpo: el('div', { class: 'form-grade' },
-        campo('Nº OS', entrada({ value: 'Gerado ao salvar', readOnly: true }), { largura: 'c2' }),
-        campo('Data de abertura', entrada({ value: 'Hoje, pela hora do servidor', readOnly: true }), { largura: 'c2' }),
+        campo('Nº OS', numeroOs, { largura: 'c2', dica: 'Previsto; confirmado ao salvar.' }),
+        campo('Data de abertura', dataEntrada, { largura: 'c2' }),
         campo('Registrada por', entrada({ value: pagina.usuario.nome, readOnly: true }), { largura: 'c2' }),
         el('div', { class: 'campo c4' }, el('label', { class: 'rotulo', for: cliente.id || 'cliente-os' }, 'Cliente', el('span', { class: 'obrigatorio', text: '*' })), filtroCliente, cliente,
           el('p', { class: 'dica' }, 'Cliente novo? ', el('a', { class: 'texto-primario', href: 'clientes.html?novo=1', text: 'Cadastre em Clientes' }), ' e volte aqui.')),
@@ -73,7 +84,7 @@ if (pagina) {
       const soma = valores.filter((v) => Number.isFinite(v)).reduce((a, b) => a + b, 0);
       total.textContent = moeda(soma);
       const semValor = valores.filter((v) => v === null).length;
-      notaTotal.textContent = semValor ? `${semValor} item(ns) sem valor: a OS ficará com "valor incompleto" (RN-OS-15).` : 'Soma dos valores informados nos itens.';
+      notaTotal.textContent = semValor ? `${semValor} item(ns) sem valor: a OS ficará com "valor incompleto".` : 'Soma dos valores informados nos itens.';
     };
     const renumerar = () => itens.forEach((f, i) => { f.elemento.querySelector('h4').textContent = `Item ${i + 1}`; });
     const adicionarItem = () => {
@@ -121,12 +132,14 @@ if (pagina) {
         areaErro.hidden = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
         mostrarErro(e);
+        // a tentativa recusada pode ter consumido o número previsto
+        buscarProxima().then(mostrarProxima);
       }
     }));
 
     conteudo.append(el('div', { class: 'pilha' },
       voltar('Voltar', 'ordens.html'),
-      cabecalho('Nova Ordem de Serviço', 'A OS é gravada junto com os itens: inclua pelo menos um (RN-OS-01).'),
+      cabecalho('Nova Ordem de Serviço', 'A OS é gravada junto com os itens: inclua pelo menos um.'),
       areaErro, cardOs, cardItens,
       el('div', { class: 'card card-p5 linha-entre' },
         el('div', {}, el('p', { class: 'texto-xs texto-mudo maiusculas', text: 'Valor total da OS' }), total, notaTotal),

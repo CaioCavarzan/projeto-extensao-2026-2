@@ -13,10 +13,8 @@ import br.fatec.projetoextensao.entities.OrdemServicoEntity;
 @Repository
 public interface HistoricoStatusOsRepository extends JpaRepository<HistoricoStatusOsEntity, HistoricoStatusOsId> {
 
-    // INCLUÍDO (20/10/2026): RN-HOS-03: status atual da OS = registro mais recente do histórico.
     Optional<HistoricoStatusOsEntity> findTopByOsOrderByDataHoraDesc(OrdemServicoEntity os);
 
-    // INCLUÍDO (20/10/2026): Histórico completo da OS, do mais antigo para o mais novo.
     List<HistoricoStatusOsEntity> findByOsOrderByDataHora(OrdemServicoEntity os);
 
 }

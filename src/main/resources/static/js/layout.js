@@ -91,7 +91,7 @@ export async function montarPagina({ pagina, titulo, somenteAdmin = false }) {
     conteudo.append(cartao({
       classe: 'max-w-md',
       corpo: el('div', { class: 'vazio' }, icone('lock'), el('p', { class: 'seminegrito', text: 'Acesso restrito ao Administrador' }),
-        el('p', { class: 'texto-xs', text: 'Esta tela altera as listas de apoio e os parâmetros do sistema (RN-SIS-03).' }),
+        el('p', { class: 'texto-xs', text: 'Esta tela altera as listas de apoio e os parâmetros do sistema.' }),
         el('a', { class: 'btn btn-contorno btn-sm mt-2', href: 'index.html', text: 'Voltar ao início' })),
     }));
     return null;
@@ -163,7 +163,8 @@ function barraTopo(usuario, admin, aoAlternar) {
       atrasados.slice(0, 4).forEach((i) => itens.push(itemMenu('', () => { location.href = `peca.html?codigo=${i.codigo}`; }, {
         detalhe: el('div', { class: 'largura-total' },
           el('div', { class: 'linha-entre' }, el('span', { class: 'medio', text: `${nOs(i.osNumero)} · item ${nItem(i.codigo)} atrasado` }), status('Atrasada')),
-          el('span', { class: 'texto-xs texto-mudo', text: `Prazo ${diaMes(i.prazoEntrega)} · ${i.descricao}` })),
+          // ALTERADO (18/11/2026) [E3-35]: + dias de atraso, campo da função dbo.fn_itens_atrasados (GET /api/itens/atrasados).
+          el('span', { class: 'texto-xs texto-mudo', text: `Prazo ${diaMes(i.prazoEntrega)} (${i.diasAtraso} dia(s)) · ${i.descricao}` })),
       })));
       if (atrasados.length > 4) itens.push(itemMenu(`Ver os ${atrasados.length} itens atrasados`, () => { location.href = 'pecas.html?atrasadas=1'; }, { nomeIcone: 'arrow-right' }));
       const pausadas = resumo.osPorStatus?.['Pausada'] || 0;

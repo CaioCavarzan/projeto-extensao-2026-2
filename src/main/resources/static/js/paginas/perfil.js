@@ -79,7 +79,7 @@ if (pagina) {
     const salvarPergunta = botao('Salvar pergunta', { tipo: 'submit', icone: 'shield-question-mark' });
     const formPergunta = el('form', { class: 'form-grade', novalidate: true },
       campo('Pergunta', pergunta, { largura: 'c6' }),
-      campo('Nova resposta', resposta, { largura: 'c3', dica: 'Maiúsculas e espaços nas pontas não contam (RN-USU-18).' }),
+      campo('Nova resposta', resposta, { largura: 'c3', dica: 'Maiúsculas e espaços nas pontas não contam.' }),
       campo('Senha atual', senhaPergunta, { largura: 'c3', dica: 'Confirma que é você.' }),
       el('div', { class: 'c6 linha' }, el('span', { class: 'ml-auto' }), salvarPergunta));
     formPergunta.addEventListener('submit', (ev) => {

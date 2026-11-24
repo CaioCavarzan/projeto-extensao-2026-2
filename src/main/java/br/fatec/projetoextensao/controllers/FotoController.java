@@ -17,10 +17,11 @@ import br.fatec.projetoextensao.services.ItemService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): arquivo de uma foto (sempre JPG, RN-FOT-09) e exclusão da foto, que apaga também o
- * arquivo (RN-FOT-01). A imagem exige login como o resto da API; por isso o front a busca com o cabeçalho
+ * Arquivo de uma foto e exclusão da foto, que apaga também o arquivo. 
+ * A imagem exige login como o resto da API; por isso o front a busca com o cabeçalho
  * Authorization e a mostra a partir da resposta, e não com um link direto no &lt;img&gt;.
  */
+
 @RestController
 @RequestMapping("/api/fotos")
 @RequiredArgsConstructor

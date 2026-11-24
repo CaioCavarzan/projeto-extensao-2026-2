@@ -20,14 +20,17 @@ import br.fatec.projetoextensao.dtos.CronogramaAtualizacaoRequest;
 import br.fatec.projetoextensao.dtos.CronogramaEtapaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaRequest;
 import br.fatec.projetoextensao.dtos.CronogramaResponse;
+import br.fatec.projetoextensao.dtos.ReplanejamentoRequest;
+import br.fatec.projetoextensao.dtos.ReplanejamentoResponse;
 import br.fatec.projetoextensao.services.CronogramaService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): cronograma diário de produção. Um cronograma por dia (RN-CRO-02), gravado já com pelo
- * menos uma etapa (RN-CRO-01) e com o usuário logado (RN-CRO-04). A fila é renumerada 0, 1, 2... ao incluir,
- * remover ou reordenar (RN-CRI-07); POST /{codigo}/fila/sugerir ordena pela pontuação e pelo prazo (RN-CRI-09).
+ * Cronograma diário de produção. Um cronograma por dia, gravado já com pelo
+ * menos uma etapa e com o usuário logado. A fila é renumerada 0, 1, 2... ao incluir,
+ * remover ou reordenar; POST /{codigo}/fila/sugerir ordena pela pontuação e pelo prazo.
  */
+
 @RestController
 @RequestMapping("/api/cronogramas")
 @RequiredArgsConstructor
@@ -84,5 +87,10 @@ public class CronogramaController {
     @PostMapping("/{codigo}/fila/sugerir")
     public CronogramaResponse sugerirFila(@PathVariable("codigo") int codigo) {
         return cronogramaService.sugerirFila(codigo);
+    }
+   
+    @PostMapping("/replanejar")
+    public ReplanejamentoResponse replanejar(@RequestBody ReplanejamentoRequest dto) {
+        return cronogramaService.replanejar(dto);
     }
 }

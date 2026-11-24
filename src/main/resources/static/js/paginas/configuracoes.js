@@ -2,14 +2,19 @@
 // O protótipo tinha as abas Empresa, Conta, Acessos e Notificações, mas o banco não guarda dados da empresa nem
 // preferências de notificação; "Conta" virou a tela Meu perfil. Aqui ficam as listas de apoio (cores, fontes de
 // aquisição e etapas da rota), os parâmetros do sistema (só leitura) e o resumo dos perfis de acesso.
+// ALTERADO (18/11/2026) [E3-38]: nova aba "Banco de dados" (só ADMIN): mostra se os 13 objetos da Etapa 3
+// (functions, views, procedures e triggers) estão instalados no SQL Server, instala/atualiza os scripts do grupo e
+// faz backup e restore com o backup_restore.sql (API /api/banco, BancoDadosService).
 
 import { del, get, post, put } from '../api.js';
-import { normalizar } from '../formato.js';
+// ALTERADO (18/11/2026) [E3-38]: + dataHora (datas do catálogo do banco e do último backup, aba Banco de dados).
+import { dataHora, normalizar } from '../formato.js';
 import { montarPagina } from '../layout.js';
 import * as ref from '../referencias.js';
+// ALTERADO (18/11/2026) [E3-38]: + caixaErro e dialogo (aba Banco de dados).
 import {
-  abas, badge, botao, botaoIcone, cabecalho, caixaInfo, cartao, confirmar, el, entrada, esqueleto, icone, mostrarErro,
-  ocupado, pedirTexto, sucesso, tabela, trocar,
+  abas, badge, botao, botaoIcone, cabecalho, caixaErro, caixaInfo, cartao, confirmar, dialogo, el, entrada, esqueleto,
+  icone, mostrarErro, ocupado, pedirTexto, sucesso, tabela, trocar,
 } from '../ui.js';
 
 const pagina = await montarPagina({ pagina: 'configuracoes', titulo: 'Configurações', somenteAdmin: true });
@@ -59,7 +64,7 @@ if (pagina) {
     }
 
     function excluir(b, i) {
-      confirmar(`Excluir "${i.nome}"? Registro em uso não é excluído (RN-SIS-12).`, { titulo: 'Excluir', textoConfirmar: 'Excluir', perigo: true }).then((ok) => {
+      confirmar(`Excluir "${i.nome}"? Registro em uso não é excluído.`, { titulo: 'Excluir', textoConfirmar: 'Excluir', perigo: true }).then((ok) => {
         if (!ok) return;
         ocupado(b, async () => {
           try {
@@ -100,7 +105,7 @@ if (pagina) {
   const abaListas = () => el('div', { class: 'grade lg-3' },
     cardLista({
       titulo: 'Cores', descricao: 'Cor pedida no item e cor da tinta.', caminho: '/cores', chaveCache: 'cores', nomeIcone: 'palette',
-      placeholder: 'Ex.: Vermelho RAL 3020', dica: 'Padronize o nome, com o código RAL quando houver, para não repetir a mesma cor com grafias diferentes (RN-COR-04).',
+      placeholder: 'Ex.: Vermelho RAL 3020', dica: 'Padronize o nome, com o código RAL quando houver, para não repetir a mesma cor com grafias diferentes.',
     }),
     cardLista({
       titulo: 'Fontes de aquisição', descricao: 'Como o cliente conheceu a Fênix.', caminho: '/fontes', chaveCache: 'fontes', nomeIcone: 'sparkles',
@@ -115,22 +120,26 @@ if (pagina) {
     const area = el('div', {}, esqueleto(5));
     ref.parametros().then((p) => {
       const linhas = [
-        ['Escala de prioridade (cliente e OS)', `${p.prioridadeMinima} a ${p.prioridadeMaxima}`, 'fenix.prioridade.minima / maxima', 'RN-CLI-09 — definida em 22/10'],
-        ['Prioridade do cliente', 'Calculada: faturamento do cliente ÷ maior faturamento × 100 (OS canceladas não contam)', 'PrioridadeClienteService', 'RN-CLI-09'],
-        ['Unidades do item', p.unidades.join(', '), 'fenix.itens.unidades', 'RN-ITE-17 — definida em 22/10'],
-        ['Fotos por item', String(p.maxFotosPorItem), 'fenix.fotos.max-por-item', 'decisão de 20/10'],
-        ['Tamanho máximo da foto', `${p.tamanhoMaximoFotoMb} MB`, 'fenix.fotos.tamanho-maximo-mb', 'RN-FOT'],
-        ['Unidade do estoque de tinta', p.unidadeEstoqueTinta, 'TintaService.UNIDADE_ESTOQUE', 'RN-TIN-15'],
-        ['Tamanho da senha', `${p.senhaMinimo} a ${p.senhaMaximo} caracteres`, 'UsuarioService.SENHA_MINIMO / MAXIMO', 'RN-USU-15'],
-        ['Cargos', p.cargos.join(', '), 'FuncionarioService.CARGOS', 'RN-FUN-07'],
-        ['Prazos de pagamento', p.prazosPagamento.join(', '), 'FornecedorService.PRAZOS_PAGAMENTO', 'RN-FOR-09'],
+        ['Escala de prioridade (cliente e OS)', `${p.prioridadeMinima} a ${p.prioridadeMaxima}`, 'fenix.prioridade.minima / maxima'],
+        // ALTERADO (18/11/2026) [E3-38]: o cálculo passou para a função do banco dbo.fn_prioridade_clientes (Etapa 3).
+        ['Prioridade do cliente', 'Calculada: faturamento do cliente ÷ maior faturamento × 100 (OS canceladas não contam)', 'Cálculo do sistema'],
+        // INCLUÍDO (18/11/2026) [E3-38]: regras que passaram a ser cumpridas pelos objetos da Etapa 3.
+        ['Valor da OS', 'Soma dos itens não cancelados, atualizada a cada mudança de item', 'Cálculo do sistema'],
+        ['Itens atrasados', 'Prazo de entrega antes de hoje e item não executado nem cancelado', 'Cálculo do sistema'],
+        ['Unidades do item', p.unidades.join(', '), 'fenix.itens.unidades'],
+        ['Fotos por item', String(p.maxFotosPorItem), 'fenix.fotos.max-por-item'],
+        ['Tamanho máximo da foto', `${p.tamanhoMaximoFotoMb} MB`, 'fenix.fotos.tamanho-maximo-mb'],
+        ['Unidade do estoque de tinta', p.unidadeEstoqueTinta, 'TintaService.UNIDADE_ESTOQUE'],
+        ['Tamanho da senha', `${p.senhaMinimo} a ${p.senhaMaximo} caracteres`, 'UsuarioService.SENHA_MINIMO / MAXIMO'],
+        ['Cargos', p.cargos.join(', '), 'FuncionarioService.CARGOS'],
+        ['Prazos de pagamento', p.prazosPagamento.join(', '), 'FornecedorService.PRAZOS_PAGAMENTO'],
       ];
       trocar(area, el('div', { class: 'pilha-4' },
         caixaInfo('Parâmetros só de leitura nesta tela: mudam no application.properties (fenix.*) ou nas listas fixas dos Services, e a tela acompanha sem ser editada.'),
         el('div', { class: 'card card-tabela' }, tabela({
-          colunas: [{ titulo: 'Parâmetro' }, { titulo: 'Valor atual' }, { titulo: 'Onde muda' }, { titulo: 'Regra' }],
+          colunas: [{ titulo: 'Parâmetro' }, { titulo: 'Valor atual' }, { titulo: 'Onde muda' }],
           linhas,
-          montar: (l) => [el('span', { class: 'medio', text: l[0] }), l[1], el('span', { class: 'mono texto-xs texto-mudo', text: l[2] }), el('span', { class: 'texto-xs texto-mudo', text: l[3] })],
+          montar: (l) => [el('span', { class: 'medio', text: l[0] }), l[1], el('span', { class: 'mono texto-xs texto-mudo', text: l[2] })],
         }))));
     }).catch((e) => { trocar(area); mostrarErro(e); });
     return area;
@@ -150,6 +159,8 @@ if (pagina) {
         ['Excluir cadastros; inativar fornecedor; corrigir CPF/CNPJ', true, false],
         ['Cancelar OS; corrigir datas de etapa', true, false],
         ['Listas de apoio (cores, fontes, etapas); perfis e bloqueio de usuários', true, false],
+        // INCLUÍDO (18/11/2026) [E3-38]: a aba Banco de dados (objetos da Etapa 3, backup e restore) é só do ADMIN.
+        ['Banco de dados: objetos da Etapa 3, backup e restore', true, false],
         ['Alterar o próprio perfil, senha e pergunta de segurança', true, true],
       ];
       trocar(area,
@@ -171,11 +182,137 @@ if (pagina) {
     return area;
   };
 
+  /**
+   * INCLUÍDO (18/11/2026) [E3-38]: aba Banco de dados.
+   * GET /api/banco/situacao: os 13 objetos da Etapa 3 (sys.objects) e o último backup (msdb). Ações:
+   *  - "Instalar ou atualizar objetos": POST /api/banco/objetos/instalar (roda objetos_banco.sql: functions, views, procedures e triggers, nessa ordem; CREATE OR ALTER);
+   *  - "Fazer backup agora": POST /api/banco/backup (rotina 1 do backup_restore.sql);
+   *  - "Restaurar último backup": POST /api/banco/restauracao com o texto de confirmação (rotina 2 do script).
+   * As mensagens do SQL Server (andamento do backup, "The backup set on file 1 is valid."...) aparecem num diálogo.
+   */
+  const CONFIRMACAO_RESTORE = 'RESTAURAR banco_fenix';
+  const tamanho = (bytes) => (bytes == null ? '—' : `${(bytes / 1048576).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`);
+
+  function mostrarResultado(titulo, mensagens) {
+    const dlg = dialogo({
+      titulo, largura: '2xl', descricao: 'Mensagens devolvidas pelo SQL Server:',
+      conteudo: (mensagens || []).length
+        ? el('ul', { class: 'pilha-2 texto-sm mono' }, mensagens.map((m) => el('li', { text: m })))
+        : el('p', { class: 'texto-sm texto-mudo', text: 'O SQL Server não devolveu mensagens.' }),
+      botoes: [botao('Fechar', { variante: 'primario', onclick: () => dlg.fechar() })],
+    });
+  }
+
+  const abaBanco = () => {
+    const area = el('div', { class: 'pilha-4' }, esqueleto(4));
+
+    async function carregar() {
+      try {
+        desenhar(await get('/banco/situacao'));
+      } catch (e) {
+        if (e?.status === 401) return;
+        trocar(area, caixaErro(e?.mensagens || [e?.message || 'Não foi possível consultar o banco.']),
+          caixaInfo('Os objetos também podem ser instalados pelo SSMS: rode o script docs/database/objetos_banco.sql.'));
+      }
+    }
+
+    function situacaoDe(o) {
+      if (!o.instalado) return badge('falta instalar', 'perigo', 'circle-x');
+      if (!o.tipoConfere) return badge('tipo diferente', 'alerta', 'triangle-alert');
+      if (o.habilitado === false) return badge('desabilitado', 'alerta', 'triangle-alert');
+      return badge('instalado', 'sucesso', 'circle-check');
+    }
+
+    function desenhar(s) {
+      const completo = s.objetosInstalados === s.objetosEsperados;
+      const instalar = botao('Instalar ou atualizar objetos', { icone: 'database' });
+      instalar.addEventListener('click', async () => {
+        if (!(await confirmar('Roda no SQL Server o script objetos_banco.sql, com os 13 objetos (functions, views, procedures e triggers, nessa ordem). O script usa CREATE OR ALTER: objetos que já existem são atualizados para a versão do arquivo do sistema.', { titulo: 'Instalar objetos da Etapa 3', textoConfirmar: 'Instalar' }))) return;
+        await ocupado(instalar, async () => {
+          try {
+            const r = await post('/banco/objetos/instalar');
+            sucesso(`Objetos da Etapa 3: ${r.situacao.objetosInstalados} de ${r.situacao.objetosEsperados} instalados.`);
+            mostrarResultado(r.operacao, r.mensagens);
+            desenhar(r.situacao);
+          } catch (e) {
+            mostrarErro(e);
+          }
+        });
+      });
+      const backup = botao('Fazer backup agora', { variante: 'primario', icone: 'download' });
+      backup.addEventListener('click', async () => {
+        if (!(await confirmar('Faz um backup completo do banco banco_fenix no arquivo banco_fenix_full.bak, na pasta padrão de backup do SQL Server (o arquivo anterior é substituído), e confere se o arquivo ficou íntegro.', { titulo: 'Backup do banco', textoConfirmar: 'Fazer backup' }))) return;
+        await ocupado(backup, async () => {
+          try {
+            const r = await post('/banco/backup');
+            sucesso(`Backup concluído${r.concluidoEm ? ` em ${dataHora(r.concluidoEm)}` : ''}.`);
+            mostrarResultado('Backup do banco', r.mensagens);
+            await carregar();
+          } catch (e) {
+            mostrarErro(e);
+          }
+        });
+      });
+      const restaurar = botao('Restaurar último backup', { variante: 'perigo-contorno', icone: 'undo-2', disabled: !s.ultimoBackup });
+      restaurar.addEventListener('click', async () => {
+        const texto = await pedirTexto({
+          titulo: 'Restaurar o banco', rotulo: `Digite ${CONFIRMACAO_RESTORE} para confirmar`, textoConfirmar: 'Restaurar',
+          dica: `O banco inteiro volta ao backup de ${s.ultimoBackup ? dataHora(s.ultimoBackup.concluidoEm) : '—'}: tudo o que foi gravado depois é perdido e todos os usuários são desconectados por alguns segundos.`,
+          validar: (v) => (v.trim() === CONFIRMACAO_RESTORE ? null : `Digite exatamente: ${CONFIRMACAO_RESTORE}`),
+        });
+        if (texto === null) return;
+        await ocupado(restaurar, async () => {
+          try {
+            const r = await post('/banco/restauracao', { confirmacao: texto.trim() });
+            sucesso('Banco restaurado a partir do último backup.');
+            mostrarResultado(r.operacao, r.mensagens);
+            desenhar(r.situacao);
+          } catch (e) {
+            mostrarErro(e);
+          }
+        });
+      });
+
+      const ultimo = s.ultimoBackup;
+      trocar(area,
+        el('div', { class: 'grade sm-3' },
+          cartao({ titulo: 'Objetos da Etapa 3', corpo: el('div', { class: `numero-grande ${completo ? 'texto-sucesso' : 'texto-perigo'}`, text: `${s.objetosInstalados} de ${s.objetosEsperados}` }) }),
+          cartao({
+            titulo: 'Último backup completo', corpo: el('div', { class: 'pilha-2' },
+              el('div', { class: 'texto-lg negrito', text: ultimo ? dataHora(ultimo.concluidoEm) : 'nenhum' }),
+              ultimo ? el('p', { class: 'texto-xs texto-mudo mono quebra', text: `${ultimo.arquivo || ''} · ${tamanho(ultimo.tamanhoBytes)}` }) : null)
+          }),
+          cartao({
+            titulo: 'Banco', corpo: el('div', { class: 'pilha-2' },
+              el('div', { class: 'texto-lg negrito mono', text: s.banco }),
+              el('p', { class: 'texto-xs texto-mudo', text: s.versaoSqlServer || '' }))
+          })),
+        completo ? null : caixaInfo('Faltam objetos da Etapa 3: sem eles, telas como OS, dashboard, cronograma e estoque respondem "objeto não instalado". Use "Instalar ou atualizar objetos" ou rode os scripts no SSMS.', { tipo: 'alerta', nomeIcone: 'triangle-alert' }),
+        cartao({
+          titulo: 'Objetos de banco da Etapa 3', descricao: 'Scripts do grupo em docs/database. O sistema chama estes objetos pelo nome; a coluna "Onde o sistema usa" aponta o código Java.',
+          acoes: el('div', { class: 'linha' }, instalar, backup, restaurar),
+          corpo: tabela({
+            colunas: [{ titulo: 'Objeto' }, { titulo: 'Tipo' }, { titulo: 'Script' }, { titulo: 'Situação' }, { titulo: 'Para que serve' }, { titulo: 'Onde o sistema usa' }, { titulo: 'Alterado em' }],
+            linhas: s.objetos,
+            montar: (o) => [el('span', { class: 'mono texto-xs seminegrito', text: o.nome }), o.tipo, el('span', { class: 'mono texto-xs texto-mudo', text: o.script }),
+            situacaoDe(o), el('span', { class: 'texto-xs', text: o.finalidade }), el('span', { class: 'texto-xs texto-mudo', text: o.usoNoSistema }),
+            el('span', { class: 'texto-xs texto-mudo', text: o.alteradoEm ? dataHora(o.alteradoEm) : '—' })],
+          }),
+        }),
+        caixaInfo('Backup e restore rodam o docs/database/backup_restore.sql do grupo numa conexão separada, no banco master. O arquivo .bak fica no servidor do SQL Server. O login do sistema precisa de permissão de backup/restore (hoje "sa").'));
+    }
+
+    carregar();
+    return area;
+  };
+
   conteudo.append(el('div', { class: 'pilha' },
     cabecalho('Configurações', 'Listas de apoio, parâmetros e permissões do sistema.'),
     abas([
       { id: 'listas', rotulo: 'Listas de apoio', icone: 'list', conteudo: abaListas },
       { id: 'parametros', rotulo: 'Parâmetros', icone: 'sliders-horizontal', conteudo: abaParametros },
       { id: 'acessos', rotulo: 'Acessos', icone: 'shield-check', conteudo: abaAcessos },
+      // INCLUÍDO (18/11/2026) [E3-38]
+      { id: 'banco', rotulo: 'Banco de dados', icone: 'database', conteudo: abaBanco },
     ]).elemento));
 }

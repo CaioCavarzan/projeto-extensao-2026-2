@@ -15,8 +15,9 @@ import br.fatec.projetoextensao.services.UsuarioService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): "Meu perfil" do usuário logado (ADMIN ou OPERADOR): contatos, senha e pergunta de segurança.
+ * "Meu perfil" do usuário logado (ADMIN ou OPERADOR): contatos, senha e pergunta de segurança.
  */
+
 @RestController
 @RequestMapping("/api/perfil")
 @RequiredArgsConstructor

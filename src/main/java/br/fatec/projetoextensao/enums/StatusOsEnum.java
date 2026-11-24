@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * INCLUÍDO (20/10/2026): lista fixa de status da OS (RN-SOS-01) e transições permitidas (RN-HOS-02, aba
+ * Lista fixa de status da OS e transições permitidas (aba
  * "Fluxo de status" da planilha de regras, que fecha a D3 do cronograma).
  *
  * O nome de cada constante é exatamente o texto gravado na tabela StatusOs. O Java nunca usa o código numérico
@@ -15,9 +15,10 @@ import java.util.Set;
  *   Criada       -> Em produção, Cancelada
  *   Em produção  -> Pausada, Concluída, Cancelada
  *   Pausada      -> Em produção, Cancelada
- *   Concluída    -> (nenhum: OS concluída não reabre, RN-OS-03)
+ *   Concluída    -> (nenhum: OS concluída não reabre)
  *   Cancelada    -> (nenhum)
  */
+
 public enum StatusOsEnum {
 
     CRIADA("Criada"),
@@ -42,17 +43,14 @@ public enum StatusOsEnum {
         this.nome = nome;
     }
 
-    /** Texto gravado na coluna StatusOs.status. */
     public String getNome() {
         return nome;
     }
 
-    /** RN-HOS-02: a mudança de status só acontece pelas transições da tabela acima. */
     public boolean podeMudarPara(StatusOsEnum novo) {
         return TRANSICOES.get(this).contains(novo);
     }
 
-    /** Concluída e Cancelada são finais: não têm saída e a OS não aceita alterações (RN-OS-07). */
     public boolean isEncerrado() {
         return this == CONCLUIDA || this == CANCELADA;
     }

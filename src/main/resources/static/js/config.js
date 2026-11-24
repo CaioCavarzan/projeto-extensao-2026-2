@@ -64,10 +64,12 @@ export const UFS = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 
  * Gráficos do painel inicial. Os dados vêm de GET /api/dashboard/graficos/{nome}; enquanto o back-end responder
  * "disponivel: false" (dados ainda não programados — ver DashboardService), a tela mostra o aviso no lugar do
  * gráfico. Quando a consulta for feita (ex.: com as views da Etapa 3), o gráfico aparece sem mudar o front.
+ * ALTERADO (18/11/2026) [E3-34]: as consultas foram feitas com as views da Etapa 3. Só as descrições mudaram, para
+ * dizer o período que cada gráfico mostra (o mesmo do DashboardService: 30 dias e 12 meses).
  */
 export const GRAFICOS_PAINEL = {
-  producaoDiaria: { nome: 'producao-diaria', titulo: 'Produção diária', descricao: 'Etapas concluídas por dia' },
-  retrabalhoMensal: { nome: 'retrabalho-mensal', titulo: 'Retrabalho mensal', descricao: '% de itens com etapa repetida (indicador do PDCA)' },
-  etapasPorFuncionario: { nome: 'etapas-por-funcionario', titulo: 'Produtividade por funcionário', descricao: 'Etapas concluídas por operador' },
-  osPorStatus: { nome: 'os-por-status', titulo: 'OS por status', descricao: 'Distribuição das ordens de serviço' },
+  producaoDiaria: { nome: 'producao-diaria', titulo: 'Produção diária', descricao: 'Etapas concluídas por dia (últimos 30 dias)' },
+  retrabalhoMensal: { nome: 'retrabalho-mensal', titulo: 'Retrabalho mensal', descricao: '% de itens com etapa repetida, por mês (indicador do PDCA)' },
+  etapasPorFuncionario: { nome: 'etapas-por-funcionario', titulo: 'Produtividade por funcionário', descricao: 'Etapas concluídas por operador (últimos 30 dias)' },
+  osPorStatus: { nome: 'os-por-status', titulo: 'OS por status', descricao: 'Distribuição das ordens de serviço pelo status atual' },
 };

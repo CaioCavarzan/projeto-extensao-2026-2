@@ -21,10 +21,11 @@ import br.fatec.projetoextensao.services.FornecedorService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * INCLUÍDO (21/10/2026): fornecedores. Cadastrar e alterar: ADMIN e OPERADOR. Inativar, reativar e excluir: só
- * ADMIN (RN-SIS-03 e RN-SIS-12). Fornecedor nunca é funcionário (RN-PES-05); se o CNPJ já é de um cliente PJ, a mesma
- * pessoa ganha o papel de fornecedor (RN-PES-02). ?somenteAtivos=true lista só os ativos (para escolher na tinta).
+ * Fornecedores. Cadastrar e alterar: ADMIN e OPERADOR. Inativar, reativar e excluir: só ADMIN. 
+ * Fornecedor nunca é funcionário; se o CNPJ já é de um cliente PJ, a mesma
+ * pessoa ganha o papel de fornecedor. ?somenteAtivos=true lista só os ativos (para escolher na tinta).
  */
+
 @RestController
 @RequestMapping("/api/fornecedores")
 @RequiredArgsConstructor
